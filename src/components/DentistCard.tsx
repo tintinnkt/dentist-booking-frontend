@@ -1,10 +1,15 @@
-import { AccordionContent, AccordionTrigger } from "@radix-ui/react-accordion";
 import { DentistListAllItem } from "../types/api/Dentist";
 
-import { ButtonConfigKeys } from "./CustomButton";
-import { Accordion, AccordionItem } from "./ui/Accordion";
+import { ButtonConfigKeys, CustomButton } from "./CustomButton";
 import { Badge } from "./ui/Badge";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/Card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./ui/Card";
+import { Separator } from "./ui/Separator";
 
 interface DentistCardProps {
   dentist: DentistListAllItem;
@@ -25,28 +30,32 @@ const DentistCard = ({
   return (
     <Card className="rounded-xl">
       <CardHeader>
-        <CardTitle className="flex items-center space-x-4">
-          <h2>{dentist.name}</h2>
+        <CardTitle className="flex flex-wrap items-center space-y-1 space-x-4">
+          <h2 className="text-2xl">{dentist.name}</h2>
           <Badge variant={"secondary"}>
-            {dentist.yearsOfExperience} year of experience
+            {dentist.yearsOfExperience} year
+            {dentist.yearsOfExperience > 1 ? "s" : ""} of experience
           </Badge>
         </CardTitle>
-        <CardContent className="w-full">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="see-full-detail">
-              <AccordionTrigger className="w-full text-start">
-                Full Description
-              </AccordionTrigger>
-              <AccordionContent className="grid w-full grid-cols-5">
-                <p className="col-span-1">name</p>
-                <p className="col-span-4">{dentist.name}</p>
-                <p className="col-span-1">year of experience</p>
-                <p className="col-span-4">{dentist.yearsOfExperience}</p>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
       </CardHeader>
+      <Separator />
+      <CardContent className="grid w-full grid-cols-2">
+        <p>Name</p>
+        <p className="col-span-1">{dentist.name}</p>
+        <p>Years of experiences</p>
+        <p className="col-span-1">{dentist.yearsOfExperience}</p>
+        <p>Expertises</p>
+        <ul className="col-span-1 list-disc">
+          {dentist.areaOfExpertise.map((expertise, idx) => (
+            <li key={idx} className="">
+              {expertise}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+      <CardFooter className="flex justify-end">
+        <CustomButton useFor="select" />
+      </CardFooter>
     </Card>
   );
 };
