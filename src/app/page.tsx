@@ -1,6 +1,6 @@
 import DentistCard from "@/components/DentistCard";
 import { DentistListAllItem } from "@/types/api/Dentist";
-const dentists: DentistListAllItem[] = [
+const dentists: Array<DentistListAllItem> = [
   {
     id: "012",
     name: "Zeng",
