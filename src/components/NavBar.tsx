@@ -5,6 +5,7 @@ import {
   MenuIcon,
   StethoscopeIcon,
 } from "lucide-react";
+import { TypingAnimation } from "./magicui/TypingAnimation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,10 +17,18 @@ import { Separator } from "./ui/Separator";
 
 const NavBar = () => {
   return (
-    <div className="to mx-auto my-2 flex w-4/5 max-w-2xl flex-row items-center justify-between rounded-md bg-red-400 bg-gradient-to-r from-blue-300 px-4 py-1.5">
+    <div className="to mx-auto flex w-3/5 min-w-lg flex-row items-center justify-between rounded-b-2xl bg-red-400 bg-gradient-to-r from-blue-300 px-4 py-1.5 shadow-lg">
       <div className="hover:bg-primary-foreground/20 rounded-sm p-1.5 transition-all hover:translate-x-1 hover:scale-110 hover:shadow-sm">
         <BriefcaseMedicalIcon />
       </div>
+      <TypingAnimation
+        startOnView
+        delay={100}
+        duration={40}
+        className="font-serif text-lg"
+      >
+        Dentist Booking System
+      </TypingAnimation>
       <DropdownMenu>
         <DropdownMenuTrigger className="hover:bg-primary-foreground/20 rounded-lg p-1.5 transition-all hover:-translate-x-1.5 hover:scale-105 hover:shadow-md">
           <MenuIcon />
