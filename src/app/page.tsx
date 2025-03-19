@@ -1,4 +1,5 @@
 import DentistCard from "@/components/DentistCard";
+import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { DentistListAllItem } from "@/types/api/Dentist";
 const dentists: Array<DentistListAllItem> = [
   {
@@ -18,10 +19,15 @@ const dentists: Array<DentistListAllItem> = [
 export default function Home() {
   return (
     <main>
-      <div className="w-full space-y-6 p-5 md:w-1/3">
+      <div className="w-full space-y-6 p-5">
         {dentists.map((dentist, idx) => (
           <DentistCard key={idx} dentist={dentist} />
         ))}
+        <Card>
+          <CardHeader>
+            <CardTitle>hello</CardTitle>
+          </CardHeader>
+        </Card>
       </div>
     </main>
   );

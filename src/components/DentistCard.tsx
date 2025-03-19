@@ -28,7 +28,7 @@ const DentistCard = ({
   // const user = session?.user;
 
   return (
-    <Card className="rounded-xl">
+    <Card className="w-full max-w-xl rounded-xl">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center space-y-1 space-x-4">
           <h2 className="text-2xl">{dentist.name}</h2>
