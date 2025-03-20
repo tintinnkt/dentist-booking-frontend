@@ -39,13 +39,13 @@ const DentistCard = ({
         </CardTitle>
       </CardHeader>
       <Separator />
-      <CardContent className="grid w-full grid-cols-2">
+      <CardContent className="grid w-full grid-cols-2 sm:grid-cols-3">
         <p>Name</p>
-        <p className="col-span-1">{dentist.name}</p>
-        <p>Years of experiences</p>
-        <p className="col-span-1">{dentist.yearsOfExperience}</p>
+        <p className="sm:col-span-2">{dentist.name}</p>
+        <p className="min-w-fit">Years of experiences</p>
+        <p className="sm:col-span-2">{dentist.yearsOfExperience}</p>
         <p>Expertises</p>
-        <ul className="col-span-1 list-disc">
+        <ul className="list-disc sm:col-span-2">
           {dentist.areaOfExpertise.map((expertise, idx) => (
             <li key={idx} className="">
               {expertise}
