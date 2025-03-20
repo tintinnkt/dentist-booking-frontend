@@ -1,4 +1,4 @@
-export interface DentistListAllItem {
+export interface DentistProps {
   id: string;
   name: string;
   yearsOfExperience: number;
