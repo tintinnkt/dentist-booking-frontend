@@ -6,6 +6,7 @@ import {
   LucideIcon,
   LucideProps,
   Plus,
+  SearchIcon,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 
@@ -44,6 +45,11 @@ const buttonConfig: Record<string, ButtonConfig> = {
     label: "See Resources",
     variant: "secondary",
     icon: ChevronRight,
+    placeAt: "end",
+  },
+  search: {
+    variant: "secondary",
+    icon: SearchIcon,
     placeAt: "end",
   },
 };
