@@ -1,6 +1,7 @@
 import NavBar from "@/components/NavBar";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,6 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen w-full flex-col items-center antialiased`}
       >
         <NavBar />
+        <Toaster position="bottom-right" />
         <main className="w-full">{children}</main>
       </body>
     </html>

@@ -1,3 +1,5 @@
+"use client";
+import { FrontendRoutes } from "@/conifg/apiRoutes";
 import {
   BriefcaseMedicalIcon,
   CalendarPlusIcon,
@@ -5,6 +7,7 @@ import {
   MenuIcon,
   StethoscopeIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { TypingAnimation } from "./magicui/TypingAnimation";
 import {
   DropdownMenu,
@@ -16,10 +19,11 @@ import {
 import { Separator } from "./ui/Separator";
 
 const NavBar = () => {
+  const router = useRouter();
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-row items-center justify-between rounded-b-2xl bg-red-400 bg-gradient-to-r from-blue-300 px-4 py-1.5 shadow-lg sm:w-3/5">
       <div className="hover:bg-primary-foreground/20 rounded-sm p-1.5 transition-all hover:translate-x-1 hover:scale-110 hover:shadow-sm">
-        <BriefcaseMedicalIcon />
+        <BriefcaseMedicalIcon onClick={() => router.push("/")} />
       </div>
       <TypingAnimation
         startOnView
@@ -35,11 +39,17 @@ const NavBar = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuGroup>
-            <DropdownMenuItem className="flex items-center space-x-1.5">
+            <DropdownMenuItem
+              className="flex items-center space-x-1.5"
+              onClick={() => router.push(FrontendRoutes.DENTIST_LIST)}
+            >
               <StethoscopeIcon />
               <>Doctors</>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center space-x-1.5">
+            <DropdownMenuItem
+              className="flex items-center space-x-1.5"
+              onClick={() => {}}
+            >
               <CalendarPlusIcon />
               <>Booking</>
             </DropdownMenuItem>

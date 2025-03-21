@@ -1,5 +1,6 @@
-import { DentistListAllItem } from "../types/api/Dentist";
-
+"use client";
+import { DentistProps } from "@/types/api/Dentist";
+import toast from "react-hot-toast";
 import { ButtonConfigKeys, CustomButton } from "./CustomButton";
 import { Badge } from "./ui/Badge";
 import {
@@ -12,7 +13,7 @@ import {
 import { Separator } from "./ui/Separator";
 
 interface DentistCardProps {
-  dentist: DentistListAllItem;
+  dentist: DentistProps;
   onAction?: () => void;
   isLoaded?: boolean;
   actionButtonUseFor?: ButtonConfigKeys;
@@ -53,8 +54,14 @@ const DentistCard = ({
           ))}
         </ul>
       </CardContent>
-      <CardFooter className="flex justify-end">
-        <CustomButton useFor="select" />
+      <Separator />
+      <CardFooter className="flex justify-end space-x-2">
+        <CustomButton useFor="edit" />
+        <CustomButton useFor="delete-dentist" />
+        <CustomButton
+          useFor="booking"
+          onClick={() => toast.success("ทำการจองแล้ว")}
+        />
       </CardFooter>
     </Card>
   );

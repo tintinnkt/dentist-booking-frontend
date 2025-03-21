@@ -1,12 +1,15 @@
 import { cn } from "@/lib/utils";
 import {
+  CalendarPlusIcon,
   Check,
   ChevronLeft,
   ChevronRight,
   LucideIcon,
   LucideProps,
+  PencilIcon,
   Plus,
   SearchIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { Button } from "./ui/Button";
 
@@ -52,8 +55,33 @@ const buttonConfig: Record<string, ButtonConfig> = {
     icon: SearchIcon,
     placeAt: "end",
   },
+  edit: {
+    label: "แก้ไข",
+    variant: "outline",
+    icon: PencilIcon,
+  },
+  "delete-dentist": {
+    label: "ลบหมอ",
+    variant: "destructive",
+    icon: Trash2Icon,
+  },
+  delete: {
+    label: "ลบ",
+    variant: "destructive",
+    icon: Trash2Icon,
+  },
+  booking: {
+    label: "นัดวันกับหมอ",
+    variant: "default",
+    icon: CalendarPlusIcon,
+  },
 };
-export type ButtonConfigKeys = "select" | "selected" | "back" | "seeResources";
+export type ButtonConfigKeys =
+  | "select"
+  | "selected"
+  | "back"
+  | "seeResources"
+  | "edit";
 
 interface CustomButtonProps extends React.ComponentProps<typeof Button> {
   useFor: keyof typeof buttonConfig;
