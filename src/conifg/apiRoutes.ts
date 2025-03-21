@@ -1,7 +1,18 @@
+const BACKEND_URL = "https://project-s-backend-nine.vercel.app/";
+const BackendRootRoutes = `${BACKEND_URL}/api/v1`;
+
 export enum BackendRoutes {
-  GET_ME = "/api/v1/aut/me",
-  GET_DENTISTS = "/api/v1/dentists/",
+  LOGOUT = `${BackendRootRoutes}/auth/logout`,
+  LOGIN = `${BackendRootRoutes}/auth/login`,
+  REGISTER = `${BackendRootRoutes}/auth/register`,
+  ME = `${BackendRootRoutes}/auth/me`,
+  UPDATE_USER = `${BackendRootRoutes}/auth/updateUser`,
+  DENTIST = `${BackendRootRoutes}/dentists`,
+  BOOKING = `${BackendRootRoutes}/bookings`,
+  USER = `${BackendRootRoutes}/user`,
+  GET_BOOKING_FOR_DENTIST = `${BackendRoutes.DENTIST}`,
 }
+
 export enum FrontendRootRoutes {
   ADMIN = "/admin",
   LIST = "/list",
