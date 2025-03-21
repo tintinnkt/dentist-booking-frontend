@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button";
+import { InteractiveHoverButton } from "@/components/magicui/InteractiveHoverButton";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 
 const Page = () => {
   return (
-    <main className="mx-auto my-10 max-w-screen-xl px-8">
+    <main className="mx-auto my-10 max-w-screen-xl place-items-center px-8">
       <Tabs defaultValue="login" className="w-[400px]">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">Login</TabsTrigger>
@@ -40,7 +40,7 @@ const Page = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Login</Button>
+              <InteractiveHoverButton>Log in</InteractiveHoverButton>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -83,7 +83,7 @@ const Page = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Register</Button>
+              <InteractiveHoverButton>Register</InteractiveHoverButton>
             </CardFooter>
           </Card>
         </TabsContent>
