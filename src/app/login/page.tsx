@@ -11,11 +11,15 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { BackendRoutes } from "@/conifg/apiRoutes";
+import { BackendRoutes, FrontendRoutes } from "@/conifg/apiRoutes";
 import axios from "axios";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const Page = () => {
+  const router = useRouter();
+
   // Login state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,17 +38,22 @@ const Page = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    try {
-      await axios.post(BackendRoutes.LOGIN, { email, password });
+
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+
+    if (result?.error) {
+      setError(result.error);
+    } else {
       setSuccess("Logged in successfully!");
-      console.log("login naa");
-    } catch (err) {
-      axios.isAxiosError(err)
-        ? setError(err.response?.data.message || "Login failed.")
-        : setError("An unexpected error occurred.");
+      router.push(FrontendRoutes.DENTIST_LIST); // Redirect to dashboard or any other page
     }
   };
 
+  // Registration handler
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
