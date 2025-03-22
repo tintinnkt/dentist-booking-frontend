@@ -15,15 +15,15 @@ const compat = new FlatCompat({
 
 const config = [
   prettierRecommended,
-  ...compat.extends("next/core-web-vitals"),
-  ...compat.extends("next/typescript"),
-  { ignores: [".next/"] },
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  { ignores: [".next/*", "node_modules/*", "build/*"] },
   {
     plugins: {
       unicorn,
     },
     rules: {
       "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-expressions": "off",
 
       "@typescript-eslint/array-type": [
         "warn",

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { ErrorIcon } from "react-hot-toast";
 
 const Page = () => {
-  const [dentists, setDentists] = useState<DentistProps[]>([]);
+  const [dentists, setDentists] = useState<Array<DentistProps>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,7 +44,7 @@ const Page = () => {
 
   if (loading)
     return (
-      <p className="text-gray-500">
+      <p className="place-items-center py-10 text-gray-500">
         <LoaderIcon /> Loading...
       </p>
     );

@@ -48,14 +48,14 @@ const NavBar = () => {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center space-x-1.5"
-              onClick={() => {}}
+              onClick={() => router.push("")}
             >
               <CalendarPlusIcon />
               <>Booking</>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <Separator />
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push(FrontendRoutes.LOGIN)}>
             <LogInIcon />
             <>Login</>
           </DropdownMenuItem>
