@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://project-s-backend-nine.vercel.app/";
+const BACKEND_URL = "https://project-s-backend-cyan.vercel.app";
 const BackendRootRoutes = `${BACKEND_URL}/api/v1`;
 
 export enum BackendRoutes {
