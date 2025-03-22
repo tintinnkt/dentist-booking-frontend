@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import {
   CalendarPlusIcon,
+  CalendarX2Icon,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -64,6 +65,16 @@ const buttonConfig: Record<string, ButtonConfig> = {
     label: "ลบหมอ",
     variant: "destructive",
     icon: Trash2Icon,
+  },
+  "delete-booking": {
+    label: "ลบการจอง",
+    variant: "destructive",
+    icon: Trash2Icon,
+  },
+  "cancel-booking": {
+    label: "ยกเลิกการจอง",
+    variant: "destructive",
+    icon: CalendarX2Icon,
   },
   delete: {
     label: "ลบ",
