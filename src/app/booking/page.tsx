@@ -1,3 +1,4 @@
+"use clientp";
 import BookingCard from "@/components/BookingCard";
 import { SearchBar } from "@/components/SearchBar";
 import { mockBookings } from "@/mock/BookingMock";

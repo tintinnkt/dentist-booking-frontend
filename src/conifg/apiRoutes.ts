@@ -5,7 +5,6 @@ export enum BackendRoutes {
   LOGOUT = `${BackendRootRoutes}/auth/logout`,
   LOGIN = `${BackendRootRoutes}/auth/login`,
   REGISTER = `${BackendRootRoutes}/auth/register`,
-  ME = `${BackendRootRoutes}/auth/me`,
   UPDATE_USER = `${BackendRootRoutes}/auth/updateUser`,
   DENTIST = `${BackendRootRoutes}/dentists`,
   BOOKING = `${BackendRootRoutes}/bookings`,
@@ -18,10 +17,12 @@ export enum FrontendRootRoutes {
   LIST = "/list",
   LOGIN = "/login",
   ME = "/me",
+  BOOKING = "/booking",
 }
 export enum FrontendRoutes {
   USER_MANAGEMENT = `${FrontendRootRoutes.ADMIN}/user`,
   DENTIST_LIST = `${FrontendRootRoutes.LIST}`,
   LOGIN = `${FrontendRootRoutes.LOGIN}`,
   ME = `${FrontendRootRoutes.ME}`,
+  BOOKING = `${FrontendRootRoutes.BOOKING}`,
 }

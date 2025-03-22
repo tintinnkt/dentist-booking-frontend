@@ -48,7 +48,7 @@ const NavBar = () => {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center space-x-1.5"
-              onClick={() => router.push("")}
+              onClick={() => router.push(FrontendRoutes.BOOKING)}
             >
               <CalendarPlusIcon />
               <>Booking</>
