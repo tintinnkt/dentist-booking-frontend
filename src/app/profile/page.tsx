@@ -1,4 +1,6 @@
 "use client";
+import { CustomButton } from "@/components/CustomButton";
+import { Badge } from "@/components/ui/Badge";
 import {
   Card,
   CardContent,
@@ -6,45 +8,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/Card";
-import { FrontendRoutes } from "@/config/apiRoutes";
-import getUserProfile from "@/lib/getUserProfile";
-import { User } from "@/types/user";
-import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Role_type } from "@/config/role";
+import { useUser } from "@/hooks/useUser";
+import { LoaderCircleIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
-  const { data: session } = useSession();
-  const [user, setUser] = useState<User>();
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (session?.user?.token) {
-        try {
-          const userData = await getUserProfile(session.user.token);
-          setUser(userData.data);
-        } catch (error) {
-          console.error("Failed to fetch user profile:", error);
-        }
-      }
-    };
+  const router = useRouter();
+  const { user, loading } = useUser();
 
-    fetchUserProfile();
-  }, [session?.user?.token]);
-  console.log(user);
-  if (!user) {
-    redirect(FrontendRoutes.DENTIST_LIST);
+  if (loading) {
+    return (
+      <div className="place-items-center pt-20">
+        <Skeleton className="h-72 w-lg place-items-center pt-5 shadow-lg">
+          <LoaderCircleIcon />
+        </Skeleton>
+      </div>
+    );
   }
   return (
-    <main className="space-y-10">
+    <main className="space-y-10 px-10">
       <section className="flex w-full flex-col items-center justify-center pt-10">
         <p className="text-3xl font-semibold">Your Profile</p>
       </section>
       <section className="flex w-full justify-center">
         {user ? (
-          <Card className="max-w-lg p-5">
+          <Card className="w-lg max-w-full p-5 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-xl font-bold">
-                Profile Information
+              <CardTitle className="flex items-center justify-start space-x-3 text-xl font-bold">
+                <span>Profile Information</span>
+                {user.role != Role_type.ADMIN && <Badge>Admin</Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -58,9 +52,11 @@ const Page = () => {
                 <p>
                   <strong>Phone:</strong> {user.tel}
                 </p>
-                <p>
-                  <strong>Role:</strong> {user.role}
-                </p>
+                {user.role == "admin" && (
+                  <p>
+                    <strong>Role:</strong> {user.role}
+                  </p>
+                )}
                 <p>
                   <strong>Account Created: </strong>
                   {new Date(user.createdAt).toLocaleDateString()}
@@ -71,9 +67,15 @@ const Page = () => {
               <p className="text-sm text-gray-500">ID: {user._id}</p>
             </CardFooter>
           </Card>
-        ) : (
-          <></>
-        )}
+        ) : null}
+      </section>
+      <section className="flex w-full max-w-lg justify-end justify-self-center px-5">
+        <CustomButton
+          useFor="logout"
+          hideTextOnMobile={false}
+          className="shadow-3xl"
+          onClick={() => router.push("")}
+        />
       </section>
     </main>
   );

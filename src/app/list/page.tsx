@@ -56,7 +56,7 @@ const Page = () => {
         <section className="col-span-3 hidden md:block" />
         <section className="flex flex-col items-center gap-y-6 md:col-span-8 md:flex-row md:justify-between">
           <h1 className="align-baseline text-5xl font-semibold">
-            Search Doctors
+            Search Dentists
           </h1>
           <SearchBar />
         </section>
