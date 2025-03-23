@@ -1,16 +1,17 @@
 "use client";
 import { FrontendRoutes } from "@/config/apiRoutes";
+import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
 import {
   BriefcaseMedicalIcon,
   CalendarPlusIcon,
   LogInIcon,
-  LogOutIcon,
   MenuIcon,
   StethoscopeIcon,
   UserIcon,
+  UserRoundCogIcon,
 } from "lucide-react";
-import { signOut, useSession } from "next-auth/react"; // Add useSession
+import { useSession } from "next-auth/react"; // Add useSession
 import { useRouter } from "next/navigation";
 import { TypingAnimation } from "./magicui/TypingAnimation";
 import {
@@ -27,19 +28,6 @@ const NavBar = () => {
   const { user, loading } = useUser();
   // Add direct session check to ensure immediate updates
   const { data: session } = useSession();
-  
-  const handleLogout = async () => {
-    try {
-      // Use callbackUrl to force a full page reload
-      await signOut({ redirect: true, callbackUrl: "/" });
-      // Note: We're now using redirect:true so the router.push line will never execute
-      // But we'll keep it as a fallback
-      router.push("/");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      router.push("/");
-    }
-  };
 
   // Check both user from hook and session directly
   const isAuthenticated = !!(user && !loading && session?.user);
@@ -86,19 +74,16 @@ const NavBar = () => {
                 className="flex items-center space-x-1.5"
                 onClick={() => router.push(FrontendRoutes.PROFILE)}
               >
-                <UserIcon />
+                {user.role == Role_type.ADMIN ? (
+                  <UserRoundCogIcon />
+                ) : (
+                  <UserIcon />
+                )}
                 <>{user?.name || "Profile"}</>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="flex items-center space-x-1.5"
-                onClick={handleLogout}
-              >
-                <LogOutIcon />
-                <>Logout</>
               </DropdownMenuItem>
             </>
           ) : (
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="flex items-center space-x-1.5"
               onClick={() => router.push(FrontendRoutes.LOGIN)}
             >

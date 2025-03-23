@@ -5,9 +5,8 @@ import { BackendRoutes } from "@/config/apiRoutes";
 
 import { DentistProps } from "@/types/api/Dentist";
 import axios, { AxiosError } from "axios";
-import { LoaderIcon } from "lucide-react";
+import { LoaderIcon, XCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { ErrorIcon } from "react-hot-toast";
 
 const Page = () => {
   const [dentists, setDentists] = useState<Array<DentistProps>>([]);
@@ -39,7 +38,7 @@ const Page = () => {
   if (error)
     return (
       <p className="text-red-500">
-        <ErrorIcon /> Error: {error}
+        <XCircleIcon /> Error: {error}
       </p>
     );
 

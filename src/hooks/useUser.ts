@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
  * @returns The user object or undefined if not fetched yet
  */
 export const useUser = () => {
-  const [user, setUser] = useState<User | undefined>();
+  const [user, setUser] = useState<User>();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const { data: session } = useSession();

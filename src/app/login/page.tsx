@@ -16,6 +16,7 @@ import axios from "axios";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 const Page = () => {
   const router = useRouter();
@@ -39,17 +40,29 @@ const Page = () => {
     e.preventDefault();
     setError(null);
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    // Create a loading toast that you can dismiss later
+    const toastId = toast.loading("Logging in...");
 
-    if (result?.error) {
-      setError(result.error);
-    } else {
-      setSuccess("Logged in successfully!");
-      router.push(FrontendRoutes.DENTIST_LIST); // Redirect to dashboard or any other page
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        // Update the toast to show an error
+        toast.error("Invalid credentials. Please try again.", { id: toastId });
+        setError(result.error);
+      } else {
+        // Update the toast to show success
+        toast.success("Logged in successfully!", { id: toastId });
+        router.push(FrontendRoutes.DENTIST_LIST);
+      }
+    } catch (err) {
+      // In case of a network error or other exception
+      toast.error("Login failed. Please try again.", { id: toastId });
+      setError("An unexpected error occurred.");
     }
   };
 
@@ -60,30 +73,46 @@ const Page = () => {
 
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
 
+    const registerPromise = axios.post(BackendRoutes.REGISTER, {
+      name,
+      email: regEmail,
+      password: newPassword,
+      tel: phone,
+      role: "user",
+    });
+
+    toast.promise(registerPromise, {
+      loading: "Creating your account...",
+      success: "Account created successfully!",
+      error: "Registration failed. Please try again.",
+    });
+
     try {
-      await axios.post(BackendRoutes.REGISTER, {
-        name,
-        email: regEmail,
-        password: newPassword,
-        tel: phone,
-        role: "user",
-      });
-      setSuccess("Account created successfully!");
+      await registerPromise;
 
       // Automatically log in the user after successful registration
-      const result = await signIn("credentials", {
+      const loginPromise = signIn("credentials", {
         redirect: false,
         email: regEmail,
         password: newPassword,
       });
 
+      toast.promise(loginPromise, {
+        loading: "Logging you in...",
+        success: "Logged in successfully!",
+        error: "Login failed after registration.",
+      });
+
+      const result = await loginPromise;
+
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push(FrontendRoutes.DENTIST_LIST); 
+        router.push(FrontendRoutes.DENTIST_LIST);
       }
     } catch (err) {
       axios.isAxiosError(err)
