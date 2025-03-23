@@ -1,20 +1,29 @@
-import { BackendRoutes } from "@/conifg/apiRoutes"
+import { BackendRoutes } from "@/config/apiRoutes";
+import axios, { AxiosError } from "axios";
 
-export default async function userLogIn (userEmail:string,userPassword:string){
-  const response = await fetch(BackendRoutes.LOGIN,
-      {method:"POST",
-          headers:{
-              "Content-Type":"application/json",
+export default async function userLogIn(
+  userEmail: string,
+  userPassword: string,
+) {
+  try {
+    const response = await axios.post(
+      BackendRoutes.LOGIN,
+      {
+        email: userEmail,
+        password: userPassword,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
-          },
-          body:JSON.stringify({
-              email:userEmail,
-              password:userPassword,
-          }),
-      })
-
-  if(!response.ok){
-      throw new Error("Failed to log in")
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      throw new Error(error.response?.data?.message || "Failed to log in");
+    }
+    throw new Error("An unexpected error occurred");
   }
-  return await response.json()
 }

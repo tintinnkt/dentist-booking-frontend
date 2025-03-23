@@ -1,7 +1,8 @@
 "use client";
 import DentistCard from "@/components/DentistCard";
 import { SearchBar } from "@/components/SearchBar";
-import { BackendRoutes } from "@/conifg/apiRoutes";
+import { BackendRoutes } from "@/config/apiRoutes";
+
 import { DentistProps } from "@/types/api/Dentist";
 import axios, { AxiosError } from "axios";
 import { LoaderIcon } from "lucide-react";

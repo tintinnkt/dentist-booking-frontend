@@ -8,8 +8,8 @@ export enum BackendRoutes {
   UPDATE_USER = `${BackendRootRoutes}/auth/updateUser`,
   DENTIST = `${BackendRootRoutes}/dentists`,
   BOOKING = `${BackendRootRoutes}/bookings`,
-  USER = `${BackendRootRoutes}/user`,
   GET_BOOKING_FOR_DENTIST = `${BackendRoutes.DENTIST}`,
+  USER_INFO = `${BackendRootRoutes}/auth/me`,
 }
 
 export enum FrontendRootRoutes {
