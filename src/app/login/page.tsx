@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { BackendRoutes, FrontendRoutes } from "@/conifg/apiRoutes";
+import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import axios from "axios";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
