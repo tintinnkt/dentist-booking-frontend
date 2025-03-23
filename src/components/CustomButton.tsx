@@ -5,6 +5,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  LogOutIcon,
   LucideIcon,
   LucideProps,
   PencilIcon,
@@ -12,6 +13,7 @@ import {
   SearchIcon,
   Trash2Icon,
 } from "lucide-react";
+import { twJoin } from "tailwind-merge";
 import { Button } from "./ui/Button";
 
 interface ButtonConfig {
@@ -86,6 +88,12 @@ const buttonConfig: Record<string, ButtonConfig> = {
     variant: "default",
     icon: CalendarPlusIcon,
   },
+  logout: {
+    label: "logout",
+    variant: "destructive",
+    icon: LogOutIcon,
+    placeAt: "end",
+  },
 };
 export type ButtonConfigKeys =
   | "select"
@@ -112,7 +120,7 @@ export const CustomButton = ({
   return (
     <Button
       className={cn(
-        "flex items-center gap-2 rounded-full",
+        "flex items-center gap-2 rounded-full transition-all hover:scale-110",
         config?.className,
         hideTextOnMobile && "max-md:size-10 max-md:p-0",
         !config?.label && "size-10 p-0",
@@ -124,8 +132,8 @@ export const CustomButton = ({
       {config?.placeAt !== "end" && Icon && (
         <Icon className="size-5" {...config?.iconProps} />
       )}
-      {!hideTextOnMobile && config?.label && (
-        <span className="hidden sm:block">
+      {config?.label && (
+        <span className={twJoin(hideTextOnMobile ? "hidden sm:block" : "")}>
           {typeof config?.label === "string" ? config?.label : config?.label.md}
         </span>
       )}
