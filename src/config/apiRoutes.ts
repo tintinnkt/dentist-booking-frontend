@@ -16,13 +16,13 @@ export enum FrontendRootRoutes {
   ADMIN = "/admin",
   LIST = "/list",
   LOGIN = "/login",
-  ME = "/me",
+  PROFILE = "/profile",
   BOOKING = "/booking",
 }
 export enum FrontendRoutes {
   USER_MANAGEMENT = `${FrontendRootRoutes.ADMIN}/user`,
   DENTIST_LIST = `${FrontendRootRoutes.LIST}`,
   LOGIN = `${FrontendRootRoutes.LOGIN}`,
-  ME = `${FrontendRootRoutes.ME}`,
+  PROFILE = `${FrontendRootRoutes.PROFILE}`,
   BOOKING = `${FrontendRootRoutes.BOOKING}`,
 }
