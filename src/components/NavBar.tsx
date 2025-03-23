@@ -5,10 +5,12 @@ import {
   BriefcaseMedicalIcon,
   CalendarPlusIcon,
   LogInIcon,
+  LogOutIcon,
   MenuIcon,
   StethoscopeIcon,
   UserIcon,
 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react"; // Add useSession
 import { useRouter } from "next/navigation";
 import { TypingAnimation } from "./magicui/TypingAnimation";
 import {
@@ -23,6 +25,25 @@ import { Separator } from "./ui/Separator";
 const NavBar = () => {
   const router = useRouter();
   const { user, loading } = useUser();
+  // Add direct session check to ensure immediate updates
+  const { data: session } = useSession();
+  
+  const handleLogout = async () => {
+    try {
+      // Use callbackUrl to force a full page reload
+      await signOut({ redirect: true, callbackUrl: "/" });
+      // Note: We're now using redirect:true so the router.push line will never execute
+      // But we'll keep it as a fallback
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      router.push("/");
+    }
+  };
+
+  // Check both user from hook and session directly
+  const isAuthenticated = !!(user && !loading && session?.user);
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-row items-center justify-between rounded-b-2xl bg-red-400 bg-gradient-to-r from-blue-300 px-4 py-1.5 shadow-lg sm:w-3/5">
       <div className="hover:bg-primary-foreground/20 rounded-sm p-1.5 transition-all hover:translate-x-1 hover:scale-110 hover:shadow-sm">
@@ -59,15 +80,28 @@ const NavBar = () => {
           </DropdownMenuGroup>
           <Separator />
 
-          {user && !loading ? (
-            <DropdownMenuItem
-              onClick={() => router.push(FrontendRoutes.PROFILE)}
-            >
-              <UserIcon />
-              <>{user.name}</>
-            </DropdownMenuItem>
+          {isAuthenticated ? (
+            <>
+              <DropdownMenuItem
+                className="flex items-center space-x-1.5"
+                onClick={() => router.push(FrontendRoutes.PROFILE)}
+              >
+                <UserIcon />
+                <>{user?.name || "Profile"}</>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center space-x-1.5"
+                onClick={handleLogout}
+              >
+                <LogOutIcon />
+                <>Logout</>
+              </DropdownMenuItem>
+            </>
           ) : (
-            <DropdownMenuItem onClick={() => router.push(FrontendRoutes.LOGIN)}>
+            <DropdownMenuItem 
+              className="flex items-center space-x-1.5"
+              onClick={() => router.push(FrontendRoutes.LOGIN)}
+            >
               <LogInIcon />
               <>Login</>
             </DropdownMenuItem>
