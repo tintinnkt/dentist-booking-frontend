@@ -1,6 +1,8 @@
 "use client";
+import { Booking } from "@/types/api/Dentist";
 import { twJoin } from "tailwind-merge";
 import { CustomButton } from "./CustomButton";
+import { Calendar } from "./ui/Calendar";
 import {
   Card,
   CardContent,
@@ -9,15 +11,10 @@ import {
   CardTitle,
 } from "./ui/Card";
 import { Separator } from "./ui/Separator";
-interface BookingProps {
-  id: string;
-  owner: string;
-  dentist: string;
-  date: string;
-}
+
 interface BookingCardProps {
+  booking: Booking;
   isMyBooking?: boolean;
-  booking: BookingProps;
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({
@@ -27,7 +24,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
   return (
     <Card
       className={twJoin(
-        "w-full max-w-xl rounded-xl",
+        "w-fit max-w-lg rounded-xl",
         isMyBooking ? "pt-0" : null,
       )}
     >
@@ -39,17 +36,22 @@ const BookingCard: React.FC<BookingCardProps> = ({
         </CardHeader>
       )}
 
-      <CardContent className="grid w-full grid-cols-2 sm:grid-cols-3">
-        {!isMyBooking && (
-          <>
-            <p>Owner</p>
-            <p className="col-span-2">{booking.owner}</p>
-          </>
-        )}
+      <CardContent className="grid w-full grid-cols-2 space-y-3 sm:grid-cols-3">
+        <p>Owner</p>
+        <p className="col-span-2">{booking.user}</p>
         <p>Dentist</p>
-        <p className="col-span-2">{booking.dentist}</p>
+        <p className="col-span-2">{booking.dentist?.name}</p>
         <p>Date</p>
-        <p className="col-span-2">{booking.date}</p>
+        <p className="col-span-2">
+          {new Date(booking.apptDate).toLocaleDateString("en-GB")}
+        </p>
+        {isMyBooking && (
+          <Calendar
+            mode="single"
+            selected={new Date(booking.apptDate)}
+            month={new Date(booking.apptDate)}
+          />
+        )}
       </CardContent>
       <Separator />
       <CardFooter className="flex justify-end space-x-2">
