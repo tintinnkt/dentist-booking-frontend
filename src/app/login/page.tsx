@@ -72,6 +72,19 @@ const Page = () => {
         role: "user",
       });
       setSuccess("Account created successfully!");
+
+      // Automatically log in the user after successful registration
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: regEmail,
+        password: newPassword,
+      });
+
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        router.push(FrontendRoutes.DENTIST_LIST); 
+      }
     } catch (err) {
       axios.isAxiosError(err)
         ? setError(err.response?.data.message || "Registration failed.")
