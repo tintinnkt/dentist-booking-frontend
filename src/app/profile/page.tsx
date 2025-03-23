@@ -38,7 +38,7 @@ const Page = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-start space-x-3 text-xl font-bold">
                 <span>Profile Information</span>
-                {user.role != Role_type.ADMIN && <Badge>Admin</Badge>}
+                {user.role === Role_type.ADMIN && <Badge>Admin</Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent>
