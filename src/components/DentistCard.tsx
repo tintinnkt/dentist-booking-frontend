@@ -56,20 +56,24 @@ const DentistCard = ({
           ))}
         </ul>
       </CardContent>
-      <Separator />
-      <CardFooter className="flex justify-end space-x-2">
-        {user?.role === Role_type.ADMIN && (
-          <>
-            <CustomButton useFor="edit" />
-            <CustomButton useFor="delete-dentist" />
-          </>
-        )}
-        <CustomButton
-          useFor="booking"
-          onClick={() => toast.success("ทำการจองแล้ว")}
-          hideTextOnMobile={false}
-        />
-      </CardFooter>
+      {user && (
+        <>
+          <Separator />
+          <CardFooter className="flex justify-end space-x-2">
+            {user?.role === Role_type.ADMIN && (
+              <>
+                <CustomButton useFor="edit" />
+                <CustomButton useFor="delete-dentist" />
+              </>
+            )}
+            <CustomButton
+              useFor="booking"
+              onClick={() => toast.success("ทำการจองแล้ว")}
+              hideTextOnMobile={false}
+            />
+          </CardFooter>
+        </>
+      )}
     </Card>
   );
 };
