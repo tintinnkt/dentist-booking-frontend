@@ -14,22 +14,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/Popover";
 import { BackendRoutes } from "@/config/apiRoutes";
+import { expertiseOptions } from "@/constant/expertise";
 import axios, { AxiosError } from "axios";
 import { Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { CustomButton } from "./CustomButton";
-
-const expertiseOptions = [
-  "Orthodontics",
-  "Pediatric Dentistry",
-  "Endodontics",
-  "Prosthodontics",
-  "Periodontics",
-  "Oral Surgery",
-  "General Dentistry",
-];
 
 export default function CreateDentistForm() {
   const [selectedExpertise, setSelectedExpertise] = useState<Array<string>>([]);

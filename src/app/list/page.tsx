@@ -7,21 +7,12 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Slider } from "@/components/ui/Slider";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
+import { expertiseOptions } from "@/constant/expertise";
 import { useUser } from "@/hooks/useUser";
 import { DentistProps } from "@/types/api/Dentist";
 import axios, { AxiosError } from "axios";
 import { LoaderIcon, XCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-
-const expertiseOptions = [
-  "Orthodontics",
-  "Pediatric Dentistry",
-  "Endodontics",
-  "Prosthodontics",
-  "Periodontics",
-  "Oral Surgery",
-  "General Dentistry",
-];
 
 const Page = () => {
   const [dentists, setDentists] = useState<Array<DentistProps>>([]);
@@ -35,7 +26,9 @@ const Page = () => {
 
   // Filtering states
   const [minExperience, setMinExperience] = useState<number>(0);
-  const [selectedExpertises, setSelectedExpertises] = useState<string[]>([]);
+  const [selectedExpertises, setSelectedExpertises] = useState<Array<string>>(
+    [],
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,7 +61,7 @@ const Page = () => {
 
   const handleFilterChange = (
     newExperience: number,
-    newExpertises: string[],
+    newExpertises: Array<string>,
   ) => {
     setMinExperience(newExperience);
     setSelectedExpertises(newExpertises);
@@ -78,9 +71,9 @@ const Page = () => {
   const filterDentists = (
     term: string,
     experience: number,
-    expertises: string[],
+    expertises: Array<string>,
   ) => {
-    let filtered = dentists.filter((dentist) => {
+    const filtered = dentists.filter((dentist) => {
       const matchesSearch = dentist.name
         .toLowerCase()
         .includes(term.toLowerCase());
