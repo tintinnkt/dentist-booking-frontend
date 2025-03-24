@@ -66,11 +66,10 @@ export default function CreateDentistForm() {
       queryClient.invalidateQueries({ queryKey: ["dentists"] });
       toast.success("Dentist created successfully!");
 
-      // Reset form
       setName("");
       setYearsOfExperience("");
       setSelectedExpertise([]);
-      setIsOpen(false); // Close the popover
+      setIsOpen(false);
     },
     onError: (error) => {
       toast.error(

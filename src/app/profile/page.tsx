@@ -13,6 +13,7 @@ import { FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
 import { User } from "@/types/user";
+import { useQueryClient } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -58,6 +59,7 @@ const MemoizedCard = React.memo(({ user }: { user: User }) => (
 const Page = () => {
   const router = useRouter();
   const { user, setUser } = useUser();
+  const queryClient = useQueryClient();
 
   const handleLogout = async () => {
     const logoutPromise = signOut({ redirect: false, callbackUrl: "/" });
@@ -70,9 +72,9 @@ const Page = () => {
 
     try {
       await logoutPromise;
-
-      setUser(null);
-
+      // Invalidate and remove user queries from cache on logout
+      queryClient.removeQueries({ queryKey: ["userProfile"] });
+      setUser(null as any);
       router.push(FrontendRoutes.DENTIST_LIST);
     } catch (error) {
       console.error("Logout failed:", error);
@@ -98,7 +100,8 @@ const Page = () => {
       <section className="flex w-full justify-center">
         <MemoizedCard user={user} />
       </section>
-      <section className="flex w-full max-w-lg justify-end justify-self-center px-5">
+      <section className="flex w-full max-w-lg justify-end space-x-2 justify-self-center px-5">
+        <CustomButton useFor="edit" />
         <CustomButton
           useFor="logout"
           hideTextOnMobile={false}

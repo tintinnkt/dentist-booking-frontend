@@ -15,7 +15,6 @@ import axios from "axios";
 import { LoaderIcon, XCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// Dentist fetcher function
 const fetchDentists = async (): Promise<Array<DentistProps>> => {
   const response = await axios.get(BackendRoutes.DENTIST);
   if (Array.isArray(response.data.data)) {

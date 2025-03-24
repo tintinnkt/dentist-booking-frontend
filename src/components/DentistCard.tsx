@@ -159,7 +159,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
         <p className="min-w-fit">Years of experiences</p>
         <p className="sm:col-span-2">{dentist.yearsOfExperience}</p>
         <p>Expertises</p>
-        <ul className="list-disc sm:col-span-2">
+        <ul className="list-inside list-disc sm:col-span-2">
           {dentist.areaOfExpertise.map((expertise, idx) => (
             <li key={idx} className="">
               {expertise}
