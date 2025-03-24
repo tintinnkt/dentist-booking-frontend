@@ -37,7 +37,7 @@ export const authOptions: AuthOptions = {
   session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user }) {
-      console.log("JWT callback - token being created:", { ...token, ...user });
+      // console.log("JWT callback - token being created:", { ...token, ...user });
       return { ...token, ...user };
     },
     async session({ session, token, user }) {
