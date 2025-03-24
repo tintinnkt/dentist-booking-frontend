@@ -99,12 +99,11 @@ export default function CreateDentistForm() {
       <PopoverTrigger asChild>
         <CustomButton useFor="create-dentist" />
       </PopoverTrigger>
-      <PopoverContent className="w-sm min-w-fit space-y-3 p-4">
+      <PopoverContent className="mx-3 max-w-screen min-w-fit space-y-3 p-4 sm:w-sm">
         <CardHeader>
           <h2 className="font-semibold">Create New Dentist</h2>
         </CardHeader>
 
-        {/* Name Input */}
         <div>
           <p className="text-sm">Name</p>
           <Input
@@ -115,7 +114,6 @@ export default function CreateDentistForm() {
           />
         </div>
 
-        {/* Years of Experience Input */}
         <div>
           <p className="text-sm">Years of Experience</p>
           <Input
@@ -127,7 +125,6 @@ export default function CreateDentistForm() {
           />
         </div>
 
-        {/* Areas of Expertise Selection */}
         <div>
           <p className="text-sm">Areas of Expertise</p>
           <Popover>
@@ -170,10 +167,9 @@ export default function CreateDentistForm() {
           </Popover>
         </div>
 
-        {/* Create Button */}
         <div className="px-1.5 py-1">
           <CustomButton
-            useFor="create-dentist"
+            useFor="confirm-info"
             onClick={handleCreateDentist}
             disabled={createDentistMutation.isPending}
           >

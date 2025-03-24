@@ -68,37 +68,37 @@ const buttonConfig: Record<string, ButtonConfig> = {
     icon: UserPlusIcon,
   },
   edit: {
-    label: "แก้ไข",
+    label: "Edit",
     variant: "outline",
     icon: PencilIcon,
   },
   "edit-booking": {
-    label: "แก้ไขการจอง",
+    label: "Edit Booking",
     variant: "outline",
     icon: PencilIcon,
   },
   "delete-dentist": {
-    label: "ลบหมอ",
+    label: "Delete Dentist",
     variant: "destructive",
     icon: Trash2Icon,
   },
   "delete-booking": {
-    label: "ลบการจอง",
+    label: "Remove Booking",
     variant: "destructive",
     icon: Trash2Icon,
   },
   "cancel-booking": {
-    label: "ยกเลิกการจอง",
+    label: "Cancel Booking",
     variant: "destructive",
     icon: CalendarX2Icon,
   },
   delete: {
-    label: "ลบ",
+    label: "Delete",
     variant: "destructive",
     icon: Trash2Icon,
   },
   booking: {
-    label: "นัดวันกับหมอ",
+    label: "Book now",
     variant: "default",
     icon: CalendarPlusIcon,
   },
@@ -109,17 +109,17 @@ const buttonConfig: Record<string, ButtonConfig> = {
     placeAt: "end",
   },
   "add-booking-section": {
-    label: "ยืนยันการนัดหมาย",
+    label: "comfirm",
     variant: "outline",
     icon: CalendarCheckIcon,
   },
-  "confirm-edit": {
-    label: "ยืนยันข้อมูล",
-    variant: "secondary",
+  "confirm-info": {
+    label: "Confirm Info",
+    variant: "default",
     icon: FileCheck2Icon,
   },
   cancel: {
-    label: "ยกเลิก",
+    label: "cancel",
     variant: "outline",
     icon: CalendarX2Icon,
   },
@@ -135,7 +135,7 @@ interface CustomButtonProps extends React.ComponentProps<typeof Button> {
   useFor: keyof typeof buttonConfig;
   hideTextOnMobile?: boolean;
   iconProps?: LucideProps;
-  isLoading?: boolean; // Added isLoading prop
+  isLoading?: boolean;
 }
 
 export const CustomButton = ({

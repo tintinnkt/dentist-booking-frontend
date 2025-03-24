@@ -182,10 +182,8 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
     setExpertisePopoverOpen(false);
   };
 
-  // Toggle editing mode
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
-    // Reset form data when cancelling edit
     if (isEditing) {
       setFormData({
         name: dentist.name,
@@ -275,14 +273,14 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full justify-between sm:col-span-2"
+                className="w-full justify-between text-wrap sm:col-span-2"
               >
                 {selectedExpertise.length > 0
                   ? selectedExpertise.join(", ")
                   : "Select expertise"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-2">
+            <PopoverContent className="w-full p-2 text-wrap">
               <Command>
                 <CommandInput placeholder="Search expertise..." />
                 <CommandList>
@@ -340,7 +338,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                       disabled={updateDentist.isPending}
                     />
                     <CustomButton
-                      useFor="confirm-edit"
+                      useFor="confirm-info"
                       onClick={handleSave}
                       isLoading={updateDentist.isPending}
                     />
@@ -350,7 +348,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                 )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <CustomButton useFor="delete-dentist" />
+                    <CustomButton useFor="delete-dentist" hideTextOnMobile />
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -379,7 +377,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
 
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
-                <CustomButton useFor="booking" hideTextOnMobile={false} />
+                <CustomButton useFor="booking" hideTextOnMobile />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <div className="space-y-4 p-3">
@@ -416,6 +414,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
 
                   <div className="pt-2">
                     <CustomButton
+                      hideTextOnMobile={true}
                       useFor="add-booking-section"
                       onClick={() => {
                         if (session?.user && appDate && appTime) {

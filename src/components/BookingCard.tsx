@@ -189,7 +189,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
                 disabled={isUpdating}
               />
               <CustomButton
-                useFor="confirm-edit"
+                useFor="confirm-info"
                 onClick={handleConfirmEdit}
                 isLoading={isUpdating}
               />

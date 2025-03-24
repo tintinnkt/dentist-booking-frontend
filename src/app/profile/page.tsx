@@ -203,7 +203,7 @@ const Page = () => {
               disabled={updateUserMutation.isPending}
             />
             <CustomButton
-              useFor="confirm-edit"
+              useFor="confirm-info"
               onClick={handleSave}
               isLoading={updateUserMutation.isPending}
             />
