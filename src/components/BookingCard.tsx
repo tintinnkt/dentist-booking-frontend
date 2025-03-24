@@ -81,6 +81,25 @@ const BookingCard: React.FC<BookingCardProps> = ({
     handleUpdateAppDate();
   };
 
+  const { mutate: handleDeleteBooking, isPending: isDeleting } = useMutation({
+    mutationFn: async () => {
+      return axios.delete(`${BackendRoutes.BOOKING}/${booking._id}`, {
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      toast.success(`Appointment successfully Deleted.`);
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      toast.error("Error updating the appointment. Please try again.");
+      console.error("Error updating booking:", error);
+    },
+  });
+
   return (
     <Card
       className={twJoin(
@@ -149,7 +168,19 @@ const BookingCard: React.FC<BookingCardProps> = ({
         ) : (
           <CustomButton useFor="edit-booking" onClick={toggleEditMode} />
         )}
-        <CustomButton useFor="cancel-booking" />
+        {isMyBooking ? (
+          <CustomButton
+            useFor="cancel-booking"
+            isLoading={isDeleting}
+            onClick={() => handleDeleteBooking()}
+          />
+        ) : (
+          <CustomButton
+            useFor="delete"
+            isLoading={isDeleting}
+            onClick={() => handleDeleteBooking()}
+          />
+        )}
       </CardFooter>
     </Card>
   );
