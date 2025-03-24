@@ -1,13 +1,25 @@
 "use client";
 import { BackendRoutes } from "@/config/apiRoutes";
+import { timeSlots } from "@/constant/expertise";
 import { DentistProps } from "@/types/api/Dentist";
 import { User } from "@/types/user";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { format } from "date-fns"; // Make sure to install this package if not already
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { ButtonConfigKeys, CustomButton } from "./CustomButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/AlertDialog";
 import { Badge } from "./ui/Badge";
 import { Calendar } from "./ui/Calendar";
 import {
@@ -41,22 +53,6 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   const [appTime, setAppTime] = useState<string>("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { data: session } = useSession();
-
-  const timeSlots = [
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "13:00",
-    "13:30",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-  ];
 
   const handleBooking = async () => {
     if (!appDate) {
@@ -96,7 +92,6 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
         },
       );
 
-      // Handle success
       toast.success("Appointment booked successfully");
       setAppDate(undefined);
       setAppTime("");
@@ -113,8 +108,20 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
     }
   };
 
-  const handleDeleteDentist = (dentist_id: string) => {
-    axios.delete(`${BackendRoutes.DENTIST}/${dentist_id}`);
+  const handleDeleteDentist = () => {
+    axios
+      .delete(`${BackendRoutes.DENTIST}/${dentist._id}`, {
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+      })
+      .then((response) => {
+        toast.success("Dentist deleted successfully!");
+      })
+      .catch((error) => {
+        console.error((error as AxiosError).message);
+        toast.error("Failed to delete dentist. Please try again!");
+      });
   };
 
   return (
@@ -149,10 +156,29 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
             {isAdmin && (
               <div className="flex space-x-2 pt-2">
                 <CustomButton useFor="edit" />
-                <CustomButton
-                  useFor="delete-dentist"
-                  onClick={() => handleDeleteDentist(dentist.id)}
-                />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <CustomButton useFor="delete-dentist" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete{" "}
+                      <Badge variant={"destructive"}>{dentist.name}</Badge> and
+                      remove data from our servers.
+                    </AlertDialogDescription>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteDentist}>
+                        Continue
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             )}
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
