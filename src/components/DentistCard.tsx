@@ -42,8 +42,14 @@ import {
 } from "./ui/Command";
 import { Input } from "./ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/Select";
 import { Separator } from "./ui/Separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 
 interface DentistCardProps {
   dentist: DentistProps;
@@ -413,8 +419,18 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                       useFor="add-booking-section"
                       onClick={() => {
                         if (session?.user && appDate && appTime) {
+                          const combinedDateTime = combineDateAndTime(
+                            appDate,
+                            appTime,
+                          );
+
+                          if (isNaN(combinedDateTime.getTime())) {
+                            toast.error("Invalid date or time");
+                            return;
+                          }
+
                           handleBooking.mutate({
-                            apptDate: appDate,
+                            apptDate: combinedDateTime,
                             user: user._id,
                             dentist: dentist._id,
                           });
@@ -442,3 +458,10 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
 };
 
 export default DentistCard;
+
+export function combineDateAndTime(date: Date, time: string): Date {
+  const dateString = date.toISOString().split("T")[0];
+  const combinedDateTimeString = `${dateString}T${time}:00`;
+  const combinedDateTime = new Date(combinedDateTimeString);
+  return combinedDateTime;
+}
