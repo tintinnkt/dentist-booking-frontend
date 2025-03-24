@@ -45,7 +45,8 @@ export const useUser = () => {
 
   // Mutation for updating user data
   const { mutate: setUser } = useMutation({
-    mutationFn: (newUserData: User) => {
+    mutationFn: (newUserData: User | null) => {
+      // Updated to accept null
       // TODO: Possibly could implement an API call to update the user here
       // For now, this just updates the cache
       return Promise.resolve(newUserData);
