@@ -26,7 +26,7 @@ import { CustomButton } from "./CustomButton";
 interface CreateDentistData {
   name: string;
   yearsOfExperience: number;
-  areaOfExpertise: string[];
+  areaOfExpertise: Array<string>;
 }
 
 export default function CreateDentistForm() {

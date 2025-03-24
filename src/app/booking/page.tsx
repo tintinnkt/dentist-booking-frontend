@@ -13,8 +13,8 @@ import { LoaderIcon } from "react-hot-toast";
 
 const Page = () => {
   const [myBooking, setMyBooking] = useState<Booking | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Array<Booking>>([]);
+  const [filteredBookings, setFilteredBookings] = useState<Array<Booking>>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { data: session } = useSession();
   const { user } = useUser();

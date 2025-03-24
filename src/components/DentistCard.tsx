@@ -70,7 +70,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
     yearsOfExperience: dentist.yearsOfExperience,
     areaOfExpertise: dentist.areaOfExpertise,
   });
-  const [selectedExpertise, setSelectedExpertise] = useState<string[]>(
+  const [selectedExpertise, setSelectedExpertise] = useState<Array<string>>(
     dentist.areaOfExpertise || [],
   );
   const [expertisePopoverOpen, setExpertisePopoverOpen] = useState(false);
