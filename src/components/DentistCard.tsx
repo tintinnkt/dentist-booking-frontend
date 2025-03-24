@@ -1,8 +1,5 @@
 "use client";
-import { useUser } from "@/hooks/useUser";
 import { DentistProps } from "@/types/api/Dentist";
-
-import { Role_type } from "@/config/role";
 import toast from "react-hot-toast";
 import { ButtonConfigKeys, CustomButton } from "./CustomButton";
 import { Badge } from "./ui/Badge";
@@ -20,6 +17,8 @@ interface DentistCardProps {
   onAction?: () => void;
   isLoaded?: boolean;
   actionButtonUseFor?: ButtonConfigKeys;
+  isAdmin: boolean;
+  userLoggedIn: boolean;
 }
 
 const DentistCard = ({
@@ -27,9 +26,9 @@ const DentistCard = ({
   isLoaded = true,
   onAction,
   actionButtonUseFor,
+  isAdmin,
+  userLoggedIn,
 }: DentistCardProps) => {
-  const { user, loading, error } = useUser();
-
   return (
     <Card className="w-full max-w-xl rounded-xl">
       <CardHeader>
@@ -56,11 +55,11 @@ const DentistCard = ({
           ))}
         </ul>
       </CardContent>
-      {user && (
+      {userLoggedIn && (
         <>
           <Separator />
           <CardFooter className="flex justify-end space-x-2">
-            {user?.role === Role_type.ADMIN && (
+            {isAdmin && (
               <>
                 <CustomButton useFor="edit" />
                 <CustomButton useFor="delete-dentist" />
