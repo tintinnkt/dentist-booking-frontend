@@ -12,49 +12,11 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
-import { User } from "@/types/user";
 import { useQueryClient } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React from "react";
 import toast from "react-hot-toast";
-
-const MemoizedCard = React.memo(({ user }: { user: User }) => (
-  <Card className="w-lg max-w-full p-5 shadow-xl">
-    <CardHeader>
-      <CardTitle className="flex items-center justify-start space-x-3 text-xl font-bold">
-        <span>Profile Information</span>
-        {user.role === Role_type.ADMIN && <Badge>Admin</Badge>}
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-4">
-        <p>
-          <strong>Name:</strong> {user.name}
-        </p>
-        <p>
-          <strong>Email:</strong> {user.email}
-        </p>
-        <p>
-          <strong>Phone:</strong> {user.tel}
-        </p>
-        {user.role === "admin" && (
-          <p>
-            <strong>Role:</strong> {user.role}
-          </p>
-        )}
-        <p>
-          <strong>Account Created: </strong>
-          {new Date(user.createdAt).toLocaleDateString("en-GB")}
-        </p>
-      </div>
-    </CardContent>
-    <CardFooter>
-      <p className="text-sm text-gray-500">ID: {user._id}</p>
-    </CardFooter>
-  </Card>
-));
 
 const Page = () => {
   const router = useRouter();
@@ -98,7 +60,38 @@ const Page = () => {
         <p className="text-3xl font-semibold">Your Profile</p>
       </section>
       <section className="flex w-full justify-center">
-        <MemoizedCard user={user} />
+        <Card className="w-lg max-w-full p-5 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-start space-x-3 text-xl font-bold">
+              <span>Profile Information</span>
+              {user.role === Role_type.ADMIN && <Badge>Admin</Badge>}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <strong>Name:</strong>
+              <p>{user.name}</p>
+              <strong>Email:</strong>
+              <p>{user.email}</p>
+              <strong>Phone:</strong>
+              <p>{user.tel}</p>
+              {user.role === "admin" && (
+                <>
+                  <strong>Role:</strong>
+
+                  <p>{user.role}</p>
+                </>
+              )}
+              <p>
+                <strong>Account Created:</strong>
+              </p>
+              <p>{new Date(user.createdAt).toLocaleDateString("en-GB")}</p>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <p className="text-sm text-gray-500">ID: {user._id}</p>
+          </CardFooter>
+        </Card>
       </section>
       <section className="flex w-full max-w-lg justify-end space-x-2 justify-self-center px-5">
         <CustomButton useFor="edit" />
