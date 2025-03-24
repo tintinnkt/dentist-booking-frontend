@@ -24,7 +24,7 @@ import { Separator } from "./ui/Separator";
 
 const NavBar = () => {
   const router = useRouter();
-  const { user, loading } = useUser();
+  const { user } = useUser();
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-row items-center justify-between rounded-b-2xl bg-red-400 bg-gradient-to-r from-blue-300 px-4 py-1.5 shadow-lg sm:w-3/5">

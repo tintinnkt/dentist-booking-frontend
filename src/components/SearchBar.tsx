@@ -1,9 +1,9 @@
 import { CustomButton } from "./CustomButton";
 import { Input } from "./ui/Input";
 
-type SearchBarProps = React.InputHTMLAttributes<HTMLInputElement> & {
+interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onSearch?: (value: string) => void;
-};
+}
 
 export const SearchBar = ({ onSearch, ...props }: SearchBarProps) => {
   const handleSearch = (e: React.FormEvent) => {

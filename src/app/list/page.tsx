@@ -13,7 +13,7 @@ import { DentistProps } from "@/types/api/Dentist";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { LoaderIcon, XCircleIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const fetchDentists = async (): Promise<Array<DentistProps>> => {
   const response = await axios.get(BackendRoutes.DENTIST);
@@ -62,30 +62,28 @@ const Page = () => {
     filterDentists(searchTerm, newExperience, newExpertises);
   };
 
-  const filterDentists = (
-    term: string,
-    experience: number,
-    expertises: Array<string>,
-  ) => {
-    const filtered = dentists.filter((dentist) => {
-      const matchesSearch = dentist.name
-        .toLowerCase()
-        .includes(term.toLowerCase());
-      const matchesExperience = dentist.yearsOfExperience >= experience;
-      const matchesExpertise =
-        expertises.length === 0 ||
-        dentist.areaOfExpertise.some((exp) => expertises.includes(exp));
-      return matchesSearch && matchesExperience && matchesExpertise;
-    });
-    setFilteredDentists(filtered);
-  };
+  const filterDentists = useCallback(
+    (term: string, experience: number, expertises: Array<string>) => {
+      const filtered = dentists.filter((dentist) => {
+        const matchesSearch = dentist.name
+          .toLowerCase()
+          .includes(term.toLowerCase());
+        const matchesExperience = dentist.yearsOfExperience >= experience;
+        const matchesExpertise =
+          expertises.length === 0 ||
+          dentist.areaOfExpertise.some((exp) => expertises.includes(exp));
+        return matchesSearch && matchesExperience && matchesExpertise;
+      });
+      setFilteredDentists(filtered);
+    },
+    [dentists],
+  );
 
-  // Apply filters whenever dentists data or filter criteria change
   useEffect(() => {
     if (dentists.length > 0) {
       filterDentists(searchTerm, minExperience, selectedExpertises);
     }
-  }, [searchTerm, dentists, minExperience, selectedExpertises]);
+  }, [searchTerm, dentists, minExperience, selectedExpertises, filterDentists]);
 
   if (error)
     return (

@@ -33,14 +33,12 @@ const Page = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   // Login handler
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
-    // Create a loading toast that you can dismiss later
     const toastId = toast.loading("Logging in...");
 
     try {
@@ -51,16 +49,13 @@ const Page = () => {
       });
 
       if (result?.error) {
-        // Update the toast to show an error
         toast.error("Invalid credentials. Please try again.", { id: toastId });
         setError(result.error);
       } else {
-        // Update the toast to show success
         toast.success("Logged in successfully!", { id: toastId });
         router.push(FrontendRoutes.DENTIST_LIST);
       }
-    } catch (err) {
-      // In case of a network error or other exception
+    } catch {
       toast.error("Login failed. Please try again.", { id: toastId });
       setError("An unexpected error occurred.");
     }
@@ -94,7 +89,6 @@ const Page = () => {
     try {
       await registerPromise;
 
-      // Automatically log in the user after successful registration
       const loginPromise = signIn("credentials", {
         redirect: false,
         email: regEmail,
@@ -114,9 +108,9 @@ const Page = () => {
       } else {
         router.push(FrontendRoutes.DENTIST_LIST);
       }
-    } catch (err) {
-      axios.isAxiosError(err)
-        ? setError(err.response?.data.message || "Registration failed.")
+    } catch (error) {
+      axios.isAxiosError(error)
+        ? setError(error.response?.data.message || "Registration failed.")
         : setError("An unexpected error occurred.");
     }
   };
@@ -159,7 +153,6 @@ const Page = () => {
                   />
                 </div>
                 {error && <p className="text-red-500">{error}</p>}
-                {success && <p className="text-green-500">{success}</p>}
               </CardContent>
               <CardFooter className="py-3">
                 <InteractiveHoverButton type="submit">
@@ -229,9 +222,6 @@ const Page = () => {
                   />
                 </div>
                 {error && <p className="text-red-500">{error}</p>}
-                {success && !error && (
-                  <p className="text-green-500">{success}</p>
-                )}
               </CardContent>
               <CardFooter className="py-3">
                 <InteractiveHoverButton type="submit">
