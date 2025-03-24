@@ -96,7 +96,7 @@ const Page = () => {
 
   if (isLoading)
     return (
-      <p className="place-items-center py-10 text-gray-500">
+      <p className="flex items-center justify-center gap-3 pt-10">
         <LoaderIcon /> Loading...
       </p>
     );

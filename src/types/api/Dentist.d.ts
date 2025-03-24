@@ -5,11 +5,17 @@ export interface DentistProps {
   areaOfExpertise: Array<string>;
   id: string;
 }
+
+interface BookingUserProps {
+  _id: string;
+  name: string;
+}
+
 export interface Booking {
   _id: string;
   apptDate: string;
-  user: string;
-  dentist: DentistProps;
+  user: BookingUserProps;
+  dentist: DentistProps | null;
   createdAt: string;
   __v: number;
 }

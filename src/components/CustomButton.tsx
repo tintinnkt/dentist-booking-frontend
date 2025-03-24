@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileCheck2Icon,
+  Loader2,
   LogOutIcon,
   LucideIcon,
   LucideProps,
@@ -71,6 +72,11 @@ const buttonConfig: Record<string, ButtonConfig> = {
     variant: "outline",
     icon: PencilIcon,
   },
+  "edit-booking": {
+    label: "แก้ไขการจอง",
+    variant: "outline",
+    icon: PencilIcon,
+  },
   "delete-dentist": {
     label: "ลบหมอ",
     variant: "destructive",
@@ -107,10 +113,15 @@ const buttonConfig: Record<string, ButtonConfig> = {
     variant: "outline",
     icon: CalendarCheckIcon,
   },
-  "comfirm-edit": {
-    label: "ยินยันข้อมูล",
+  "confirm-edit": {
+    label: "ยืนยันข้อมูล",
     variant: "secondary",
     icon: FileCheck2Icon,
+  },
+  cancel: {
+    label: "ยกเลิก",
+    variant: "outline",
+    icon: CalendarX2Icon,
   },
 };
 export type ButtonConfigKeys =
@@ -124,12 +135,15 @@ interface CustomButtonProps extends React.ComponentProps<typeof Button> {
   useFor: keyof typeof buttonConfig;
   hideTextOnMobile?: boolean;
   iconProps?: LucideProps;
+  isLoading?: boolean; // Added isLoading prop
 }
 
 export const CustomButton = ({
   useFor,
   hideTextOnMobile,
   className,
+  isLoading,
+  disabled,
   ...props
 }: CustomButtonProps) => {
   const config = buttonConfig[useFor];
@@ -145,18 +159,27 @@ export const CustomButton = ({
         className,
       )}
       variant={config?.variant || "default"}
+      disabled={isLoading || disabled}
       {...props}
     >
-      {config?.placeAt !== "end" && Icon && (
-        <Icon className="size-5" {...config?.iconProps} />
-      )}
-      {config?.label && (
-        <span className={twJoin(hideTextOnMobile ? "hidden sm:block" : "")}>
-          {typeof config?.label === "string" ? config?.label : config?.label.md}
-        </span>
-      )}
-      {config?.placeAt === "end" && Icon && (
-        <Icon className="size-5" {...config?.iconProps} />
+      {isLoading ? (
+        <Loader2 className="size-5 animate-spin" />
+      ) : (
+        <>
+          {config?.placeAt !== "end" && Icon && (
+            <Icon className="size-5" {...config?.iconProps} />
+          )}
+          {config?.label && (
+            <span className={twJoin(hideTextOnMobile ? "hidden sm:block" : "")}>
+              {typeof config?.label === "string"
+                ? config?.label
+                : config?.label.md}
+            </span>
+          )}
+          {config?.placeAt === "end" && Icon && (
+            <Icon className="size-5" {...config?.iconProps} />
+          )}
+        </>
       )}
     </Button>
   );
