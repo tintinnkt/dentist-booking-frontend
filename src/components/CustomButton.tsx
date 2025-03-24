@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import {
+  CalendarCheckIcon,
   CalendarPlusIcon,
   CalendarX2Icon,
   Check,
@@ -99,6 +100,11 @@ const buttonConfig: Record<string, ButtonConfig> = {
     variant: "destructive",
     icon: LogOutIcon,
     placeAt: "end",
+  },
+  "add-booking-section": {
+    label: "ยืนยันการนัดหมาย",
+    variant: "outline",
+    icon: CalendarCheckIcon,
   },
 };
 export type ButtonConfigKeys =

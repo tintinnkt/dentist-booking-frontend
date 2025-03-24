@@ -1,3 +1,4 @@
+"use client";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { User } from "@/types/user";
 import axios, { AxiosError } from "axios";

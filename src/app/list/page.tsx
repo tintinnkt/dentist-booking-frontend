@@ -41,17 +41,14 @@ const Page = () => {
     fetchData();
   }, []);
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Handle search submission
   const handleSearch = (value: string) => {
     filterDentists(value);
   };
 
-  // Filter dentists based on search term
   const filterDentists = (term: string) => {
     if (!term.trim()) {
       setFilteredDentists(dentists);
@@ -64,7 +61,6 @@ const Page = () => {
     setFilteredDentists(filtered);
   };
 
-  // Filter dentists whenever search term changes
   useEffect(() => {
     filterDentists(searchTerm);
   }, [searchTerm, dentists]);
@@ -84,7 +80,7 @@ const Page = () => {
     );
 
   return (
-    <main className="mx-auto my-10 max-w-screen-xl px-8">
+    <main className="mx-auto my-10 max-w-screen-xl px-4 sm:px-8">
       <div className="gap-x-10 md:grid md:grid-cols-11">
         <section className="col-span-2 hidden md:block" />
         <section className="flex flex-col items-center space-x-2.5 gap-y-6 md:col-span-9 md:flex-row md:justify-between">
@@ -100,14 +96,14 @@ const Page = () => {
         </section>
         <section className="mt-5 sm:col-span-4 lg:col-span-3">hello</section>
         <section className="col-span-7 my-10 flex h-full w-full flex-col justify-between gap-y-4 md:my-0 lg:col-span-8">
-          <div className="col-span-8 w-full space-y-6 p-5">
+          <div className="col-span-8 w-full space-y-6 sm:p-5">
             {filteredDentists.length > 0 ? (
               filteredDentists.map((dentist, idx) => (
                 <DentistCard
                   key={idx}
                   dentist={dentist}
-                  isAdmin={user?.role == Role_type.ADMIN}
-                  userLoggedIn={!!user}
+                  isAdmin={user?.role == Role_type.ADMIN} 
+                  user={user}
                 />
               ))
             ) : (
