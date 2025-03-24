@@ -144,9 +144,9 @@ const BookingCard: React.FC<BookingCardProps> = ({
       )}
       <CardContent className="grid w-full grid-cols-2 space-y-3.5 sm:grid-cols-3">
         <p>Owner</p>
-        <p className="col-span-2 px-1">{booking.user.name}</p>
+        <p className="col-span-1 px-1 sm:col-span-2">{booking.user.name}</p>
         <p>Dentist</p>
-        <p className="col-span-2 px-1">{booking.dentist?.name}</p>
+        <p className="col-span-1 px-1 sm:col-span-2">{booking.dentist?.name}</p>
         <p>Date</p>
 
         <span>{format(new Date(booking.apptDate), "PP | HH:mm")}</span>
