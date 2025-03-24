@@ -1,10 +1,11 @@
 "use client";
 import { BackendRoutes } from "@/config/apiRoutes";
-import { expertiseOptions } from "@/constant/expertise";
+import { expertiseOptions, timeSlots } from "@/constant/expertise";
 import { DentistProps } from "@/types/api/Dentist";
 import { User } from "@/types/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
+import { format } from "date-fns";
 import { Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -24,6 +25,7 @@ import {
 } from "./ui/AlertDialog";
 import { Badge } from "./ui/Badge";
 import { Button } from "./ui/Button";
+import { Calendar } from "./ui/Calendar";
 import {
   Card,
   CardContent,
@@ -41,6 +43,7 @@ import {
 import { Input } from "./ui/Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/Popover";
 import { Separator } from "./ui/Separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/Select";
 
 interface DentistCardProps {
   dentist: DentistProps;
@@ -69,7 +72,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   const queryClient = useQueryClient();
 
   // Booking mutation (unchanged)
-  const bookingMutation = useMutation({
+  const handleBooking = useMutation({
     mutationFn: async (appointmentData: {
       apptDate: Date;
       user: string;
@@ -367,9 +370,69 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                 </AlertDialog>
               </div>
             )}
-            {/* Booking popover remains unchanged */}
+
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              {/* ... (previous booking popover code) ... */}
+              <PopoverTrigger asChild>
+                <CustomButton useFor="booking" hideTextOnMobile={false} />
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <div className="space-y-4 p-3">
+                  <h3 className="font-medium">
+                    Select Appointment Date & Time
+                  </h3>
+                  <Calendar
+                    mode="single"
+                    selected={appDate}
+                    onSelect={setAppDate}
+                    disabled={(date) => date < new Date()}
+                    className="rounded-md border"
+                  />
+
+                  {appDate && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">
+                        Time for {format(appDate, "EEEE, MMMM do")}
+                      </h4>
+                      <Select value={appTime} onValueChange={setAppTime}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeSlots.map((time) => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <CustomButton
+                      useFor="add-booking-section"
+                      onClick={() => {
+                        if (session?.user && appDate && appTime) {
+                          handleBooking.mutate({
+                            apptDate: appDate,
+                            user: user._id,
+                            dentist: dentist._id,
+                          });
+                        } else {
+                          toast.error("Please select a date and time");
+                        }
+                      }}
+                      disabled={!appDate || !appTime || handleBooking.isPending}
+                      className="w-full"
+                      isLoading={handleBooking.isPending}
+                    >
+                      {handleBooking.isPending
+                        ? "Booking..."
+                        : "Book Appointment"}
+                    </CustomButton>
+                  </div>
+                </div>
+              </PopoverContent>
             </Popover>
           </CardFooter>
         </>
