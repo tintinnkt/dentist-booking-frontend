@@ -6,6 +6,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  FileCheck2Icon,
   LogOutIcon,
   LucideIcon,
   LucideProps,
@@ -105,6 +106,11 @@ const buttonConfig: Record<string, ButtonConfig> = {
     label: "ยืนยันการนัดหมาย",
     variant: "outline",
     icon: CalendarCheckIcon,
+  },
+  "comfirm-edit": {
+    label: "ยินยันข้อมูล",
+    variant: "secondary",
+    icon: FileCheck2Icon,
   },
 };
 export type ButtonConfigKeys =

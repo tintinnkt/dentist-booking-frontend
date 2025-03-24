@@ -8,20 +8,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { FrontendRoutes } from "@/config/apiRoutes";
+import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { LoaderCircleIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const Page = () => {
   const router = useRouter();
   const { user, setUser } = useUser();
   const queryClient = useQueryClient();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedUser, setEditedUser] = useState({
+    name: user?.name,
+    tel: user?.tel,
+  });
+  useEffect(() => {
+    if (user) {
+      setEditedUser({
+        name: user?.name || "",
+        tel: user?.tel || "",
+      });
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     const logoutPromise = signOut({ redirect: false, callbackUrl: "/" });
@@ -43,6 +60,43 @@ const Page = () => {
       router.push(FrontendRoutes.DENTIST_LIST);
     }
   };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditedUser((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const toggleEditMode = () => {
+    if (isEditing) {
+      // Save the edited data, you can add further logic to update the backend
+      console.log("Saving data", editedUser);
+    }
+    setIsEditing((prev) => !prev);
+  };
+
+  const { mutate: updateUser } = useMutation({
+    mutationFn: async () => {
+      return axios.put(
+        BackendRoutes.UPDATE_USER,
+        {
+          name: editedUser.name,
+          tel: editedUser.tel,
+        },
+        {
+          headers: {
+            // TODO: add token here
+          },
+        },
+      );
+    },
+    onSuccess: () => {
+      setIsEditing(false);
+      //TODO: add toast for noti (tell user that update successful)
+    },
+  });
 
   if (!user) {
     return (
@@ -70,15 +124,35 @@ const Page = () => {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <strong>Name:</strong>
-              <p>{user.name}</p>
+              {isEditing ? (
+                <Input
+                  type="text"
+                  value={editedUser.name}
+                  onChange={handleInputChange}
+                  className="border p-2"
+                />
+              ) : (
+                <p>{user.name}</p>
+              )}
+
               <strong>Email:</strong>
               <p>{user.email}</p>
+
               <strong>Phone:</strong>
-              <p>{user.tel}</p>
+              {isEditing ? (
+                <Input
+                  type="text"
+                  value={editedUser.tel}
+                  onChange={handleInputChange}
+                  className="border p-2"
+                />
+              ) : (
+                <p>{user.tel}</p>
+              )}
+
               {user.role === "admin" && (
                 <>
                   <strong>Role:</strong>
-
                   <p>{user.role}</p>
                 </>
               )}
@@ -94,7 +168,11 @@ const Page = () => {
         </Card>
       </section>
       <section className="flex w-full max-w-lg justify-end space-x-2 justify-self-center px-5">
-        <CustomButton useFor="edit" />
+        {isEditing ? (
+          <CustomButton useFor="comfirm-edit" />
+        ) : (
+          <CustomButton useFor="edit" onClick={toggleEditMode} />
+        )}
         <CustomButton
           useFor="logout"
           hideTextOnMobile={false}
