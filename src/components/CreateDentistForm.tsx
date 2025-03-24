@@ -32,7 +32,7 @@ const expertiseOptions = [
 ];
 
 export default function CreateDentistForm() {
-  const [selectedExpertise, setSelectedExpertise] = useState<string[]>([]);
+  const [selectedExpertise, setSelectedExpertise] = useState<Array<string>>([]);
   const [name, setName] = useState("");
   const [yearsOfExperience, setYearsOfExperience] = useState<number | "">("");
   const { data: session } = useSession();
