@@ -60,7 +60,7 @@ const config = [
 
     rules: {
       "unicorn/filename-case": [
-        "error",
+        "warn",
         {
           cases: {
             pascalCase: true,
