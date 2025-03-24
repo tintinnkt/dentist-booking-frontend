@@ -14,11 +14,12 @@ import { LoaderIcon } from "react-hot-toast";
 const Page = () => {
   const [myBooking, setMyBooking] = useState<Booking | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const { data: session } = useSession();
   const { user } = useUser();
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch bookings based on the user role
   const fetchBookings = async () => {
     try {
       const response = await axios.get(BackendRoutes.BOOKING, {
@@ -26,15 +27,16 @@ const Page = () => {
           Authorization: `Bearer ${session?.user.token}`,
         },
       });
-
       if (user?.role === Role_type.USER) {
         const userBooking = response.data.data.find(
           (booking: Booking) => booking.user._id === user._id,
         );
         setMyBooking(userBooking || null);
         setBookings([]);
+        setFilteredBookings([]);
       } else if (user?.role === Role_type.ADMIN) {
         setBookings(response.data.data);
+        setFilteredBookings(response.data.data);
         setMyBooking(null);
       }
       setLoading(false);
@@ -44,11 +46,31 @@ const Page = () => {
     }
   };
 
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+
+    const filtered = bookings.filter((booking) => {
+      const lowercasedSearchTerm = value.toLowerCase().trim();
+
+      const ownerNameMatch = booking.user.name
+        .toLowerCase()
+        .includes(lowercasedSearchTerm);
+
+      const dentistNameMatch = booking.dentist?.name
+        ?.toLowerCase()
+        .includes(lowercasedSearchTerm);
+
+      return ownerNameMatch || dentistNameMatch;
+    });
+
+    setFilteredBookings(filtered);
+  };
+
   useEffect(() => {
     if (user?._id) {
       fetchBookings();
     }
-  }, [user?._id, bookings]);
+  }, [user?._id]);
 
   if (loading) {
     return (
@@ -63,7 +85,6 @@ const Page = () => {
       {myBooking ? (
         <section className="col-span-1 flex w-full flex-col items-center pt-10 pl-5">
           <h1 className="p-4 text-3xl font-bold">My Booking</h1>
-
           <BookingCard isMyBooking booking={myBooking} />
         </section>
       ) : user.role == Role_type.USER ? (
@@ -80,14 +101,18 @@ const Page = () => {
         <></>
       )}
 
-      {user.role == Role_type.ADMIN && bookings ? (
+      {user.role == Role_type.ADMIN && bookings.length > 0 ? (
         <section className="flex w-full flex-col place-items-center items-center justify-center py-3 pr-5">
           <div className="flex w-full items-center justify-center space-x-4 py-4">
             <h1 className="text-2xl font-bold">Bookings</h1>
-            <SearchBar />
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              onSearch={() => handleSearch(searchTerm)}
+            />
           </div>
           <ul className="flex w-full grid-cols-2 flex-col items-center justify-center space-y-3">
-            {bookings.map((booking) => (
+            {filteredBookings.map((booking) => (
               <li key={booking._id}>
                 <BookingCard booking={booking} />
               </li>
