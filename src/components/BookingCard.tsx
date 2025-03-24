@@ -2,18 +2,15 @@
 
 import { BackendRoutes } from "@/config/apiRoutes";
 import { timeSlots } from "@/constant/expertise";
-import { cn } from "@/lib/utils";
 import { Booking } from "@/types/api/Dentist";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
 import { CustomButton } from "./CustomButton";
-import { Button } from "./ui/Button";
 import { Calendar } from "./ui/Calendar";
 import {
   Card,
@@ -152,33 +149,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
         <p className="col-span-2 px-1">{booking.dentist?.name}</p>
         <p>Date</p>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !booking.apptDate && "text-muted-foreground",
-              )}
-            >
-              <CalendarIcon />
-              {booking.apptDate ? (
-                format(new Date(booking.apptDate), "PP | HH:mm")
-              ) : (
-                <span>Pick a date</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent>
-            <Calendar
-              mode="single"
-              selected={new Date(booking.apptDate)}
-              month={new Date(booking.apptDate)}
-              className="col-span-3 mt-4"
-              disabled
-            />
-          </PopoverContent>
-        </Popover>
+        <span>{format(new Date(booking.apptDate), "PP | HH:mm")}</span>
       </CardContent>
       <Separator />
       <CardFooter className="flex justify-end space-x-2">
