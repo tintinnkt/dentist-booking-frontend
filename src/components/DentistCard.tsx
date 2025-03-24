@@ -3,8 +3,9 @@ import { BackendRoutes } from "@/config/apiRoutes";
 import { timeSlots } from "@/constant/expertise";
 import { DentistProps } from "@/types/api/Dentist";
 import { User } from "@/types/user";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-import { format } from "date-fns"; // Make sure to install this package if not already
+import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -53,6 +54,59 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   const [appTime, setAppTime] = useState<string>("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  // Booking mutation
+  const bookingMutation = useMutation({
+    mutationFn: async (appointmentData: {
+      apptDate: Date;
+      user: string;
+      dentist: string;
+    }) => {
+      return axios.post(BackendRoutes.BOOKING, appointmentData, {
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("Appointment booked successfully");
+      setAppDate(undefined);
+      setAppTime("");
+      setPopoverOpen(false);
+    },
+    onError: (error) => {
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.message || "Failed to book appointment";
+        toast.error(errorMessage);
+      } else {
+        toast.error("An unexpected error occurred");
+        console.error(error);
+      }
+    },
+  });
+
+  // Delete dentist mutation
+  const deleteDentistMutation = useMutation({
+    mutationFn: async () => {
+      return axios.delete(`${BackendRoutes.DENTIST}/${dentist._id}`, {
+        headers: {
+          Authorization: `Bearer ${session?.user.token}`,
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("Dentist deleted successfully!");
+      // Invalidate and refetch dentists query to update UI
+      queryClient.invalidateQueries({ queryKey: ["dentists"] });
+    },
+    onError: (error) => {
+      console.error((error as AxiosError).message);
+      toast.error("Failed to delete dentist. Please try again!");
+    },
+  });
 
   const handleBooking = async () => {
     if (!appDate) {
@@ -71,57 +125,20 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
       return;
     }
 
-    try {
-      // Create a combined date and time
-      const [hours, minutes] = appTime.split(":").map(Number);
-      const appointmentDateTime = new Date(appDate);
-      appointmentDateTime.setHours(hours, minutes);
+    // Create a combined date and time
+    const [hours, minutes] = appTime.split(":").map(Number);
+    const appointmentDateTime = new Date(appDate);
+    appointmentDateTime.setHours(hours, minutes);
 
-      const response = await axios.post(
-        BackendRoutes.BOOKING,
-        {
-          apptDate: appointmentDateTime,
-          user: user._id,
-          dentist: dentist.id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${session?.user.token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      toast.success("Appointment booked successfully");
-      setAppDate(undefined);
-      setAppTime("");
-      setPopoverOpen(false);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const errorMessage =
-          error.response?.data?.message || "Failed to book appointment";
-        toast.error(errorMessage);
-      } else {
-        toast.error("An unexpected error occurred");
-        console.error(error);
-      }
-    }
+    bookingMutation.mutate({
+      apptDate: appointmentDateTime,
+      user: user._id,
+      dentist: dentist.id,
+    });
   };
 
   const handleDeleteDentist = () => {
-    axios
-      .delete(`${BackendRoutes.DENTIST}/${dentist._id}`, {
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      })
-      .then((response) => {
-        toast.success("Dentist deleted successfully!");
-      })
-      .catch((error) => {
-        console.error((error as AxiosError).message);
-        toast.error("Failed to delete dentist. Please try again!");
-      });
+    deleteDentistMutation.mutate();
   };
 
   return (
@@ -173,8 +190,13 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                     </AlertDialogDescription>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteDentist}>
-                        Continue
+                      <AlertDialogAction
+                        onClick={handleDeleteDentist}
+                        disabled={deleteDentistMutation.isPending}
+                      >
+                        {deleteDentistMutation.isPending
+                          ? "Deleting..."
+                          : "Continue"}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -222,9 +244,15 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                     <CustomButton
                       useFor="add-booking-section"
                       onClick={handleBooking}
-                      disabled={!appDate || !appTime}
+                      disabled={
+                        !appDate || !appTime || bookingMutation.isPending
+                      }
                       className="w-full"
-                    />
+                    >
+                      {bookingMutation.isPending
+                        ? "Booking..."
+                        : "Book Appointment"}
+                    </CustomButton>
                   </div>
                 </div>
               </PopoverContent>

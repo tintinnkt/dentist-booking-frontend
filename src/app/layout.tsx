@@ -1,5 +1,6 @@
 import NavBar from "@/components/NavBar";
 import NextAuthProvider from "@/providers/NextAuthProvider";
+import { TanstackQueryProvider } from "@/providers/TanstackQueryProvider";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -33,11 +34,13 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen w-full flex-col items-center antialiased`}
       >
-        <NextAuthProvider session={session}>
-          <NavBar />
-          <Toaster position="bottom-right" />
-          <main className="w-full">{children}</main>
-        </NextAuthProvider>
+        <TanstackQueryProvider>
+          <NextAuthProvider session={session}>
+            <NavBar />
+            <Toaster position="bottom-right" />
+            <main className="w-full">{children}</main>
+          </NextAuthProvider>
+        </TanstackQueryProvider>
       </body>
     </html>
   );

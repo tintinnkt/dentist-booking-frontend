@@ -10,18 +10,34 @@ import { Role_type } from "@/config/role";
 import { expertiseOptions } from "@/constant/expertise";
 import { useUser } from "@/hooks/useUser";
 import { DentistProps } from "@/types/api/Dentist";
-import axios, { AxiosError } from "axios";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { LoaderIcon, XCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// Dentist fetcher function
+const fetchDentists = async (): Promise<Array<DentistProps>> => {
+  const response = await axios.get(BackendRoutes.DENTIST);
+  if (Array.isArray(response.data.data)) {
+    return response.data.data;
+  }
+  throw new Error("Failed to fetch dentists data");
+};
+
 const Page = () => {
-  const [dentists, setDentists] = useState<Array<DentistProps>>([]);
+  const {
+    data: dentists = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["dentists"],
+    queryFn: fetchDentists,
+  });
+
   const [filteredDentists, setFilteredDentists] = useState<Array<DentistProps>>(
     [],
   );
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
 
   // Filtering states
@@ -29,27 +45,6 @@ const Page = () => {
   const [selectedExpertises, setSelectedExpertises] = useState<Array<string>>(
     [],
   );
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(BackendRoutes.DENTIST);
-        if (Array.isArray(response.data.data)) {
-          setDentists(response.data.data);
-          setFilteredDentists(response.data.data);
-        } else {
-          console.error("Expected an array but got:", response.data);
-        }
-      } catch (err) {
-        const error = err as AxiosError;
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -77,31 +72,30 @@ const Page = () => {
       const matchesSearch = dentist.name
         .toLowerCase()
         .includes(term.toLowerCase());
-
       const matchesExperience = dentist.yearsOfExperience >= experience;
-
       const matchesExpertise =
         expertises.length === 0 ||
         dentist.areaOfExpertise.some((exp) => expertises.includes(exp));
-
       return matchesSearch && matchesExperience && matchesExpertise;
     });
-
     setFilteredDentists(filtered);
   };
 
+  // Apply filters whenever dentists data or filter criteria change
   useEffect(() => {
-    filterDentists(searchTerm, minExperience, selectedExpertises);
+    if (dentists.length > 0) {
+      filterDentists(searchTerm, minExperience, selectedExpertises);
+    }
   }, [searchTerm, dentists, minExperience, selectedExpertises]);
 
   if (error)
     return (
       <p className="text-red-500">
-        <XCircleIcon /> Error: {error}
+        <XCircleIcon /> Error: {(error as Error).message}
       </p>
     );
 
-  if (loading)
+  if (isLoading)
     return (
       <p className="place-items-center py-10 text-gray-500">
         <LoaderIcon /> Loading...
@@ -118,7 +112,6 @@ const Page = () => {
           </h1>
           {user && user.role == Role_type.ADMIN ? <CreateDentistForm /> : null}
         </section>
-
         {/* FILTERING SECTION */}
         <section className="mt-5 sm:col-span-4 lg:col-span-3">
           <div className="sticky top-10 space-y-5">
@@ -173,7 +166,6 @@ const Page = () => {
             </div>
           </div>
         </section>
-
         <section className="col-span-7 my-10 flex h-full w-full flex-col justify-between gap-y-4 md:my-0 lg:col-span-8">
           <div className="col-span-8 w-full space-y-6 sm:p-5">
             {filteredDentists.length > 0 ? (

@@ -15,18 +15,27 @@ import {
 } from "@/components/ui/Popover";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { expertiseOptions } from "@/constant/expertise";
-import axios, { AxiosError } from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { Check } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { CustomButton } from "./CustomButton";
 
+interface CreateDentistData {
+  name: string;
+  yearsOfExperience: number;
+  areaOfExpertise: string[];
+}
+
 export default function CreateDentistForm() {
   const [selectedExpertise, setSelectedExpertise] = useState<Array<string>>([]);
   const [name, setName] = useState("");
   const [yearsOfExperience, setYearsOfExperience] = useState<number | "">("");
+  const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
   // Function to toggle selected expertise
   const toggleExpertise = (expertise: string) => {
@@ -37,6 +46,41 @@ export default function CreateDentistForm() {
     );
   };
 
+  // Create dentist mutation
+  const createDentistMutation = useMutation({
+    mutationFn: async (dentistData: CreateDentistData) => {
+      const token = session?.user?.token;
+      if (!token) {
+        throw new Error("Unauthorized: No token found");
+      }
+
+      return axios.post(BackendRoutes.DENTIST, dentistData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    onSuccess: () => {
+      // Invalidate and refetch dentists query to update UI
+      queryClient.invalidateQueries({ queryKey: ["dentists"] });
+      toast.success("Dentist created successfully!");
+
+      // Reset form
+      setName("");
+      setYearsOfExperience("");
+      setSelectedExpertise([]);
+      setIsOpen(false); // Close the popover
+    },
+    onError: (error) => {
+      toast.error(
+        axios.isAxiosError(error)
+          ? error.response?.data?.message || error.message
+          : "Failed to create dentist",
+      );
+    },
+  });
+
   // Function to create a new dentist
   const handleCreateDentist = async () => {
     if (!name || !yearsOfExperience || selectedExpertise.length === 0) {
@@ -44,39 +88,15 @@ export default function CreateDentistForm() {
       return;
     }
 
-    try {
-      const token = session?.user?.token;
-      if (!token) {
-        toast.error("Unauthorized: No token found");
-        return;
-      }
-
-      const response = await axios.post(
-        BackendRoutes.DENTIST,
-        {
-          name,
-          yearsOfExperience,
-          areaOfExpertise: selectedExpertise,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      toast.success("Dentist created successfully!");
-      setName("");
-      setYearsOfExperience("");
-      setSelectedExpertise([]);
-    } catch (error) {
-      toast.error((error as AxiosError).message);
-    }
+    createDentistMutation.mutate({
+      name,
+      yearsOfExperience: Number(yearsOfExperience),
+      areaOfExpertise: selectedExpertise,
+    });
   };
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline">Create New Dentist</Button>
       </PopoverTrigger>
@@ -90,8 +110,9 @@ export default function CreateDentistForm() {
           <p className="text-sm">Name</p>
           <Input
             placeholder="Enter Name"
-            value={name} // Link state
-            onChange={(e) => setName(e.target.value)} // Update state on change
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={createDentistMutation.isPending}
           />
         </div>
 
@@ -101,8 +122,9 @@ export default function CreateDentistForm() {
           <Input
             placeholder="Enter years"
             type="number"
-            value={yearsOfExperience} // Link state
-            onChange={(e) => setYearsOfExperience(Number(e.target.value) || "")} // Update state
+            value={yearsOfExperience}
+            onChange={(e) => setYearsOfExperience(Number(e.target.value) || "")}
+            disabled={createDentistMutation.isPending}
           />
         </div>
 
@@ -111,7 +133,11 @@ export default function CreateDentistForm() {
           <p className="text-sm">Areas of Expertise</p>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                disabled={createDentistMutation.isPending}
+              >
                 {selectedExpertise.length > 0
                   ? selectedExpertise.join(", ")
                   : "Select expertise"}
@@ -147,7 +173,13 @@ export default function CreateDentistForm() {
 
         {/* Create Button */}
         <div className="px-1.5 py-1">
-          <CustomButton useFor="create-dentist" onClick={handleCreateDentist} />
+          <CustomButton
+            useFor="create-dentist"
+            onClick={handleCreateDentist}
+            disabled={createDentistMutation.isPending}
+          >
+            {createDentistMutation.isPending ? "Creating..." : "Create Dentist"}
+          </CustomButton>
         </div>
       </PopoverContent>
     </Popover>
