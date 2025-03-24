@@ -97,7 +97,7 @@ export default function CreateDentistForm() {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline">Create New Dentist</Button>
+        <CustomButton useFor="create-dentist" />
       </PopoverTrigger>
       <PopoverContent className="w-sm min-w-fit space-y-3 p-4">
         <CardHeader>

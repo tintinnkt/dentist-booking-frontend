@@ -106,12 +106,12 @@ const Page = () => {
       <div className="gap-x-10 md:grid md:grid-cols-11">
         <section className="col-span-4 hidden md:block" />
         <section className="flex flex-col items-center space-x-2.5 gap-y-6 md:col-span-7 md:flex-row md:justify-between">
-          <h1 className="align-baseline text-5xl font-semibold">
+          <h1 className="align-baseline text-4xl font-semibold sm:text-5xl">
             Search Dentists
           </h1>
           {user && user.role == Role_type.ADMIN ? <CreateDentistForm /> : null}
         </section>
-        {/* FILTERING SECTION */}
+
         <section className="mt-5 sm:col-span-4 lg:col-span-3">
           <div className="sticky top-10 space-y-5">
             <SearchBar
@@ -121,7 +121,7 @@ const Page = () => {
             />
             <div className="bg-card rounded-lg border p-4 shadow-md">
               <h2 className="mb-4 text-lg font-semibold">Filter by:</h2>
-              {/* Experience Slider */}
+
               <div className="mb-4 space-y-2">
                 <h3 className="space-x-2 text-sm font-medium">
                   <span>Years of Experience </span>
