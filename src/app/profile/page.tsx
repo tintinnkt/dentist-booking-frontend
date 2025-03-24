@@ -12,13 +12,14 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
+import { User } from "@/types/user";
 import { LoaderCircleIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import toast from "react-hot-toast";
 
-const MemoizedCard = React.memo(({ user }: { user: any }) => (
+const MemoizedCard = React.memo(({ user }: { user: User }) => (
   <Card className="w-lg max-w-full p-5 shadow-xl">
     <CardHeader>
       <CardTitle className="flex items-center justify-start space-x-3 text-xl font-bold">
@@ -56,7 +57,8 @@ const MemoizedCard = React.memo(({ user }: { user: any }) => (
 
 const Page = () => {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, setUser } = useUser();
+
   const handleLogout = async () => {
     const logoutPromise = signOut({ redirect: false, callbackUrl: "/" });
 
@@ -68,6 +70,9 @@ const Page = () => {
 
     try {
       await logoutPromise;
+
+      setUser(null);
+
       router.push(FrontendRoutes.DENTIST_LIST);
     } catch (error) {
       console.error("Logout failed:", error);

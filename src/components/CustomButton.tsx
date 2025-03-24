@@ -12,6 +12,7 @@ import {
   Plus,
   SearchIcon,
   Trash2Icon,
+  UserPlusIcon,
 } from "lucide-react";
 import { twJoin } from "tailwind-merge";
 import { Button } from "./ui/Button";
@@ -57,6 +58,11 @@ const buttonConfig: Record<string, ButtonConfig> = {
     variant: "secondary",
     icon: SearchIcon,
     placeAt: "end",
+  },
+  "create-dentist": {
+    label: "Create New Dentist",
+    variant: "default",
+    icon: UserPlusIcon,
   },
   edit: {
     label: "แก้ไข",

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
  * @returns The user object or undefined if not fetched yet
  */
 export const useUser = () => {
-  const [user, setUser] = useState<User>();
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const { data: session } = useSession();
@@ -17,6 +17,7 @@ export const useUser = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!session?.user?.token) {
+        setUser(null);
         setLoading(false);
         return;
       }
@@ -37,7 +38,7 @@ export const useUser = () => {
     fetchUserProfile();
   }, [session?.user?.token]);
 
-  return { user, loading, error };
+  return { user, setUser, loading, error };
 };
 
 async function getUserProfile(token: string) {

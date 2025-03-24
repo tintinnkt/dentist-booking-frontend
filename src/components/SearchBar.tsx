@@ -1,17 +1,29 @@
 import { CustomButton } from "./CustomButton";
 import { Input } from "./ui/Input";
 
-type SearchBarProps = React.InputHTMLAttributes<HTMLInputElement>;
+type SearchBarProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  onSearch?: (value: string) => void;
+};
 
-export const SearchBar = (props: SearchBarProps) => {
+export const SearchBar = ({ onSearch, ...props }: SearchBarProps) => {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSearch && props.value !== undefined) {
+      onSearch(props.value as string);
+    }
+  };
+
   return (
-    <div className="flex items-center space-x-1.5 rounded-lg border border-gray-300 bg-white px-2 py-2 shadow-sm">
+    <form
+      onSubmit={handleSearch}
+      className="flex items-center space-x-1.5 rounded-lg border border-gray-300 bg-white px-2 py-2 shadow-sm"
+    >
       <Input
         placeholder="Search Name"
         className="flex-1 border-none focus:ring-0"
         {...props}
       />
-      <CustomButton useFor="search" />
-    </div>
+      <CustomButton useFor="search" type="submit" />
+    </form>
   );
 };
