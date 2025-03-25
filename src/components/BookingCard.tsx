@@ -194,11 +194,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
               </Select>
             </div>
             <div className="flex space-x-1.5">
-              <CustomButton
-                useFor="cancel"
-                onClick={toggleEditMode}
-                disabled={isUpdating}
-              />
+              
               <CustomButton
                 useFor="confirm-info"
                 onClick={handleConfirmEdit}
