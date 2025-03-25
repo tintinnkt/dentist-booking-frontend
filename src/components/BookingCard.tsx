@@ -11,6 +11,17 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
 import { CustomButton } from "./CustomButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/AlertDialog";
 import { Calendar } from "./ui/Calendar";
 import {
   Card,
@@ -198,17 +209,52 @@ const BookingCard: React.FC<BookingCardProps> = ({
         </Popover>
 
         {isMyBooking ? (
-          <CustomButton
-            useFor="cancel-booking"
-            isLoading={isDeleting}
-            onClick={() => handleDeleteBooking()}
-          />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <CustomButton useFor="cancel-booking" isLoading={isDeleting} />
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              </AlertDialogHeader>
+              <AlertDialogDescription>
+                This booking will be deleted. You can always get a new booking.
+              </AlertDialogDescription>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDeleteBooking()}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Continue"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         ) : (
-          <CustomButton
-            useFor="delete"
-            isLoading={isDeleting}
-            onClick={() => handleDeleteBooking()}
-          />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <CustomButton useFor="delete" isLoading={isDeleting} />
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              </AlertDialogHeader>
+              <AlertDialogDescription>
+                This booking will be deleted. The record is not possible to
+                restore.
+              </AlertDialogDescription>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDeleteBooking()}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Continue"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </CardFooter>
     </Card>

@@ -19,7 +19,7 @@ export const authOptions: AuthOptions = {
         if (user) {
           return {
             ...user,
-            token: user.token || "", // Ensure token is always a string
+            token: user.token || "",
           };
         } else {
           return null;
