@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
+import { combineDateAndTime } from "./BookingCard";
 import { ButtonConfigKeys, CustomButton } from "./CustomButton";
 import {
   AlertDialog,
@@ -457,10 +458,3 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
 };
 
 export default DentistCard;
-
-export function combineDateAndTime(date: Date, time: string): Date {
-  const dateString = date.toISOString().split("T")[0];
-  const combinedDateTimeString = `${dateString}T${time}:00`;
-  const combinedDateTime = new Date(combinedDateTimeString);
-  return combinedDateTime;
-}

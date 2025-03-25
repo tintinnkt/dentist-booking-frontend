@@ -40,11 +40,14 @@ import {
 } from "./ui/Select";
 import { Separator } from "./ui/Separator";
 
-// Utility function to combine date and time
 export function combineDateAndTime(date: Date, time: string): Date {
-  const dateString = date.toISOString().split("T")[0];
+  const nextDay = new Date(date);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  const dateString = nextDay.toISOString().split("T")[0];
   const combinedDateTimeString = `${dateString}T${time}:00`;
   const combinedDateTime = new Date(combinedDateTimeString);
+
   return combinedDateTime;
 }
 
@@ -194,7 +197,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
               </Select>
             </div>
             <div className="flex space-x-1.5">
-              
               <CustomButton
                 useFor="confirm-info"
                 onClick={handleConfirmEdit}
