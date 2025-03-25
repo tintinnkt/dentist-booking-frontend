@@ -13,13 +13,19 @@ import { Label } from "@/components/ui/Label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import axios from "axios";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const Page = () => {
   const router = useRouter();
+  const { data: session } = useSession();
+  useEffect(() => {
+    if (session) {
+      router.push(FrontendRoutes.DENTIST_LIST);
+    }
+  }, [session, router]);
 
   // Login state
   const [email, setEmail] = useState("");
