@@ -1,6 +1,6 @@
 "use client";
 import { BackendRoutes } from "@/config/apiRoutes";
-import { User } from "@/types/user";
+import { User } from "@/types/User";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { useSession } from "next-auth/react";

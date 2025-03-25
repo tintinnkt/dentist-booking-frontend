@@ -2,7 +2,7 @@
 import { BackendRoutes } from "@/config/apiRoutes";
 import { expertiseOptions, timeSlots } from "@/constant/expertise";
 import { DentistProps } from "@/types/api/Dentist";
-import { User } from "@/types/user";
+import { User } from "@/types/User";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { format } from "date-fns";

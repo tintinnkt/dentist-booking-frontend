@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
-import { User } from "@/types/user";
+import { User } from "@/types/User";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { LoaderCircleIcon } from "lucide-react";
