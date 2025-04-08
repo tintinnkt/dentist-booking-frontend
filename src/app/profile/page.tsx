@@ -10,86 +10,33 @@ import {
 } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
 import { User } from "@/types/User";
-import { useMutation } from "@tanstack/react-query";
-import axios, { AxiosError } from "axios";
 import { LoaderCircleIcon } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
 const Page = () => {
-  const router = useRouter();
-  const { data: session } = useSession();
-  const { user, loading, setUser } = useUser();
+  const { user, loading, updateUser, isUpdating, logout, isLoggingOut } =
+    useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<User>>({});
 
-  const updateUserMutation = useMutation({
-    mutationFn: async (userData: Partial<User>) => {
-      if (!user?._id || !session?.user.token) {
-        throw new Error("User ID or token not available");
-      }
-
-      const response = await axios.put(
-        `${BackendRoutes.UPDATE_USER}/${user._id}`,
-        userData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.user.token}`,
-          },
-        },
-      );
-
-      return response.data;
-    },
-    onMutate: (newUserData) => {
-      if (user) {
-        const optimisticUser = { ...user, ...newUserData };
-        setUser(optimisticUser);
-      }
-    },
-    onSuccess: (data) => {
-      setIsEditing(false);
-      toast.success("Profile updated successfully!");
-      if (user) {
-        setUser({ ...user, ...data });
-      }
-    },
-    onError: (error) => {
-      console.error("Update error:", error);
-      toast.error((error as AxiosError).message || "Failed to update profile");
-      if (user) {
-        setUser(user);
-      }
-    },
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      return await signOut({ redirect: false, callbackUrl: "/" });
-    },
-    onSuccess: () => {
-      setUser(null);
-      router.push(FrontendRoutes.DENTIST_LIST);
-    },
-    onError: (error) => {
-      console.error("Logout failed:", error);
-      router.push(FrontendRoutes.DENTIST_LIST);
-    },
-  });
-
   const handleLogout = () => {
-    toast.promise(logoutMutation.mutateAsync(), {
-      loading: "Logging out...",
-      success: "Logged out successfully!",
-      error: "Logout failed. Please try again.",
-    });
+    toast.promise(
+      new Promise((resolve, reject) => {
+        logout(undefined, {
+          onSuccess: () => resolve("Logged out successfully!"),
+          onError: (error) => reject(error),
+        });
+      }),
+      {
+        loading: "Logging out...",
+        success: "Logged out successfully!",
+        error: "Logout failed. Please try again.",
+      },
+    );
   };
 
   const handleEditToggle = () => {
@@ -104,7 +51,24 @@ const Page = () => {
   };
 
   const handleSave = () => {
-    updateUserMutation.mutate(formData);
+    toast.promise(
+      new Promise((resolve, reject) => {
+        updateUser(formData, {
+          onSuccess: () => {
+            setIsEditing(false);
+            resolve("Profile updated successfully!");
+          },
+          onError: (error) => {
+            reject(error);
+          },
+        });
+      }),
+      {
+        loading: "Updating profile...",
+        success: "Profile updated successfully!",
+        error: "Failed to update profile",
+      },
+    );
   };
 
   if (loading) {
@@ -152,7 +116,7 @@ const Page = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    disabled={updateUserMutation.isPending}
+                    disabled={isUpdating}
                     className="col-span-2"
                   />
 
@@ -163,7 +127,7 @@ const Page = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    disabled={updateUserMutation.isPending}
+                    disabled={isUpdating}
                     className="col-span-2"
                   />
 
@@ -173,7 +137,7 @@ const Page = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, tel: e.target.value })
                     }
-                    disabled={updateUserMutation.isPending}
+                    disabled={isUpdating}
                     className="col-span-2"
                   />
                 </>
@@ -200,24 +164,26 @@ const Page = () => {
             <CustomButton
               useFor="cancel"
               onClick={handleEditToggle}
-              disabled={updateUserMutation.isPending}
+              disabled={isUpdating}
             />
             <CustomButton
               useFor="confirm-info"
               onClick={handleSave}
-              isLoading={updateUserMutation.isPending}
+              isLoading={isUpdating}
             />
           </>
         ) : (
-          <CustomButton useFor="edit" onClick={handleEditToggle} />
+          <>
+            <CustomButton useFor="edit" onClick={handleEditToggle} />
+            <CustomButton
+              useFor="logout"
+              hideTextOnMobile={false}
+              className="shadow-3xl"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+            />
+          </>
         )}
-        <CustomButton
-          useFor="logout"
-          hideTextOnMobile={false}
-          className="shadow-3xl"
-          onClick={handleLogout}
-          disabled={logoutMutation.isPending}
-        />
       </section>
     </main>
   );

@@ -1,9 +1,10 @@
 "use client";
-import { BackendRoutes } from "@/config/apiRoutes";
+import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { User } from "@/types/User";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const getUserProfile = async (token: string) => {
   try {
@@ -27,6 +28,7 @@ const getUserProfile = async (token: string) => {
 export const useUser = () => {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const {
     data: user,
@@ -38,32 +40,72 @@ export const useUser = () => {
       if (!session?.user?.token) return null;
       return getUserProfile(session.user.token);
     },
-    enabled: !!session?.user?.token, // Only run query when token exists
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    retry: 1, // Only retry once if the request fails
+    enabled: !!session?.user?.token,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
-  // Mutation for updating user data
-  const { mutate: setUser } = useMutation({
-    mutationFn: (newUserData: User | null) => {
-      // Updated to accept null
-      // TODO: Possibly could implement an API call to update the user here
-      // For now, this just updates the cache
-      return Promise.resolve(newUserData);
+  const { mutate: updateUser, isPending: isUpdating } = useMutation({
+    mutationFn: async (userData: Partial<User>) => {
+      if (!user?._id || !session?.user.token) {
+        throw new Error("User ID or token not available");
+      }
+      const response = await axios.put(
+        `${BackendRoutes.UPDATE_USER}/${user._id}`,
+        userData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.user.token}`,
+          },
+        },
+      );
+      return response.data;
     },
-    onSuccess: (newUserData) => {
-      // Update the cache with the new user data
+    onMutate: (newUserData) => {
+      if (user) {
+        const optimisticUser = { ...user, ...newUserData };
+        queryClient.setQueryData(
+          ["userProfile", session?.user?.token],
+          optimisticUser,
+        );
+      }
+    },
+    onSuccess: (data) => {
       queryClient.setQueryData(
         ["userProfile", session?.user?.token],
-        newUserData,
+        (prev: User) => ({
+          ...prev,
+          ...data,
+        }),
       );
+    },
+    onError: (error) => {
+      console.error("Failed to update user:", error);
+    },
+  });
+
+  const { mutate: logout, isPending: isLoggingOut } = useMutation({
+    mutationFn: async () => {
+      return await signOut({ redirect: false, callbackUrl: "/" });
+    },
+    onSuccess: () => {
+      queryClient.clear(); // Clear all query cache on logout
+      router.push(FrontendRoutes.DENTIST_LIST);
+    },
+    onError: (error) => {
+      console.error("Logout failed:", error);
+      router.push(FrontendRoutes.DENTIST_LIST);
     },
   });
 
   return {
     user,
-    setUser,
     loading,
     error: error as Error | null,
+    updateUser,
+    isUpdating,
+    logout,
+    isLoggingOut,
   };
 };
