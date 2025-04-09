@@ -23,10 +23,13 @@ const Page = () => {
     user?.role === Role_type.USER ? getUserBooking(user._id) : null;
 
   useEffect(() => {
-    if (bookings && user) {
-      if (user.role === Role_type.ADMIN) {
-        setFilteredBookings(bookings);
-      }
+    if (user?.role === Role_type.ADMIN && bookings) {
+      setFilteredBookings((prevFilteredBookings) => {
+        if (prevFilteredBookings !== bookings) {
+          return bookings;
+        }
+        return prevFilteredBookings;
+      });
     }
   }, [bookings, user]);
 
