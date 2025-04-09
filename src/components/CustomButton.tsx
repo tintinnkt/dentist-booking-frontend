@@ -51,8 +51,8 @@ const buttonConfig: Record<string, ButtonConfig> = {
     variant: "secondary",
     icon: ChevronLeft,
   },
-  seeResources: {
-    label: "See Resources",
+  "see-more": {
+    label: "see more",
     variant: "secondary",
     icon: ChevronRight,
     placeAt: "end",

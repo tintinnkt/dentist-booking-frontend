@@ -1,5 +1,5 @@
 "use client";
-import { BackendRoutes } from "@/config/apiRoutes";
+import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { expertiseOptions, timeSlots } from "@/constant/expertise";
 import { useBooking } from "@/hooks/useBooking";
 import { DentistProps } from "@/types/api/Dentist";
@@ -9,6 +9,7 @@ import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
 import { Check } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
@@ -62,6 +63,7 @@ interface DentistCardProps {
 }
 
 const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
+  const router = useRouter();
   const [appDate, setAppDate] = useState<Date>();
   const [appTime, setAppTime] = useState<string>("");
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -361,7 +363,11 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
 
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
-                <CustomButton useFor="booking" hideTextOnMobile />
+                <CustomButton
+                  useFor="booking"
+                  hideTextOnMobile
+                  className="mt-2.5"
+                />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
                 <div className="space-y-4 p-3">
@@ -411,6 +417,12 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                 </div>
               </PopoverContent>
             </Popover>
+            <CustomButton
+              useFor="see-more"
+              onClick={() =>
+                router.push(`${FrontendRoutes.DENTIST_LIST}/${dentist.id}`)
+              }
+            />
           </CardFooter>
         </>
       )}
