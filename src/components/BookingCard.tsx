@@ -1,12 +1,9 @@
 "use client";
 
-import { BackendRoutes } from "@/config/apiRoutes";
 import { timeSlots } from "@/constant/expertise";
+import { useBooking } from "@/hooks/useBooking";
 import { Booking } from "@/types/api/Dentist";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { format } from "date-fns";
-import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
@@ -60,18 +57,18 @@ const BookingCard: React.FC<BookingCardProps> = ({
   booking,
   isMyBooking = false,
 }) => {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(
     new Date(booking.apptDate),
   );
   const [appTime, setAppTime] = useState<string>(
-    // Extract time from existing booking date or default to first slot
     booking.apptDate
       ? format(new Date(booking.apptDate), "HH:mm")
       : timeSlots[0],
   );
+
+  const { rescheduleAppointment, deleteAppointment, isUpdating, isDeleting } =
+    useBooking();
 
   const toggleEditMode = () => {
     if (isEditing) {
@@ -82,37 +79,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
     setIsEditing((prev) => !prev);
   };
 
-  // Mutation for updating appointment
-  const { mutate: handleUpdateAppointment, isPending: isUpdating } =
-    useMutation({
-      mutationFn: async () => {
-        // Combine selected date and time
-        const combinedDateTime = combineDateAndTime(selectedDate, appTime);
-
-        return axios.put(
-          `${BackendRoutes.BOOKING}/${booking._id}`,
-          {
-            apptDate: combinedDateTime.toISOString(),
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${session?.user.token}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-      },
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["bookings"] });
-        toast.success(`Appointment successfully rescheduled.`);
-        setIsEditing(false);
-      },
-      onError: (error) => {
-        toast.error("Error updating the appointment. Please try again.");
-        console.error("Error updating booking:", error);
-      },
-    });
-
   // Handle confirm edit
   const handleConfirmEdit = () => {
     const originalDate = new Date(booking.apptDate);
@@ -122,27 +88,14 @@ const BookingCard: React.FC<BookingCardProps> = ({
       toast.error("No changes detected.");
       return;
     }
-    handleUpdateAppointment();
+
+    rescheduleAppointment(booking._id, selectedDate, appTime);
+    setIsEditing(false);
   };
 
-  const { mutate: handleDeleteBooking, isPending: isDeleting } = useMutation({
-    mutationFn: async () => {
-      return axios.delete(`${BackendRoutes.BOOKING}/${booking._id}`, {
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-        },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      toast.success(`Appointment successfully Deleted.`);
-      setIsEditing(false);
-    },
-    onError: (error) => {
-      toast.error("Error updating the appointment. Please try again.");
-      console.error("Error updating booking:", error);
-    },
-  });
+  const handleDeleteBooking = () => {
+    deleteAppointment(booking._id);
+  };
 
   return (
     <Card
@@ -162,7 +115,6 @@ const BookingCard: React.FC<BookingCardProps> = ({
         <p>Dentist</p>
         <p className="col-span-1 px-1 sm:col-span-2">{booking.dentist?.name}</p>
         <p>Date</p>
-
         <span>{format(new Date(booking.apptDate), "PP | HH:mm")}</span>
       </CardContent>
       <Separator />
@@ -206,54 +158,33 @@ const BookingCard: React.FC<BookingCardProps> = ({
           </PopoverContent>
         </Popover>
 
-        {isMyBooking ? (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <CustomButton useFor="cancel-booking" isLoading={isDeleting} />
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              </AlertDialogHeader>
-              <AlertDialogDescription>
-                This booking will be deleted. You can always get a new booking.
-              </AlertDialogDescription>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDeleteBooking()}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "Deleting..." : "Continue"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        ) : (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <CustomButton useFor="delete" isLoading={isDeleting} />
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              </AlertDialogHeader>
-              <AlertDialogDescription>
-                This booking will be deleted. The record is not possible to
-                restore.
-              </AlertDialogDescription>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDeleteBooking()}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "Deleting..." : "Continue"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <CustomButton
+              useFor={isMyBooking ? "cancel-booking" : "delete"}
+              isLoading={isDeleting}
+            />
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogDescription>
+              {isMyBooking
+                ? "This booking will be deleted. You can always get a new booking."
+                : "This booking will be deleted. The record is not possible to restore."}
+            </AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteBooking}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Continue"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );
