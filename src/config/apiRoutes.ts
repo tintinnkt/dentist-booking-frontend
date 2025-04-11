@@ -18,9 +18,11 @@ export enum FrontendRootRoutes {
   LOGIN = "/login",
   PROFILE = "/profile",
   BOOKING = "/booking",
+  DENTIST = "/dentist",
 }
 export enum FrontendRoutes {
   ADMIN_MANAGEMENT = `${FrontendRootRoutes.ADMIN}/management`,
+  DENTIST = `${FrontendRootRoutes.DENTIST}`,
   DENTIST_LIST = `${FrontendRootRoutes.LIST}`,
   LOGIN = `${FrontendRootRoutes.LOGIN}`,
   PROFILE = `${FrontendRootRoutes.PROFILE}`,
