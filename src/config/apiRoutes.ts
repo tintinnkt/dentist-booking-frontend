@@ -20,7 +20,7 @@ export enum FrontendRootRoutes {
   BOOKING = "/booking",
 }
 export enum FrontendRoutes {
-  USER_MANAGEMENT = `${FrontendRootRoutes.ADMIN}/user`,
+  ADMIN_MANAGEMENT = `${FrontendRootRoutes.ADMIN}/management`,
   DENTIST_LIST = `${FrontendRootRoutes.LIST}`,
   LOGIN = `${FrontendRootRoutes.LOGIN}`,
   PROFILE = `${FrontendRootRoutes.PROFILE}`,
