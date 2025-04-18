@@ -1,5 +1,5 @@
-// const BACKEND_URL = "https://project-s-backend-cyan.vercel.app";
-const BACKEND_URL = "http://127.0.0.1:5003";
+const BACKEND_URL = "https://project-s-backend-cyan.vercel.app";
+//const BACKEND_URL = "http://127.0.0.1:5003";
 const BackendRootRoutes = `${BACKEND_URL}/api/v1`;
 
 export enum BackendRoutes {
@@ -8,7 +8,6 @@ export enum BackendRoutes {
   REGISTER = `${BackendRootRoutes}/auth/register`,
   UPDATE_USER = `${BackendRootRoutes}/auth/updateUser`,
   USER_INFO = `${BackendRootRoutes}/auth/me`,
-
   DENTIST = `${BackendRootRoutes}/dentists`,
   BOOKING = `${BackendRootRoutes}/bookings`,
   BOOKING_DENTIST = `${BackendRootRoutes}/bookings/dentist`,
