@@ -1,13 +1,12 @@
-// pages/dentists.tsx
-"use client"
+"use client";
 
-import DentistManagement from "@/components/DentistManagement";
+import DentistManagement from "@/components/DentistMangement";
 import { FrontendRootRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
 
-
-export default function DentistsPage() {
+export default function DentistDashboard() {
   const router = useRouter();
+
   const ScheduleClick = () => {
     router.push(FrontendRootRoutes.ADMIN);
   };
@@ -33,12 +32,12 @@ export default function DentistsPage() {
       </div>
 
       <div className="mb-6 flex gap-2 px-10">
-        {/* <button
+        <button
           className="rounded bg-orange-400 px-4 py-1 text-sm font-semibold text-black hover:bg-white"
           onClick={ScheduleClick}
         >
           Schedules
-        </button> */}
+        </button>
 
         <button
           className="rounded bg-orange-400 px-4 py-1 text-sm font-semibold text-black hover:bg-white"

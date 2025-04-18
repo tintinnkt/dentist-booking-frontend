@@ -1,13 +1,13 @@
-// pages/dentists.tsx
-"use client"
+"use client";
 
-import PatientManagement from "@/components/PatientManagemant";
-import { FrontendRootRoutes, BackendRoutes } from "@/config/apiRoutes";
+import PatientManagement from "@/components/PatientManagement";
+import { FrontendRootRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-
-export default function DentistsPage() {
+export default function PatientDashboard() {
   const router = useRouter();
+
   const ScheduleClick = () => {
     router.push(FrontendRootRoutes.ADMIN);
   };
@@ -23,6 +23,11 @@ export default function DentistsPage() {
   const HolidayClick = () => {
     router.push(`${FrontendRootRoutes.ADMIN}/holiday`);
   };
+
+  // Dummy state for selected patient and date
+  const [selectedPatient, setSelectedPatient] = useState("Jame Wilson");
+  const [selectedDate, setSelectedDate] = useState("2025-04-23");
+
   return (
     <main>
       <div className="m-3 flex justify-center text-3xl font-bold">
@@ -33,12 +38,12 @@ export default function DentistsPage() {
       </div>
 
       <div className="mb-6 flex gap-2 px-10">
-        {/* <button
+        <button
           className="rounded bg-orange-400 px-4 py-1 text-sm font-semibold text-black hover:bg-white"
           onClick={ScheduleClick}
         >
           Schedules
-        </button> */}
+        </button>
 
         <button
           className="rounded bg-white px-4 py-1 text-sm font-semibold text-black"
