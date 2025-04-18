@@ -10,19 +10,10 @@ export enum BackendRoutes {
 
   DENTIST = `${BackendRootRoutes}/dentists`,
   BOOKING = `${BackendRootRoutes}/bookings`,
-<<<<<<< Updated upstream
   REGISTER_DENTIST = `${BackendRootRoutes}/registerDent`,
   UNAVAILABLE_BOOKING = `${BackendRootRoutes}/bookings/unavailable`,
   GET_ALL_DENTISTS_SCHEDULES = `${BackendRootRoutes}/bookings/schedules`,
   UNAVAILABLE_BOOKING_BY_DENTIST_ID = `${BackendRootRoutes}/dentists/:dentistId/unavailable`,
-||||||| Stash base
-  GET_BOOKING_FOR_DENTIST = `${BackendRoutes.DENTIST}`,
-  USER_INFO = `${BackendRootRoutes}/auth/me`,
-=======
-  GET_BOOKING_FOR_DENTIST = `${BackendRoutes.DENTIST}`,
-  USER_INFO = `${BackendRootRoutes}/auth/me`,
-  SCHEDULES = `${BackendRootRoutes}/unavailable`,
->>>>>>> Stashed changes
 }
 
 export const getUnavailableBookingByDentistId = (dentistId: string): string =>
