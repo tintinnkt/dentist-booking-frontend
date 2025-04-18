@@ -487,8 +487,7 @@ export default function DentalAdminDashboard() {
                               </div>
                             </div>
                             <CardDescription>
-                              {schedule.date} · {schedule.startTime} -{" "}
-                              {schedule.endTime}
+                              {schedule.date} · {schedule.startTime} - {schedule.endTime}
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
