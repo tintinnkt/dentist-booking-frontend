@@ -6,11 +6,21 @@ export enum BackendRoutes {
   LOGIN = `${BackendRootRoutes}/auth/login`,
   REGISTER = `${BackendRootRoutes}/auth/register`,
   UPDATE_USER = `${BackendRootRoutes}/auth/updateUser`,
+  USER_INFO = `${BackendRootRoutes}/auth/me`,
+
   DENTIST = `${BackendRootRoutes}/dentists`,
   BOOKING = `${BackendRootRoutes}/bookings`,
-  GET_BOOKING_FOR_DENTIST = `${BackendRoutes.DENTIST}`,
-  USER_INFO = `${BackendRootRoutes}/auth/me`,
+  REGISTER_DENTIST = `${BackendRootRoutes}/registerDent`,
+  UNAVAILABLE_BOOKING = `${BackendRootRoutes}/bookings/unavailable`,
+  GET_ALL_DENTISTS_SCHEDULES = `${BackendRootRoutes}/bookings/schedules`,
+  UNAVAILABLE_BOOKING_BY_DENTIST_ID = `${BackendRootRoutes}/dentists/:dentistId/unavailable`,
 }
+
+export const getUnavailableBookingByDentistId = (dentistId: string): string =>
+  BackendRoutes.UNAVAILABLE_BOOKING_BY_DENTIST_ID.replace(
+    ":dentistId",
+    dentistId,
+  );
 
 export enum FrontendRootRoutes {
   ADMIN = "/admin",
