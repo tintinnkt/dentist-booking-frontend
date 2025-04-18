@@ -32,6 +32,10 @@ import {
 import { Switch } from "@/components/ui/Switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { BackendRoutes } from "@/config/apiRoutes";
+import { DentistProps } from "@/types/api/Dentist";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { format } from "date-fns";
 import {
   Calendar,
   Clock,
@@ -43,11 +47,7 @@ import {
   UserCheck,
   XCircleIcon,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import { format } from "date-fns";
-import { DentistProps } from "@/types/api/Dentist";
+import { useEffect, useState } from "react";
 
 interface Patient {
   _id: string;
@@ -83,27 +83,29 @@ interface HolidayFormData {
   endTime: string;
 }
 
-const fetchDentists = async (): Promise<DentistProps[]> => {
+const fetchDentists = async (): Promise<Array<DentistProps>> => {
   const response = await axios.get(BackendRoutes.DENTIST);
   return response.data.data;
 };
 
-const fetchPatients = async (): Promise<Patient[]> => {
+const fetchPatients = async (): Promise<Array<Patient>> => {
   const response = await axios.get(BackendRoutes.PATIENTS);
   return response.data.data;
 };
 
-const fetchSchedules = async (): Promise<Schedule[]> => {
+const fetchSchedules = async (): Promise<Array<Schedule>> => {
   const response = await axios.get(BackendRoutes.SCHEDULES);
   return response.data.data;
 };
 
-const fetchBookings = async (): Promise<Booking[]> => {
+const fetchBookings = async (): Promise<Array<Booking>> => {
   const response = await axios.get(BackendRoutes.BOOKING);
   return response.data.data;
 };
 
-const addHoliday = async (holiday: Omit<Schedule, "_id">): Promise<Schedule> => {
+const addHoliday = async (
+  holiday: Omit<Schedule, "_id">,
+): Promise<Schedule> => {
   const response = await axios.post(BackendRoutes.SCHEDULES, holiday);
   return response.data.data;
 };
@@ -111,7 +113,7 @@ const addHoliday = async (holiday: Omit<Schedule, "_id">): Promise<Schedule> => 
 const updateSchedule = async (schedule: Schedule): Promise<Schedule> => {
   const response = await axios.put(
     `${BackendRoutes.SCHEDULES}/${schedule._id}`,
-    schedule
+    schedule,
   );
   return response.data.data;
 };
@@ -124,7 +126,7 @@ export default function DentalAdminDashboard() {
   const queryClient = useQueryClient();
   const [selectedDentist, setSelectedDentist] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>(
-    format(new Date(), "yyyy-MM-dd")
+    format(new Date(), "yyyy-MM-dd"),
   );
   const [viewMode, setViewMode] = useState<"schedule" | "booking">("schedule");
   const [holidayDialogOpen, setHolidayDialogOpen] = useState(false);
@@ -137,20 +139,34 @@ export default function DentalAdminDashboard() {
   const [editScheduleDialog, setEditScheduleDialog] = useState(false);
   const [currentSchedule, setCurrentSchedule] = useState<Schedule | null>(null);
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<"default" | "destructive">("default");
+  const [alertType, setAlertType] = useState<"default" | "destructive">(
+    "default",
+  );
 
   // Data fetching
-  const { data: dentists = [], isPending: isDentistsLoading, error: dentistsError } = 
-    useQuery({ queryKey: ["dentists"], queryFn: fetchDentists });
-  
-  const { data: patients = [], isPending: isPatientsLoading, error: patientsError } = 
-    useQuery({ queryKey: ["patients"], queryFn: fetchPatients });
-  
-  const { data: schedules = [], isPending: isSchedulesLoading, error: schedulesError } = 
-    useQuery({ queryKey: ["schedules"], queryFn: fetchSchedules });
-  
-  const { data: bookings = [], isPending: isBookingsLoading, error: bookingsError } = 
-    useQuery({ queryKey: ["bookings"], queryFn: fetchBookings });
+  const {
+    data: dentists = [],
+    isPending: isDentistsLoading,
+    error: dentistsError,
+  } = useQuery({ queryKey: ["dentists"], queryFn: fetchDentists });
+
+  const {
+    data: patients = [],
+    isPending: isPatientsLoading,
+    error: patientsError,
+  } = useQuery({ queryKey: ["patients"], queryFn: fetchPatients });
+
+  const {
+    data: schedules = [],
+    isPending: isSchedulesLoading,
+    error: schedulesError,
+  } = useQuery({ queryKey: ["schedules"], queryFn: fetchSchedules });
+
+  const {
+    data: bookings = [],
+    isPending: isBookingsLoading,
+    error: bookingsError,
+  } = useQuery({ queryKey: ["bookings"], queryFn: fetchBookings });
 
   // Mutations
   const addHolidayMutation = useMutation({
@@ -205,13 +221,13 @@ export default function DentalAdminDashboard() {
     });
   };
 
-  const getFilteredSchedules = (): Schedule[] => {
+  const getFilteredSchedules = (): Array<Schedule> => {
     let filtered = [...schedules];
     if (selectedDentist !== "all") {
       filtered = filtered.filter(
         (schedule) =>
           schedule.dentistId === selectedDentist ||
-          (schedule.isHoliday && schedule.dentistId === null)
+          (schedule.isHoliday && schedule.dentistId === null),
       );
     }
     if (selectedDate) {
@@ -220,11 +236,11 @@ export default function DentalAdminDashboard() {
     return filtered;
   };
 
-  const getFilteredBookings = (): Booking[] => {
+  const getFilteredBookings = (): Array<Booking> => {
     let filtered = [...bookings];
     if (selectedDentist !== "all") {
       filtered = filtered.filter(
-        (booking) => booking.dentistId === selectedDentist
+        (booking) => booking.dentistId === selectedDentist,
       );
     }
     if (selectedDate) {
@@ -272,7 +288,7 @@ export default function DentalAdminDashboard() {
 
   const handleCurrentScheduleChange = (
     field: keyof Schedule,
-    value: string | null | boolean
+    value: string | null | boolean,
   ) => {
     if (currentSchedule) {
       setCurrentSchedule({ ...currentSchedule, [field]: value });
@@ -292,10 +308,13 @@ export default function DentalAdminDashboard() {
   }, [alertMessage]);
 
   // Loading and error states
-  const isPending = isDentistsLoading || isPatientsLoading || 
-                   isSchedulesLoading || isBookingsLoading;
-  const error = dentistsError || patientsError || 
-               schedulesError || bookingsError;
+  const isPending =
+    isDentistsLoading ||
+    isPatientsLoading ||
+    isSchedulesLoading ||
+    isBookingsLoading;
+  const error =
+    dentistsError || patientsError || schedulesError || bookingsError;
 
   if (error) {
     return (
@@ -409,7 +428,9 @@ export default function DentalAdminDashboard() {
                       <SelectValue placeholder="Select view mode" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="schedule">Dentist Schedules</SelectItem>
+                      <SelectItem value="schedule">
+                        Dentist Schedules
+                      </SelectItem>
                       <SelectItem value="booking">Patient Bookings</SelectItem>
                     </SelectContent>
                   </Select>
@@ -431,14 +452,18 @@ export default function DentalAdminDashboard() {
                       getFilteredSchedules().map((schedule) => (
                         <Card
                           key={schedule._id}
-                          className={schedule.isHoliday ? "border-red-300 bg-red-50" : ""}
+                          className={
+                            schedule.isHoliday ? "border-red-300 bg-red-50" : ""
+                          }
                         >
                           <CardHeader className="pb-2">
                             <div className="flex justify-between">
                               <CardTitle className="text-base">
                                 {schedule.isHoliday
                                   ? schedule.title || "Holiday"
-                                  : getDentistName(schedule.dentistId as string)}
+                                  : getDentistName(
+                                      schedule.dentistId as string,
+                                    )}
                               </CardTitle>
                               <div className="flex space-x-2">
                                 {!schedule.isHoliday && (
@@ -453,14 +478,17 @@ export default function DentalAdminDashboard() {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={() => handleDeleteSchedule(schedule._id)}
+                                  onClick={() =>
+                                    handleDeleteSchedule(schedule._id)
+                                  }
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
                             <CardDescription>
-                              {schedule.date} · {schedule.startTime} - {schedule.endTime}
+                              {schedule.date} · {schedule.startTime} -{" "}
+                              {schedule.endTime}
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
@@ -557,12 +585,14 @@ export default function DentalAdminDashboard() {
                         </div>
                         <div>
                           <p className="font-medium">Upcoming Bookings</p>
-                          {bookings.filter((a) => a.patientId === patient._id).length > 0 ? (
+                          {bookings.filter((a) => a.patientId === patient._id)
+                            .length > 0 ? (
                             bookings
                               .filter((a) => a.patientId === patient._id)
                               .map((a) => (
                                 <div key={a._id} className="text-sm">
-                                  {a.date} · {a.startTime} - {a.endTime} · {a.service}
+                                  {a.date} · {a.startTime} - {a.endTime} ·{" "}
+                                  {a.service}
                                 </div>
                               ))
                           ) : (
@@ -613,7 +643,7 @@ export default function DentalAdminDashboard() {
                             .filter(
                               (s) =>
                                 s.dentistId === dentist._id &&
-                                s.date === selectedDate
+                                s.date === selectedDate,
                             )
                             .map((s) => (
                               <div key={s._id} className="text-sm">
@@ -623,7 +653,7 @@ export default function DentalAdminDashboard() {
                           {schedules.filter(
                             (s) =>
                               s.dentistId === dentist._id &&
-                              s.date === selectedDate
+                              s.date === selectedDate,
                           ).length === 0 && (
                             <p className="text-sm text-gray-500">
                               No schedule for today
@@ -640,7 +670,8 @@ export default function DentalAdminDashboard() {
                                 {getPatientName(a.patientId)}
                               </div>
                             ))}
-                          {bookings.filter((a) => a.dentistId === dentist._id).length === 0 && (
+                          {bookings.filter((a) => a.dentistId === dentist._id)
+                            .length === 0 && (
                             <p className="text-sm text-gray-500">
                               No upcoming bookings
                             </p>
@@ -819,7 +850,10 @@ export default function DentalAdminDashboard() {
                 {schedules
                   .filter((schedule) => schedule.isHoliday)
                   .map((holiday) => (
-                    <Card key={holiday._id} className="border-red-300 bg-red-50">
+                    <Card
+                      key={holiday._id}
+                      className="border-red-300 bg-red-50"
+                    >
                       <CardHeader className="pb-2">
                         <div className="flex justify-between">
                           <CardTitle className="text-base">
@@ -879,7 +913,7 @@ export default function DentalAdminDashboard() {
                     if (date) {
                       handleCurrentScheduleChange(
                         "date",
-                        format(date, "yyyy-MM-dd")
+                        format(date, "yyyy-MM-dd"),
                       );
                     }
                   }}
