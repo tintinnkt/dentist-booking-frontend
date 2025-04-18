@@ -31,34 +31,34 @@ import {
 } from "@/components/ui/Select";
 import { Switch } from "@/components/ui/Switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { BackendRoutes } from "@/config/apiRoutes";
 import {
   Calendar,
   Clock,
   Edit,
+  LoaderIcon,
   Plus,
   Trash2,
   User,
   UserCheck,
+  XCircleIcon,
 } from "lucide-react";
-import { useState } from "react";
-
-// Define types for our data models
-interface Dentist {
-  id: number;
-  name: string;
-  specialization: string;
-}
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { format } from "date-fns";
+import { DentistProps } from "@/types/api/Dentist";
 
 interface Patient {
-  id: number;
+  _id: string;
   name: string;
   phone: string;
   email: string;
 }
 
 interface Schedule {
-  id: number;
-  dentistId: number | null;
+  _id: string;
+  dentistId: string | null;
   date: string;
   startTime: string;
   endTime: string;
@@ -66,10 +66,10 @@ interface Schedule {
   title?: string;
 }
 
-interface Appointment {
-  id: number;
-  patientId: number;
-  dentistId: number;
+interface Booking {
+  _id: string;
+  patientId: string;
+  dentistId: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -83,170 +83,168 @@ interface HolidayFormData {
   endTime: string;
 }
 
-// Mock data
-const mockDentists: Array<Dentist> = [
-  { id: 1, name: "Dr. Sarah Johnson", specialization: "Orthodontist" },
-  { id: 2, name: "Dr. Michael Chen", specialization: "Periodontist" },
-  { id: 3, name: "Dr. Emily Davis", specialization: "Pediatric Dentist" },
-];
+const fetchDentists = async (): Promise<DentistProps[]> => {
+  const response = await axios.get(BackendRoutes.DENTIST);
+  return response.data.data;
+};
 
-const mockPatients: Array<Patient> = [
-  {
-    id: 1,
-    name: "James Wilson",
-    phone: "555-123-4567",
-    email: "james@example.com",
-  },
-  {
-    id: 2,
-    name: "Maria Garcia",
-    phone: "555-234-5678",
-    email: "maria@example.com",
-  },
-  {
-    id: 3,
-    name: "Robert Taylor",
-    phone: "555-345-6789",
-    email: "robert@example.com",
-  },
-];
+const fetchPatients = async (): Promise<Patient[]> => {
+  const response = await axios.get(BackendRoutes.PATIENTS);
+  return response.data.data;
+};
 
-const mockSchedules: Array<Schedule> = [
-  {
-    id: 1,
-    dentistId: 1,
-    date: "2025-04-10",
-    startTime: "09:00",
-    endTime: "12:00",
-    isHoliday: false,
-  },
-  {
-    id: 2,
-    dentistId: 1,
-    date: "2025-04-10",
-    startTime: "14:00",
-    endTime: "17:00",
-    isHoliday: false,
-  },
-  {
-    id: 3,
-    dentistId: 2,
-    date: "2025-04-11",
-    startTime: "10:00",
-    endTime: "15:00",
-    isHoliday: false,
-  },
-  {
-    id: 4,
-    dentistId: 3,
-    date: "2025-04-12",
-    startTime: "09:00",
-    endTime: "18:00",
-    isHoliday: false,
-  },
-  {
-    id: 5,
-    dentistId: null,
-    date: "2025-04-15",
-    startTime: "00:00",
-    endTime: "23:59",
-    isHoliday: true,
-    title: "Clinic Holiday",
-  },
-];
+const fetchSchedules = async (): Promise<Schedule[]> => {
+  const response = await axios.get(BackendRoutes.SCHEDULES);
+  return response.data.data;
+};
 
-const mockAppointments: Array<Appointment> = [
-  {
-    id: 1,
-    patientId: 1,
-    dentistId: 1,
-    date: "2025-04-10",
-    startTime: "10:00",
-    endTime: "11:00",
-    service: "Teeth Cleaning",
-  },
-  {
-    id: 2,
-    patientId: 2,
-    dentistId: 2,
-    date: "2025-04-11",
-    startTime: "14:00",
-    endTime: "15:00",
-    service: "Root Canal",
-  },
-  {
-    id: 3,
-    patientId: 3,
-    dentistId: 1,
-    date: "2025-04-10",
-    startTime: "15:00",
-    endTime: "16:00",
-    service: "Filling",
-  },
-];
+const fetchBookings = async (): Promise<Booking[]> => {
+  const response = await axios.get(BackendRoutes.BOOKING);
+  return response.data.data;
+};
+
+const addHoliday = async (holiday: Omit<Schedule, "_id">): Promise<Schedule> => {
+  const response = await axios.post(BackendRoutes.SCHEDULES, holiday);
+  return response.data.data;
+};
+
+const updateSchedule = async (schedule: Schedule): Promise<Schedule> => {
+  const response = await axios.put(
+    `${BackendRoutes.SCHEDULES}/${schedule._id}`,
+    schedule
+  );
+  return response.data.data;
+};
+
+const deleteSchedule = async (id: string): Promise<void> => {
+  await axios.delete(`${BackendRoutes.SCHEDULES}/${id}`);
+};
 
 export default function DentalAdminDashboard() {
+  const queryClient = useQueryClient();
   const [selectedDentist, setSelectedDentist] = useState<string>("all");
-  const [schedules, setSchedules] = useState<Array<Schedule>>(mockSchedules);
-  const [appointments, setAppointments] =
-    useState<Array<Appointment>>(mockAppointments);
-  const [selectedDate, setSelectedDate] = useState<string>("2025-04-10");
-  const [viewMode, setViewMode] = useState<"schedule" | "appointment">(
-    "schedule",
+  const [selectedDate, setSelectedDate] = useState<string>(
+    format(new Date(), "yyyy-MM-dd")
   );
-  const [holidayDialogOpen, setHolidayDialogOpen] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<"schedule" | "booking">("schedule");
+  const [holidayDialogOpen, setHolidayDialogOpen] = useState(false);
   const [newHoliday, setNewHoliday] = useState<HolidayFormData>({
-    date: "",
+    date: format(new Date(), "yyyy-MM-dd"),
     title: "",
     startTime: "00:00",
     endTime: "23:59",
   });
-  const [editScheduleDialog, setEditScheduleDialog] = useState<boolean>(false);
+  const [editScheduleDialog, setEditScheduleDialog] = useState(false);
   const [currentSchedule, setCurrentSchedule] = useState<Schedule | null>(null);
-  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"default" | "destructive">("default");
 
-  // Get filtered schedules based on selected dentist and date
-  const getFilteredSchedules = (): Array<Schedule> => {
+  // Data fetching
+  const { data: dentists = [], isPending: isDentistsLoading, error: dentistsError } = 
+    useQuery({ queryKey: ["dentists"], queryFn: fetchDentists });
+  
+  const { data: patients = [], isPending: isPatientsLoading, error: patientsError } = 
+    useQuery({ queryKey: ["patients"], queryFn: fetchPatients });
+  
+  const { data: schedules = [], isPending: isSchedulesLoading, error: schedulesError } = 
+    useQuery({ queryKey: ["schedules"], queryFn: fetchSchedules });
+  
+  const { data: bookings = [], isPending: isBookingsLoading, error: bookingsError } = 
+    useQuery({ queryKey: ["bookings"], queryFn: fetchBookings });
+
+  // Mutations
+  const addHolidayMutation = useMutation({
+    mutationFn: addHoliday,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      setAlertMessage("Holiday added successfully");
+      setAlertType("default");
+      setHolidayDialogOpen(false);
+      resetHolidayForm();
+    },
+    onError: (error) => {
+      setAlertMessage(`Error adding holiday: ${error.message}`);
+      setAlertType("destructive");
+    },
+  });
+
+  const updateScheduleMutation = useMutation({
+    mutationFn: updateSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      setAlertMessage("Schedule updated successfully");
+      setAlertType("default");
+      setEditScheduleDialog(false);
+    },
+    onError: (error) => {
+      setAlertMessage(`Error updating schedule: ${error.message}`);
+      setAlertType("destructive");
+    },
+  });
+
+  const deleteScheduleMutation = useMutation({
+    mutationFn: deleteSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      setAlertMessage("Schedule deleted successfully");
+      setAlertType("default");
+    },
+    onError: (error) => {
+      setAlertMessage(`Error deleting schedule: ${error.message}`);
+      setAlertType("destructive");
+    },
+  });
+
+  // Helper functions
+  const resetHolidayForm = () => {
+    setNewHoliday({
+      date: format(new Date(), "yyyy-MM-dd"),
+      title: "",
+      startTime: "00:00",
+      endTime: "23:59",
+    });
+  };
+
+  const getFilteredSchedules = (): Schedule[] => {
     let filtered = [...schedules];
-
     if (selectedDentist !== "all") {
       filtered = filtered.filter(
         (schedule) =>
-          schedule.dentistId === parseInt(selectedDentist) ||
-          (schedule.isHoliday && schedule.dentistId === null),
+          schedule.dentistId === selectedDentist ||
+          (schedule.isHoliday && schedule.dentistId === null)
       );
     }
-
     if (selectedDate) {
       filtered = filtered.filter((schedule) => schedule.date === selectedDate);
     }
-
     return filtered;
   };
 
-  // Get filtered appointments based on selected dentist and date
-  const getFilteredAppointments = (): Array<Appointment> => {
-    let filtered = [...appointments];
-
+  const getFilteredBookings = (): Booking[] => {
+    let filtered = [...bookings];
     if (selectedDentist !== "all") {
       filtered = filtered.filter(
-        (appointment) => appointment.dentistId === parseInt(selectedDentist),
+        (booking) => booking.dentistId === selectedDentist
       );
     }
-
     if (selectedDate) {
-      filtered = filtered.filter(
-        (appointment) => appointment.date === selectedDate,
-      );
+      filtered = filtered.filter((booking) => booking.date === selectedDate);
     }
-
     return filtered;
   };
 
-  // Add holiday
-  const handleAddHoliday = (): void => {
-    const holiday: Schedule = {
-      id: schedules.length + 1,
+  const getDentistName = (id: string): string => {
+    const dentist = dentists.find((d) => d._id === id);
+    return dentist ? dentist.name : "Unknown Dentist";
+  };
+
+  const getPatientName = (id: string): string => {
+    const patient = patients.find((p) => p._id === id);
+    return patient ? patient.name : "Unknown Patient";
+  };
+
+  const handleAddHoliday = () => {
+    const holiday: Omit<Schedule, "_id"> = {
       dentistId: null,
       date: newHoliday.date,
       startTime: newHoliday.startTime,
@@ -254,94 +252,87 @@ export default function DentalAdminDashboard() {
       isHoliday: true,
       title: newHoliday.title,
     };
-
-    setSchedules([...schedules, holiday]);
-
-    // Check for conflicting appointments
-    const conflictingAppointments = appointments.filter(
-      (appointment) => appointment.date === newHoliday.date,
-    );
-
-    if (conflictingAppointments.length > 0) {
-      setAlertMessage(
-        `${conflictingAppointments.length} appointments affected by this holiday. These will be automatically canceled.`,
-      );
-      setTimeout(() => setAlertMessage(""), 5000);
-    }
-
-    setHolidayDialogOpen(false);
-    setNewHoliday({
-      date: "",
-      title: "",
-      startTime: "00:00",
-      endTime: "23:59",
-    });
+    addHolidayMutation.mutate(holiday);
   };
 
-  // Delete schedule
-  const handleDeleteSchedule = (id: number): void => {
-    setSchedules(schedules.filter((schedule) => schedule.id !== id));
-    setAlertMessage("Schedule deleted successfully");
-    setTimeout(() => setAlertMessage(""), 3000);
+  const handleDeleteSchedule = (id: string) => {
+    deleteScheduleMutation.mutate(id);
   };
 
-  // Handle edit schedule
-  const openEditSchedule = (schedule: Schedule): void => {
+  const openEditSchedule = (schedule: Schedule) => {
     setCurrentSchedule(schedule);
     setEditScheduleDialog(true);
   };
 
-  // Update schedule
-  const handleUpdateSchedule = (): void => {
-    if (!currentSchedule) return;
-
-    setSchedules(
-      schedules.map((schedule) =>
-        schedule.id === currentSchedule.id ? currentSchedule : schedule,
-      ),
-    );
-
-    setEditScheduleDialog(false);
-    setAlertMessage("Schedule updated successfully");
-    setTimeout(() => setAlertMessage(""), 3000);
+  const handleUpdateSchedule = () => {
+    if (currentSchedule) {
+      updateScheduleMutation.mutate(currentSchedule);
+    }
   };
 
-  // Get dentist name by id
-  const getDentistName = (id: number): string => {
-    const dentist = mockDentists.find((dentist) => dentist.id === id);
-    return dentist ? dentist.name : "All Dentists";
-  };
-
-  // Get patient name by id
-  const getPatientName = (id: number): string => {
-    const patient = mockPatients.find((patient) => patient.id === id);
-    return patient ? patient.name : "Unknown Patient";
-  };
-
-  // Handle current schedule changes
   const handleCurrentScheduleChange = (
     field: keyof Schedule,
-    value: string,
-  ): void => {
-    if (!currentSchedule) return;
-
-    setCurrentSchedule({
-      ...currentSchedule,
-      [field]: value,
-    });
+    value: string | null | boolean
+  ) => {
+    if (currentSchedule) {
+      setCurrentSchedule({ ...currentSchedule, [field]: value });
+    }
   };
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) setSelectedDate(format(date, "yyyy-MM-dd"));
+  };
+
+  // Effect for clearing alerts
+  useEffect(() => {
+    if (alertMessage) {
+      const timer = setTimeout(() => setAlertMessage(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertMessage]);
+
+  // Loading and error states
+  const isPending = isDentistsLoading || isPatientsLoading || 
+                   isSchedulesLoading || isBookingsLoading;
+  const error = dentistsError || patientsError || 
+               schedulesError || bookingsError;
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <Alert variant="destructive">
+          <XCircleIcon className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {(error as Error).message || "Failed to load data"}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <div className="container mx-auto flex h-screen items-center justify-center p-4">
+        <div className="flex items-center gap-2">
+          <LoaderIcon className="h-6 w-6 animate-spin" />
+          <span>Loading dashboard data...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
       <header className="mb-6">
         <h1 className="text-3xl font-bold">Dental Clinic Admin Dashboard</h1>
         <p className="text-gray-500">
-          Manage schedules, appointments, and holidays
+          Manage schedules, bookings, and holidays
         </p>
       </header>
 
       {alertMessage && (
-        <Alert className="mb-4">
+        <Alert variant={alertType} className="mb-4">
           <AlertTitle>Notification</AlertTitle>
           <AlertDescription>{alertMessage}</AlertDescription>
         </Alert>
@@ -367,32 +358,30 @@ export default function DentalAdminDashboard() {
           </TabsTrigger>
         </TabsList>
 
+        {/* Schedules Tab */}
         <TabsContent value="schedules" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Schedule Management</CardTitle>
               <CardDescription>
-                View and manage dentist schedules and appointments
+                View and manage dentist schedules and bookings
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-6 flex flex-col gap-4 md:flex-row">
                 <div className="w-full md:w-1/3">
-                  <Label htmlFor="dentist-select">Select Dentist</Label>
+                  <Label>Select Dentist</Label>
                   <Select
                     value={selectedDentist}
                     onValueChange={setSelectedDentist}
                   >
-                    <SelectTrigger id="dentist-select">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select a dentist" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Dentists</SelectItem>
-                      {mockDentists.map((dentist) => (
-                        <SelectItem
-                          key={dentist.id}
-                          value={dentist.id.toString()}
-                        >
+                      {dentists.map((dentist) => (
+                        <SelectItem key={dentist._id} value={dentist._id}>
                           {dentist.name}
                         </SelectItem>
                       ))}
@@ -401,34 +390,27 @@ export default function DentalAdminDashboard() {
                 </div>
 
                 <div className="w-full md:w-1/3">
-                  <Label htmlFor="date-select">Select Date</Label>
-                  <DatePickerWithPresets />
-                  {/* <Input
-                    id="date-select"
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                  /> */}
+                  <Label>Select Date</Label>
+                  <DatePickerWithPresets
+                    date={new Date(selectedDate)}
+                    onSelect={handleDateChange}
+                  />
                 </div>
 
                 <div className="w-full md:w-1/3">
-                  <Label htmlFor="view-mode">View Mode</Label>
+                  <Label>View Mode</Label>
                   <Select
                     value={viewMode}
-                    onValueChange={(value: "schedule" | "appointment") =>
+                    onValueChange={(value: "schedule" | "booking") =>
                       setViewMode(value)
                     }
                   >
-                    <SelectTrigger id="view-mode">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select view mode" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="schedule">
-                        Dentist Schedules
-                      </SelectItem>
-                      <SelectItem value="appointment">
-                        Patient Appointments
-                      </SelectItem>
+                      <SelectItem value="schedule">Dentist Schedules</SelectItem>
+                      <SelectItem value="booking">Patient Bookings</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -440,7 +422,7 @@ export default function DentalAdminDashboard() {
                     Schedules for{" "}
                     {selectedDentist === "all"
                       ? "All Dentists"
-                      : getDentistName(parseInt(selectedDentist))}{" "}
+                      : getDentistName(selectedDentist)}{" "}
                     on {selectedDate}
                   </h3>
 
@@ -448,17 +430,15 @@ export default function DentalAdminDashboard() {
                     {getFilteredSchedules().length > 0 ? (
                       getFilteredSchedules().map((schedule) => (
                         <Card
-                          key={schedule.id}
-                          className={`${schedule.isHoliday ? "border-red-300 bg-red-50" : ""}`}
+                          key={schedule._id}
+                          className={schedule.isHoliday ? "border-red-300 bg-red-50" : ""}
                         >
                           <CardHeader className="pb-2">
                             <div className="flex justify-between">
                               <CardTitle className="text-base">
                                 {schedule.isHoliday
-                                  ? schedule.title
-                                  : getDentistName(
-                                      schedule.dentistId as number,
-                                    )}
+                                  ? schedule.title || "Holiday"
+                                  : getDentistName(schedule.dentistId as string)}
                               </CardTitle>
                               <div className="flex space-x-2">
                                 {!schedule.isHoliday && (
@@ -473,17 +453,14 @@ export default function DentalAdminDashboard() {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={() =>
-                                    handleDeleteSchedule(schedule.id)
-                                  }
+                                  onClick={() => handleDeleteSchedule(schedule._id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
                             <CardDescription>
-                              {schedule.date} · {schedule.startTime} -{" "}
-                              {schedule.endTime}
+                              {schedule.date} · {schedule.startTime} - {schedule.endTime}
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
@@ -508,33 +485,33 @@ export default function DentalAdminDashboard() {
               ) : (
                 <div>
                   <h3 className="mb-4 text-lg font-medium">
-                    Appointments for{" "}
+                    Bookings for{" "}
                     {selectedDentist === "all"
                       ? "All Dentists"
-                      : getDentistName(parseInt(selectedDentist))}{" "}
+                      : getDentistName(selectedDentist)}{" "}
                     on {selectedDate}
                   </h3>
 
                   <div className="space-y-4">
-                    {getFilteredAppointments().length > 0 ? (
-                      getFilteredAppointments().map((appointment) => (
-                        <Card key={appointment.id}>
+                    {getFilteredBookings().length > 0 ? (
+                      getFilteredBookings().map((booking) => (
+                        <Card key={booking._id}>
                           <CardHeader className="pb-2">
                             <div className="flex justify-between">
                               <CardTitle className="text-base">
-                                {getPatientName(appointment.patientId)}
+                                {getPatientName(booking.patientId)}
                               </CardTitle>
-                              <Badge>{appointment.service}</Badge>
+                              <Badge>{booking.service}</Badge>
                             </div>
                             <CardDescription>
-                              With {getDentistName(appointment.dentistId)}
+                              With {getDentistName(booking.dentistId)}
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
                             <div className="flex items-center">
                               <Clock className="mr-2 h-4 w-4" />
                               <span>
-                                {appointment.startTime} - {appointment.endTime}
+                                {booking.startTime} - {booking.endTime}
                               </span>
                             </div>
                           </CardContent>
@@ -542,7 +519,7 @@ export default function DentalAdminDashboard() {
                       ))
                     ) : (
                       <p className="text-gray-500">
-                        No appointments found for the selected criteria.
+                        No bookings found for the selected criteria.
                       </p>
                     )}
                   </div>
@@ -552,7 +529,8 @@ export default function DentalAdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="patients">
+        {/* Patients Tab */}
+        <TabsContent value="patients" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Patient Management</CardTitle>
@@ -562,12 +540,12 @@ export default function DentalAdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockPatients.map((patient) => (
-                  <Card key={patient.id}>
+                {patients.map((patient) => (
+                  <Card key={patient._id}>
                     <CardHeader>
                       <CardTitle>{patient.name}</CardTitle>
                       <CardDescription>
-                        Patient ID: {patient.id}
+                        Patient ID: {patient._id}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -578,21 +556,18 @@ export default function DentalAdminDashboard() {
                           <p>Email: {patient.email}</p>
                         </div>
                         <div>
-                          <p className="font-medium">Upcoming Appointments</p>
-                          {appointments.filter(
-                            (a) => a.patientId === patient.id,
-                          ).length > 0 ? (
-                            appointments
-                              .filter((a) => a.patientId === patient.id)
+                          <p className="font-medium">Upcoming Bookings</p>
+                          {bookings.filter((a) => a.patientId === patient._id).length > 0 ? (
+                            bookings
+                              .filter((a) => a.patientId === patient._id)
                               .map((a) => (
-                                <div key={a.id} className="text-sm">
-                                  {a.date} · {a.startTime} - {a.endTime} ·{" "}
-                                  {a.service}
+                                <div key={a._id} className="text-sm">
+                                  {a.date} · {a.startTime} - {a.endTime} · {a.service}
                                 </div>
                               ))
                           ) : (
                             <p className="text-sm text-gray-500">
-                              No upcoming appointments
+                              No upcoming bookings
                             </p>
                           )}
                         </div>
@@ -601,7 +576,7 @@ export default function DentalAdminDashboard() {
                     <CardFooter>
                       <div className="flex justify-end space-x-2">
                         <Button variant="outline">View Details</Button>
-                        <Button>Book Appointment</Button>
+                        <Button>Book Booking</Button>
                       </div>
                     </CardFooter>
                   </Card>
@@ -611,7 +586,8 @@ export default function DentalAdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="dentists">
+        {/* Dentists Tab */}
+        <TabsContent value="dentists" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Dentist Management</CardTitle>
@@ -621,12 +597,12 @@ export default function DentalAdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockDentists.map((dentist) => (
-                  <Card key={dentist.id}>
+                {dentists.map((dentist) => (
+                  <Card key={dentist._id}>
                     <CardHeader>
                       <CardTitle>{dentist.name}</CardTitle>
                       <CardDescription>
-                        {dentist.specialization}
+                        {dentist.areaOfExpertise}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -636,25 +612,39 @@ export default function DentalAdminDashboard() {
                           {schedules
                             .filter(
                               (s) =>
-                                s.dentistId === dentist.id &&
-                                s.date === selectedDate,
+                                s.dentistId === dentist._id &&
+                                s.date === selectedDate
                             )
                             .map((s) => (
-                              <div key={s.id} className="text-sm">
+                              <div key={s._id} className="text-sm">
                                 {s.startTime} - {s.endTime}
                               </div>
                             ))}
+                          {schedules.filter(
+                            (s) =>
+                              s.dentistId === dentist._id &&
+                              s.date === selectedDate
+                          ).length === 0 && (
+                            <p className="text-sm text-gray-500">
+                              No schedule for today
+                            </p>
+                          )}
                         </div>
                         <div>
-                          <p className="font-medium">Upcoming Appointments</p>
-                          {appointments
-                            .filter((a) => a.dentistId === dentist.id)
+                          <p className="font-medium">Upcoming Bookings</p>
+                          {bookings
+                            .filter((a) => a.dentistId === dentist._id)
                             .map((a) => (
-                              <div key={a.id} className="text-sm">
+                              <div key={a._id} className="text-sm">
                                 {a.date} · {a.startTime} - {a.endTime} ·{" "}
                                 {getPatientName(a.patientId)}
                               </div>
                             ))}
+                          {bookings.filter((a) => a.dentistId === dentist._id).length === 0 && (
+                            <p className="text-sm text-gray-500">
+                              No upcoming bookings
+                            </p>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -671,7 +661,8 @@ export default function DentalAdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="holidays">
+        {/* Holidays Tab */}
+        <TabsContent value="holidays" className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -694,8 +685,7 @@ export default function DentalAdminDashboard() {
                   <DialogHeader>
                     <DialogTitle>Schedule a Holiday</DialogTitle>
                     <DialogDescription>
-                      Add a holiday or off-service period. Any existing
-                      appointments during this time will be canceled.
+                      Add a holiday or off-service period.
                     </DialogDescription>
                   </DialogHeader>
 
@@ -720,16 +710,19 @@ export default function DentalAdminDashboard() {
                       <Label htmlFor="holiday-date" className="text-right">
                         Date
                       </Label>
-                      <DatePickerWithPresets />
-                      {/* <Input
-                        id="holiday-date"
-                        type="date"
-                        className="col-span-3"
-                        value={newHoliday.date}
-                        onChange={(e) =>
-                          setNewHoliday({ ...newHoliday, date: e.target.value })
-                        }
-                      /> */}
+                      <div className="col-span-3">
+                        <DatePickerWithPresets
+                          date={new Date(newHoliday.date)}
+                          onSelect={(date) => {
+                            if (date) {
+                              setNewHoliday({
+                                ...newHoliday,
+                                date: format(date, "yyyy-MM-dd"),
+                              });
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="holiday-start" className="text-right">
@@ -804,7 +797,19 @@ export default function DentalAdminDashboard() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleAddHoliday}>Save Holiday</Button>
+                    <Button
+                      onClick={handleAddHoliday}
+                      disabled={addHolidayMutation.isPending}
+                    >
+                      {addHolidayMutation.isPending ? (
+                        <>
+                          <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Holiday"
+                      )}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -814,7 +819,7 @@ export default function DentalAdminDashboard() {
                 {schedules
                   .filter((schedule) => schedule.isHoliday)
                   .map((holiday) => (
-                    <Card key={holiday.id} className="border-red-300 bg-red-50">
+                    <Card key={holiday._id} className="border-red-300 bg-red-50">
                       <CardHeader className="pb-2">
                         <div className="flex justify-between">
                           <CardTitle className="text-base">
@@ -823,7 +828,7 @@ export default function DentalAdminDashboard() {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleDeleteSchedule(holiday.id)}
+                            onClick={() => handleDeleteSchedule(holiday._id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -858,7 +863,7 @@ export default function DentalAdminDashboard() {
           <DialogHeader>
             <DialogTitle>Edit Schedule</DialogTitle>
             <DialogDescription>
-              {"Update the dentist's schedule details."}
+              Update the dentist's schedule details.
             </DialogDescription>
           </DialogHeader>
 
@@ -868,16 +873,17 @@ export default function DentalAdminDashboard() {
                 <Label htmlFor="edit-date" className="text-right">
                   Date
                 </Label>
-                <DatePickerWithPresets />
-                {/* <Input
-                  id="edit-date"
-                  type="date"
-                  className="col-span-3"
-                  value={currentSchedule.date}
-                  onChange={(e) =>
-                    handleCurrentScheduleChange("date", e.target.value)
-                  }
-                /> */}
+                <DatePickerWithPresets
+                  date={new Date(currentSchedule.date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      handleCurrentScheduleChange(
+                        "date",
+                        format(date, "yyyy-MM-dd")
+                      );
+                    }
+                  }}
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-start" className="text-right">
@@ -917,7 +923,19 @@ export default function DentalAdminDashboard() {
             >
               Cancel
             </Button>
-            <Button onClick={handleUpdateSchedule}>Update Schedule</Button>
+            <Button
+              onClick={handleUpdateSchedule}
+              disabled={updateScheduleMutation.isPending}
+            >
+              {updateScheduleMutation.isPending ? (
+                <>
+                  <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Schedule"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
