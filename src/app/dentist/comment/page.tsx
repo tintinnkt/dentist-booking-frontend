@@ -1,17 +1,19 @@
 "use client"
+import NavBar from "@/components/NavBar";
 
 import ScheduleManagement from "@/components/ScheduleManament";
+import CommentDentist from "@/components/CommentDentist"
 import { useRouter } from "next/navigation";
 
-
-export default function DentistDashboard() {
+export default function CommentDashboard() {
     const router = useRouter();
 
-    const CommentClick = () => {
-        router.push("/dentist/comment");
+    const ScheduleClick = () => {
+        router.push("/dentist"); 
       };
-    const HolidayClick = () => {
-        router.push("/dentist/holiday");
+
+      const HolidayClick = () => {
+        router.push("/dentist/holiday"); 
       };
     return (
       <main>
@@ -19,12 +21,12 @@ export default function DentistDashboard() {
           Dental Clinic Dentist Dashboard
         </div>
         <div className="flex justify-start px-90"><button
-            className="bg-white hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded ">
+            className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded " onClick={() => {ScheduleClick()}}>
             Schedules
           </button>
-
+          
           <button
-            className="bg-orange-400 hover:bg-white  text-black text-sm font-semibold px-4 py-1 rounded" onClick={() => CommentClick()}>
+            className="bg-white hover:bg-white  text-black text-sm font-semibold px-4 py-1 rounded " >
             comment
           </button>
 
@@ -33,12 +35,12 @@ export default function DentistDashboard() {
             Holidays
           </button>
           </div>
-
+        
         <div className="flex justify-center ">
-        <ScheduleManagement></ScheduleManagement>
+        <CommentDentist></CommentDentist>
         </div>
-
+        
       </main>
     );
   }
-
+  
