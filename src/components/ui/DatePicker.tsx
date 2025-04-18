@@ -20,8 +20,27 @@ import {
 } from "@/components/ui/Select";
 import { cn } from "@/lib/utils";
 
-export function DatePickerWithPresets() {
-  const [date, setDate] = React.useState<Date>();
+interface DatePickerWithPresetsProps {
+  date?: Date;       // Changed from 'selected' to 'date'
+  onSelect?: (date: Date | undefined) => void;
+}
+
+export function DatePickerWithPresets({
+  date: selectedDate,  // Renamed prop here for internal usage
+  onSelect,
+}: DatePickerWithPresetsProps) {
+  const [date, setDate] = React.useState<Date | undefined>(selectedDate);
+
+  React.useEffect(() => {
+    setDate(selectedDate);
+  }, [selectedDate]);
+
+  const handleDateSelect = (newDate: Date | undefined) => {
+    setDate(newDate);
+    if (onSelect) {
+      onSelect(newDate);
+    }
+  };
 
   return (
     <Popover>
@@ -33,7 +52,7 @@ export function DatePickerWithPresets() {
             !date && "text-muted-foreground",
           )}
         >
-          <CalendarIcon />
+          <CalendarIcon className="mr-2 h-4 w-4" />
           {date ? format(date, "PPP") : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
@@ -43,7 +62,7 @@ export function DatePickerWithPresets() {
       >
         <Select
           onValueChange={(value) =>
-            setDate(addDays(new Date(), parseInt(value)))
+            handleDateSelect(addDays(new Date(), parseInt(value)))
           }
         >
           <SelectTrigger>
@@ -57,7 +76,11 @@ export function DatePickerWithPresets() {
           </SelectContent>
         </Select>
         <div className="rounded-md border">
-          <Calendar mode="single" selected={date} onSelect={setDate} />
+          <Calendar 
+            mode="single" 
+            selected={date} 
+            onSelect={handleDateSelect} 
+          />
         </div>
       </PopoverContent>
     </Popover>
