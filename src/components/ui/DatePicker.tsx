@@ -52,7 +52,7 @@ export function DatePickerWithPresets({
             !date && "text-muted-foreground",
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon />
           {date ? format(date, "PPP") : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
@@ -62,7 +62,7 @@ export function DatePickerWithPresets({
       >
         <Select
           onValueChange={(value) =>
-            handleDateSelect(addDays(new Date(), parseInt(value)))
+            setDate(addDays(new Date(), parseInt(value)))
           }
         >
           <SelectTrigger>
