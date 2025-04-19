@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Trash2 } from "lucide-react";
+import { Trash2, LoaderIcon, XCircleIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { BackendRoutes } from "@/config/apiRoutes";
 
 interface Appointment {
   date: string;
@@ -25,78 +27,74 @@ interface Dentist {
   todaySchedule: string[];
   upcomingAppointments: Appointment[];
   comments: Comment[];
+  yearsOfExperience: number;
+  areaOfExpertise: string[];
 }
 
-const fakeDentists: Dentist[] = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialty: "Orthodontist",
-    todaySchedule: ["09:00 - 12:00", "14:00 - 17:00"],
-    upcomingAppointments: [
-      { date: "2025-04-10", timeRange: "10:00 - 11:10", patientName: "James Wilson" },
-      { date: "2025-04-10", timeRange: "15:00 - 16:00", patientName: "Robert Tayler" },
-    ],
-    comments: [
-      {
-        id: 1,
-        title: "comment from user1",
-        content: "Had a great experience with Dr. Sarah Johnson!",
-        dateTime: "9:00 2025/04/02",
-      },
-      {
-        id: 2,
-        title: "comment from user2",
-        content: "Super professional and kind.",
-        dateTime: "10:00 2025/04/02",
-      },
-      {
-        id: 3,
-        title: "comment from user3",
-        content: "Would definitely recommend!",
-        dateTime: "12:00 2025/04/02",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Chen",
-    specialty: "Periodontist",
-    todaySchedule: ["09:00 - 12:00"],
-    upcomingAppointments: [
-      { date: "2025-04-10", timeRange: "09:00 - 12:00", patientName: "Tatie Hash" },
-    ],
-    comments: [],
-  },
-];
+// API call to fetch dentists data
+const fetchDentists = async (): Promise<Array<Dentist>> => {
+  const response = await axios.get(BackendRoutes.DENTIST);
+  if (Array.isArray(response.data.data)) {
+    return response.data.data;
+  }
+  throw new Error("Failed to fetch dentists data");
+};
+
+// API call to delete a comment
+const deleteComment = async (dentistId: number, commentId: number): Promise<void> => {
+  await axios.delete(`${BackendRoutes.DENTIST}/${dentistId}/comments/${commentId}`);
+};
 
 export default function DentistManagement() {
   const [selectedDentistId, setSelectedDentistId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const {
+    data: dentists = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ["dentists"],
+    queryFn: fetchDentists,
+  });
 
   const handleCardClick = (id: number) => {
     setSelectedDentistId(id === selectedDentistId ? null : id);
   };
 
-  const handleDeleteComment = (dentistId: number, commentId: number) => {
-    const updatedDentists = fakeDentists.map((d) => {
-      if (d.id === dentistId) {
-        return {
-          ...d,
-          comments: d.comments.filter((c) => c.id !== commentId),
-        };
-      }
-      return d;
-    });
-
-    // Simulate update
-    setSelectedDentistId(null);
-    setTimeout(() => setSelectedDentistId(dentistId), 0);
+  const handleDeleteComment = async (dentistId: number, commentId: number) => {
+    try {
+      await deleteComment(dentistId, commentId);
+      refetch();
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+    }
   };
 
-  const filteredDentists = fakeDentists.filter((dentist) =>
+  const filteredDentists = dentists.filter((dentist) =>
     `${dentist.name} ${dentist.specialty}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
+        <p className="text-red-500 flex items-center gap-2">
+          <XCircleIcon size={18} /> Error: {(error as Error).message}
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
+        <p className="flex items-center justify-center gap-3 pt-4">
+          <LoaderIcon className="animate-spin" size={18} /> Loading dentists data...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
@@ -132,23 +130,33 @@ export default function DentistManagement() {
                 <div>
                   <div className="font-bold">{dentist.name}</div>
                   <div className="text-sm text-gray-400">{dentist.specialty}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {dentist.yearsOfExperience} years of experience
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {dentist.areaOfExpertise?.join(", ")}
+                  </div>
 
                   <div className="mt-3 font-bold text-sm">Today's Schedule</div>
                   <div className="text-sm">
-                    {dentist.todaySchedule.map((time, idx) => (
+                    {dentist.todaySchedule?.map((time, idx) => (
                       <div key={idx}>{time}</div>
-                    ))}
+                    )) || "No schedule for today"}
                   </div>
                 </div>
 
                 <div>
                   <div className="font-bold text-sm">Upcoming Appointments</div>
                   <div className="text-sm">
-                    {dentist.upcomingAppointments.map((appointment, idx) => (
-                      <div key={idx}>
-                        {appointment.date} - {appointment.timeRange} - {appointment.patientName}
-                      </div>
-                    ))}
+                    {dentist.upcomingAppointments?.length > 0 ? (
+                      dentist.upcomingAppointments.map((appointment, idx) => (
+                        <div key={idx}>
+                          {appointment.date} - {appointment.timeRange} - {appointment.patientName}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 text-sm italic">No upcoming appointments</div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -158,7 +166,7 @@ export default function DentistManagement() {
             {selectedDentistId === dentist.id && (
               <div className="bg-white rounded-xl shadow-md p-6 mt-2 mb-6">
                 <div className="font-bold mb-3">{dentist.name} comments</div>
-                {dentist.comments.length === 0 ? (
+                {dentist.comments?.length === 0 || !dentist.comments ? (
                   <div className="text-gray-500 text-sm italic">No comments available</div>
                 ) : (
                   dentist.comments.map((comment) => (
