@@ -19,3 +19,31 @@ export interface Booking {
   createdAt: string;
   __v: number;
 }
+
+type BookingItem = {
+  id: string;
+  date: string;
+  patientName: string;
+  patientContact: string;
+  patientEmail: string;
+  status: string;
+};
+
+type DentistSchedule = {
+  dentist: {
+    id: string;
+    user: {
+      name: string;
+      tel: string;
+      email: string;
+    };
+    yearsOfExperience: number;
+    areaOfExpertise: string[];
+  };
+  upcomingBookings: BookingItem[];
+  unavailableSlots: {
+    id: string;
+    date: string;
+    createdAt: string;
+  }[];
+};
