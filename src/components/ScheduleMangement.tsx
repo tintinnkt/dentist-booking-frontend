@@ -31,10 +31,10 @@ interface Dentist {
 const fetchUnavailableBookings = async (dentistId?: string, date?: string): Promise<Array<Booking>> => {
   let url = BackendRoutes.UNAVAILABLE_BOOKING;
   const params: Record<string, string> = {};
-  
+
   if (dentistId) params.dentistId = dentistId;
   if (date) params.date = date;
-  
+
   const response = await axios.get(url, { params });
   if (Array.isArray(response.data.data)) {
     return response.data.data;
@@ -124,7 +124,7 @@ export default function ScheduleManagement() {
   });
 
   // Filter bookings based on the view mode
-  const filteredBookings = viewMode === "Dental schedules" 
+  const filteredBookings = viewMode === "Dental schedules"
     ? formattedBookings // Unavailable times are fetched by the API
     : formattedBookings.filter(booking => booking.status === "Booked" || booking.status === "Cancel");
 
@@ -189,7 +189,7 @@ export default function ScheduleManagement() {
         </div>
 
         <div className="flex items-end">
-          <button 
+          <button
             className="bg-orange-400 hover:bg-orange-300 text-black text-sm font-semibold px-4 py-2 rounded transition-colors"
             onClick={handleSearch}
           >

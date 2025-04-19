@@ -32,7 +32,7 @@ export default function OffHoursManagement() {
   const { data: session } = useSession(); // Move useSession to component level
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
-  
+
   // Define fetchOffHours using the session from component scope
   const fetchOffHours = async (): Promise<OffHour[]> => {
     if (!session?.user.token) return [];
@@ -44,7 +44,7 @@ export default function OffHoursManagement() {
     }
     throw new Error("Failed to fetch holiday data");
   };
-  
+
   const {
     data: offHours = [],
     isLoading,
@@ -83,7 +83,7 @@ export default function OffHoursManagement() {
     mutationFn: async (newOffHour: Omit<OffHour, "_id" | "createdAt">) => {
       if (!session?.user.token) throw new Error("Authentication required");
       const response = await axios.post(
-        BackendRoutes.OFF_HOURS, 
+        BackendRoutes.OFF_HOURS,
         newOffHour,
         { headers: { Authorization: `Bearer ${session.user.token}` } }
       );
@@ -220,8 +220,8 @@ export default function OffHoursManagement() {
                   startDate: (form.startDate as HTMLInputElement).value,
                   endDate: (form.endDate as HTMLInputElement).value,
                   description: (form.description as HTMLInputElement).value,
-                  isForAllDentist: user.role === Role_type.ADMIN 
-                    ? (form.isForAllDentist as HTMLInputElement)?.checked 
+                  isForAllDentist: user.role === Role_type.ADMIN
+                    ? (form.isForAllDentist as HTMLInputElement)?.checked
                     : false,
                 });
               }}
