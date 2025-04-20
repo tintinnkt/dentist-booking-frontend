@@ -71,7 +71,9 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   const { bookAppointment, isCreating } = useBooking();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<DentistProps>>({
-    name: dentist.name,
+    user: {
+      name: dentist.user.name,
+    },
     yearsOfExperience: dentist.yearsOfExperience,
     areaOfExpertise: dentist.areaOfExpertise,
   });
@@ -172,7 +174,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
     setIsEditing(!isEditing);
     if (isEditing) {
       setFormData({
-        name: dentist.name,
+        user: { name: dentist.user.name },
         yearsOfExperience: dentist.yearsOfExperience,
         areaOfExpertise: dentist.areaOfExpertise,
       });
@@ -182,7 +184,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
 
   const handleSave = () => {
     // Validate inputs
-    if (!formData.name || !formData.name.trim()) {
+    if (!formData.user?.name || !formData.user?.name.trim()) {
       toast.error("Name cannot be empty");
       return;
     }
@@ -201,7 +203,9 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
     }
 
     updateDentist.mutate({
-      name: formData.name,
+      user: {
+        name: formData.user?.name || "",
+      },
       yearsOfExperience: formData.yearsOfExperience,
       areaOfExpertise: selectedExpertise,
     });
@@ -211,7 +215,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
     <Card className="w-full max-w-xl rounded-xl">
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center space-y-1 space-x-4">
-          <h2 className="text-2xl">{dentist.name}</h2>
+          <h2 className="text-2xl">{dentist.user.name}</h2>
           <Badge variant={"secondary"}>
             {dentist.yearsOfExperience} year
             {dentist.yearsOfExperience > 1 ? "s" : ""} of experience
@@ -230,12 +234,12 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
           <Input
             name="name"
             type="text"
-            value={formData.name || ""}
+            value={formData.user?.name || ""}
             onChange={handleInputChange}
             className="sm:col-span-2"
           />
         ) : (
-          <p className="sm:col-span-2">{dentist.name}</p>
+          <p className="sm:col-span-2">{dentist.user.name}</p>
         )}
         <p className="min-w-fit">Years of experiences</p>
         {isEditing ? (
@@ -344,8 +348,8 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                     </AlertDialogHeader>
                     <AlertDialogDescription>
                       This action cannot be undone. This will permanently delete{" "}
-                      <Badge variant={"destructive"}>{dentist.name}</Badge> and
-                      remove data from our servers.
+                      <Badge variant={"destructive"}>{dentist.user.name}</Badge>{" "}
+                      and remove data from our servers.
                     </AlertDialogDescription>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
