@@ -20,27 +20,29 @@ export default function CommentDashboard() {
         <div className="text-3xl font-bold flex justify-center m-8">
           Dental Clinic Dentist Dashboard
         </div>
-        <div className="flex justify-start px-90"><button
-            className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded " onClick={() => {ScheduleClick()}}>
-            Schedules
+        <div className="container mx-auto px-6 mb-6">
+          <button
+             className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded mr-2" 
+             onClick={ScheduleClick}>
+             Schedules
           </button>
           
           <button
-            className="bg-white hover:bg-white  text-black text-sm font-semibold px-4 py-1 rounded " >
-            comment
+            className="bg-white hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded mr-2">
+            Comment
           </button>
 
           <button
-            className="bg-orange-400 hover:bg-white  text-black text-sm font-semibold px-4 py-1 rounded " onClick={() => HolidayClick()}>
+            className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded" 
+            onClick={HolidayClick}>
             Holidays
           </button>
-          </div>
+        </div>
         
-        <div className="flex justify-center ">
-        <CommentDentist></CommentDentist>
+        <div className="flex justify-center">
+          <CommentDentist></CommentDentist>
         </div>
         
       </main>
     );
   }
-  

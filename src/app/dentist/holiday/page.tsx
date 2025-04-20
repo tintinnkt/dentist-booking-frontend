@@ -21,28 +21,29 @@ export default function HolidayDashboard() {
         <div className="text-3xl font-bold flex justify-center m-3">
           Dental Clinic Dentist Dashboard
         </div>
-        <div className="text-md flex justify-center m-5"> manage schedule appointments and day off.</div>
-        <div className="flex justify-start px-90"><button
-            className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded " onClick={() => {ScheduleClick()}}>
-            Schedules
+        <div className="container mx-auto px-6 mb-6">
+          <button
+             className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded mr-2" 
+             onClick={ScheduleClick}>
+             Schedules
           </button>
           
           <button
-            className="bg-orange-400 hover:bg-white  text-black text-sm font-semibold px-4 py-1 rounded " onClick={() => CommentClick()} >
-            comment
+            className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded mr-2" 
+            onClick={CommentClick}>
+            Comment
           </button>
 
           <button
-            className="bg-white hover:bg-white  text-black text-sm font-semibold px-4 py-1 rounded ">
+            className="bg-white hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded">
             Holidays
           </button>
-          </div>
+        </div>
         
-        <div className="flex justify-center ">
-        <HolidayDentist></HolidayDentist>
+        <div className="flex justify-center">
+          <HolidayDentist></HolidayDentist>
         </div>
         
       </main>
     );
   }
-  
