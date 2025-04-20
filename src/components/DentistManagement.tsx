@@ -64,6 +64,13 @@ export default function DentistManagement() {
     throw new Error("Failed to fetch dentists data");
   };
 
+  // Sort bookings by date function
+  const getSortedBookings = (bookings) => {
+    return [...bookings].sort((a, b) => {
+      return new Date(a.apptDateAndTime).getTime() - new Date(b.apptDateAndTime).getTime();
+    });
+  };
+
   const {
     data: dentists = [],
     isLoading,
@@ -182,7 +189,7 @@ export default function DentistManagement() {
                   <div className="mt-3 font-bold text-sm">Today's Schedule</div>
                   <div className="text-sm">
                     {dentist.bookings.length > 0 ? (
-                      dentist.bookings.map((booking, idx) => (
+                      getSortedBookings(dentist.bookings).map((booking, idx) => (
                         <div key={idx} className="flex items-center gap-2 mt-1">
                           <span>
                             {new Date(booking.apptDateAndTime).toLocaleDateString()} -{" "}
@@ -217,7 +224,7 @@ export default function DentistManagement() {
                 {dentist.bookings.length === 0 ? (
                   <div className="text-gray-500 text-sm italic">No bookings available</div>
                 ) : (
-                  dentist.bookings.map((booking, idx) => (
+                  getSortedBookings(dentist.bookings).map((booking, idx) => (
                     <div
                       key={idx}
                       className="border rounded-xl p-4 mb-3 shadow-sm bg-white flex justify-between"
