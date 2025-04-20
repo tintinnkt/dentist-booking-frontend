@@ -10,6 +10,7 @@ export enum BackendRoutes {
 
   DENTIST = `${BackendRootRoutes}/dentists`,
   BOOKING = `${BackendRootRoutes}/bookings`,
+  BOOKING_DENTIST = `${BackendRootRoutes}/bookings/dentist`,
   REGISTER_DENTIST = `${BackendRootRoutes}/registerDent`,
   UNAVAILABLE_BOOKING = `${BackendRootRoutes}/bookings/unavailable`,
   GET_ALL_DENTISTS_SCHEDULES = `${BackendRootRoutes}/bookings/schedules`,

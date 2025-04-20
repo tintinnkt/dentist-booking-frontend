@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getDentistSchedule } from "@/lib/dentist/getDentistSchedule";
-import { DentistSchedule } from "@/types/api/Dentist";
+import { Booking } from "@/types/api/Dentist";
 import { useSession } from "next-auth/react";
 
 export default function ScheduleManagement() {
   const [selectedDate, setSelectedDate] = useState("");
   const [show, setShow] = useState(false);
-  const [schedules, setSchedules] = useState<DentistSchedule[]>([]);
+  const [schedules, setSchedules] = useState<Booking[]>([]);
   const [message, setMessage] = useState("");
-  const { data: session, status } = useSession();
+  const { data: session} = useSession();
 
   const handleSearch = async () => {
     if (!session || !session.user.token) {
@@ -22,6 +22,10 @@ export default function ScheduleManagement() {
     try {
       const data = await getDentistSchedule(session.user.token);
       setSchedules(data);
+
+      if(!data) {
+        setMessage("รับข้อมูลไม่ได้");
+      }
 
       if (data.length === 0) {
         setMessage("ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก");
@@ -67,33 +71,24 @@ export default function ScheduleManagement() {
           <div className="mt-4 text-sm text-black font-bold">
             Schedule on {selectedDate || "this day"}
             {schedules.map((item) => {
-              const filteredBookings = item.upcomingBookings.filter((booking) => {
-                const bookingDate = new Date(booking.date).toISOString().split("T")[0];
-                return bookingDate === selectedDate;
-              });
-
-              // ถ้าไม่มี booking ในวันนั้น ไม่ต้องแสดงเลย
-              if (filteredBookings.length === 0) return null;
-
-              return (
-                <div key={item.dentist.id} className="mt-4">
-                  <h3 className="text-blue-600">{item.dentist.user.name}</h3>
-                  <ul className="list-disc ml-5 text-gray-700">
-                    {filteredBookings.map((booking) => (
-                      <li key={booking.id}>
-                        <strong>Date:</strong> {new Date(booking.date).toLocaleString()} <br />
-                          <strong>Patient:</strong> {booking.patientName} <br />
-                          <strong>Contact:</strong> {booking.patientContact} <br />
-                          <strong>Email:</strong> {booking.patientEmail} <br />
-                          <strong>Status:</strong> {booking.status}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        )}
+              const bookingDate = new Date(item.apptDate).toISOString().split("T")[0];
+              if (bookingDate !== selectedDate) return null;
+              if (!item.dentist) return null;
+        return (
+          <div key={item.dentist.id} className="mt-4">
+            <h3 className="text-blue-600">{item.user.name}</h3>
+            <ul className="list-disc ml-5 text-gray-700">
+              <li>
+                <strong>User ID:</strong> {item.user._id} <br />
+                <strong>User Name:</strong> {item.user.name} <br />
+                <strong>Appointment:</strong> {new Date(item.apptDate).toLocaleString()}
+              </li>
+          </ul>
+        </div>
+      );
+    })}
+  </div>
+)}
       </div>
     </div>
   );

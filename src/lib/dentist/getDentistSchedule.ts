@@ -4,10 +4,9 @@ import axios, { AxiosError } from "axios";
 export const getDentistSchedule = async (token: string) => {
   try {
     const response = await axios.get(
-      BackendRoutes.BOOKING,
+      BackendRoutes.BOOKING_DENTIST,
       {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       },

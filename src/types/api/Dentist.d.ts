@@ -9,6 +9,8 @@ export interface DentistProps {
 interface BookingUserProps {
   _id: string;
   name: string;
+  tel: string;
+  email: string;
 }
 
 export interface Booking {
