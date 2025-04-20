@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { LoaderIcon, XCircleIcon } from "lucide-react";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 interface OffHour {
@@ -25,20 +26,25 @@ interface OffHour {
   createdAt: string;
 }
 
-const fetchOffHours = async (): Promise<OffHour[]> => {
-  const response = await axios.get(BackendRoutes.OFF_HOURS);
-  if (Array.isArray(response.data.data)) {
-    return response.data.data;
-  }
-  throw new Error("Failed to fetch holiday data");
-};
-
 export default function OffHoursManagement() {
   const { user } = useUser();
   const queryClient = useQueryClient();
+  const { data: session } = useSession(); // Move useSession to component level
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
-
+  
+  // Define fetchOffHours using the session from component scope
+  const fetchOffHours = async (): Promise<OffHour[]> => {
+    if (!session?.user.token) return [];
+    const response = await axios.get(BackendRoutes.OFF_HOURS, {
+      headers: { Authorization: `Bearer ${session.user.token}` },
+    });
+    if (Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    throw new Error("Failed to fetch holiday data");
+  };
+  
   const {
     data: offHours = [],
     isLoading,
@@ -47,7 +53,7 @@ export default function OffHoursManagement() {
   } = useQuery<OffHour[], Error>({
     queryKey: ["offHours"],
     queryFn: fetchOffHours,
-    enabled: !!user, // Only fetch when user is available
+    enabled: !!user && !!session?.user.token, // Only fetch when user and token are available
     select: (data) => {
       if (user?.role === Role_type.ADMIN) {
         return data;
@@ -60,7 +66,10 @@ export default function OffHoursManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`${BackendRoutes.OFF_HOUR}/${id}`);
+      if (!session?.user.token) throw new Error("Authentication required");
+      await axios.delete(`${BackendRoutes.OFF_HOURS}/${id}`, {
+        headers: { Authorization: `Bearer ${session.user.token}` }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["offHours"] });
@@ -72,7 +81,12 @@ export default function OffHoursManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (newOffHour: Omit<OffHour, "_id" | "createdAt">) => {
-      const response = await axios.post(BackendRoutes.OFF_HOURS, newOffHour);
+      if (!session?.user.token) throw new Error("Authentication required");
+      const response = await axios.post(
+        BackendRoutes.OFF_HOURS, 
+        newOffHour,
+        { headers: { Authorization: `Bearer ${session.user.token}` } }
+      );
       return response.data.data;
     },
     onSuccess: () => {
