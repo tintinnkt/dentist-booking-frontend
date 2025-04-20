@@ -9,6 +9,7 @@ export enum BackendRoutes {
   UPDATE_USER = `${BackendRootRoutes}/auth/updateUser`,
   USER_INFO = `${BackendRootRoutes}/auth/me`,
   DENTIST = `${BackendRootRoutes}/dentists`,
+  PATIENTS = `${BackendRootRoutes}/`,
   BOOKING = `${BackendRootRoutes}/bookings`,
   REGISTER_DENTIST = `${BackendRootRoutes}/auth/registerDent`,
   UNAVAILABLE_BOOKING = `${BackendRootRoutes}/bookings/unavailable`,
