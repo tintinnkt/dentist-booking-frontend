@@ -30,12 +30,12 @@ export const useBooking = () => {
 
   // Create a new booking
   const createBookingMutation = useMutation({
-    mutationFn: async (apptDateAndTime: {
-      apptDate: Date;
+    mutationFn: async (booking: {
+      apptDateAndTime: Date;
       user: string;
       dentist: string;
     }) => {
-      return axios.post(BackendRoutes.BOOKING, apptDateAndTime, {
+      return axios.post(BackendRoutes.BOOKING, booking, {
         headers: {
           Authorization: `Bearer ${session?.user.token}`,
           "Content-Type": "application/json",
@@ -48,9 +48,7 @@ export const useBooking = () => {
     },
     onError: (error) => {
       if (axios.isAxiosError(error)) {
-        const errorMessage =
-          error.response?.data?.message || "Failed to book appointment";
-        toast.error(errorMessage);
+        toast.error(error.message);
       } else {
         toast.error("An unexpected error occurred");
         console.error(error);
@@ -140,7 +138,7 @@ export const useBooking = () => {
     }
 
     createBookingMutation.mutate({
-      apptDate: combinedDateTime,
+      apptDateAndTime: combinedDateTime,
       user: userId,
       dentist: dentistId,
     });
