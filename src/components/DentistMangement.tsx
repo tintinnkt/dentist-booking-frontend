@@ -21,14 +21,22 @@ interface Comment {
 }
 
 interface Dentist {
-  id: number;
-  name: string;
-  specialty: string;
-  todaySchedule: string[];
-  upcomingAppointments: Appointment[];
-  comments: Comment[];
+  id: string;
+  user: {
+    _id: string;
+    name: string;
+  };
   yearsOfExperience: number;
-  areaOfExpertise: string[];
+  areaOfExpertise: string[]; // List of specialties or expertise areas
+  bookings: Array<{
+    _id: string;
+    apptDateAndTime: string;
+    user: string;
+    dentist: string;
+    isUnavailable: boolean;
+    status: string;
+    createdAt: string;
+  }>;
 }
 
 // API call to fetch dentists data
@@ -48,7 +56,7 @@ const deleteComment = async (dentistId: number, commentId: number): Promise<void
 export default function DentistManagement() {
   const [selectedDentistId, setSelectedDentistId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const {
     data: dentists = [],
     isLoading,
@@ -72,8 +80,9 @@ export default function DentistManagement() {
     }
   };
 
+  // Filter dentists based on the search query
   const filteredDentists = dentists.filter((dentist) =>
-    `${dentist.name} ${dentist.specialty}`.toLowerCase().includes(searchQuery.toLowerCase())
+    `${dentist.user.name} ${dentist.areaOfExpertise?.join(" ")}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (error) {
@@ -107,7 +116,7 @@ export default function DentistManagement() {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Search dentist by name or specialty..."
+          placeholder="Search dentist by name or expertise..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded-md text-sm"
@@ -121,74 +130,61 @@ export default function DentistManagement() {
         filteredDentists.map((dentist) => (
           <div key={dentist.id}>
             <Card
-              className={`mb-4 cursor-pointer hover:shadow-lg ${
-                selectedDentistId === dentist.id ? "border-2 border-orange-400" : ""
-              }`}
+              className={`mb-4 cursor-pointer hover:shadow-lg ${selectedDentistId === dentist.id ? "border-2 border-orange-400" : ""}`}
               onClick={() => handleCardClick(dentist.id)}
             >
               <CardContent className="flex justify-between p-4">
                 <div>
-                  <div className="font-bold">{dentist.name}</div>
-                  <div className="text-sm text-gray-400">{dentist.specialty}</div>
+                  {/* Display dentist name here */}
+                  <div className="font-bold">{dentist.user.name}</div>
+                  <div className="text-sm text-gray-400">{dentist.areaOfExpertise?.join(", ")}</div>
                   <div className="text-xs text-gray-500 mt-1">
                     {dentist.yearsOfExperience} years of experience
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {dentist.areaOfExpertise?.join(", ")}
                   </div>
 
                   <div className="mt-3 font-bold text-sm">Today's Schedule</div>
                   <div className="text-sm">
-                    {dentist.todaySchedule?.map((time, idx) => (
-                      <div key={idx}>{time}</div>
-                    )) || "No schedule for today"}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="font-bold text-sm">Upcoming Appointments</div>
-                  <div className="text-sm">
-                    {dentist.upcomingAppointments?.length > 0 ? (
-                      dentist.upcomingAppointments.map((appointment, idx) => (
+                    {dentist.bookings.length > 0 ? (
+                      dentist.bookings.map((booking, idx) => (
                         <div key={idx}>
-                          {appointment.date} - {appointment.timeRange} - {appointment.patientName}
+                          {new Date(booking.apptDateAndTime).toLocaleDateString()} -{" "}
+                          {new Date(booking.apptDateAndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       ))
                     ) : (
-                      <div className="text-gray-500 text-sm italic">No upcoming appointments</div>
+                      <div className="text-gray-500 text-sm italic">No schedule for today</div>
                     )}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Comments */}
+            {/* Comments Section */}
             {selectedDentistId === dentist.id && (
               <div className="bg-white rounded-xl shadow-md p-6 mt-2 mb-6">
-                <div className="font-bold mb-3">{dentist.name} comments</div>
-                {dentist.comments?.length === 0 || !dentist.comments ? (
-                  <div className="text-gray-500 text-sm italic">No comments available</div>
+                <div className="font-bold mb-3">{dentist.user.name}'s Comments</div>
+                {dentist.bookings.length === 0 ? (
+                  <div className="text-gray-500 text-sm italic">No bookings available</div>
                 ) : (
-                  dentist.comments.map((comment) => (
+                  dentist.bookings.map((comment, idx) => (
                     <div
-                      key={comment.id}
+                      key={idx}
                       className="border rounded-xl p-4 mb-3 shadow-sm bg-white flex justify-between"
                     >
                       <div>
-                        <div className="font-bold text-sm">{comment.title}</div>
-                        <div className="text-sm mt-1">{comment.content}</div>
+                        <div className="font-bold text-sm">{comment._id}</div>
+                        <div className="text-sm mt-1">{comment.status}</div>
                         <div className="text-sm text-black font-bold mt-2">
-                          to {dentist.name}
+                          Appointment to {dentist.user.name}
                         </div>
                       </div>
                       <div className="flex flex-col items-end justify-between">
                         <button
-                          onClick={() => handleDeleteComment(dentist.id, comment.id)}
+                          onClick={() => handleDeleteComment(dentist.id, comment._id)}
                           className="text-gray-500 hover:text-red-500"
                         >
                           <Trash2 size={16} />
                         </button>
-                        <div className="text-xs text-gray-400 mt-2">{comment.dateTime}</div>
                       </div>
                     </div>
                   ))
