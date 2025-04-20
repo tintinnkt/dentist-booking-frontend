@@ -14,7 +14,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/Popover";
 import { BackendRoutes } from "@/config/apiRoutes";
-import { expertiseOptions } from "@/constant/expertise";
+import { Role_type } from "@/config/role";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Check } from "lucide-react";
@@ -23,8 +23,23 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { CustomButton } from "./CustomButton";
 
-interface CreateDentistData {
+// Define the expertise options based on the model schema
+const expertiseOptions = [
+  "Orthodontics",
+  "Pediatric Dentistry",
+  "Endodontics",
+  "Prosthodontics",
+  "Periodontics",
+  "Oral Surgery",
+  "General Dentistry",
+];
+
+interface RegisterDentistData {
   name: string;
+  email: string;
+  password: string;
+  tel: string;
+  role: string;
   yearsOfExperience: number;
   areaOfExpertise: Array<string>;
 }
@@ -32,6 +47,9 @@ interface CreateDentistData {
 export default function CreateDentistForm() {
   const [selectedExpertise, setSelectedExpertise] = useState<Array<string>>([]);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [tel, setTel] = useState("");
   const [yearsOfExperience, setYearsOfExperience] = useState<number | "">("");
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
@@ -46,15 +64,15 @@ export default function CreateDentistForm() {
     );
   };
 
-  // Create dentist mutation
-  const createDentistMutation = useMutation({
-    mutationFn: async (dentistData: CreateDentistData) => {
+  // Register dentist mutation
+  const registerDentistMutation = useMutation({
+    mutationFn: async (dentistData: RegisterDentistData) => {
       const token = session?.user?.token;
       if (!token) {
         throw new Error("Unauthorized: No token found");
       }
 
-      return axios.post(BackendRoutes.DENTIST, dentistData, {
+      return axios.post(BackendRoutes.REGISTER_DENTIST, dentistData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -64,9 +82,13 @@ export default function CreateDentistForm() {
     onSuccess: () => {
       // Invalidate and refetch dentists query to update UI
       queryClient.invalidateQueries({ queryKey: ["dentists"] });
-      toast.success("Dentist created successfully!");
+      toast.success("Dentist registered successfully!");
 
+      // Reset form
       setName("");
+      setEmail("");
+      setPassword("");
+      setTel("");
       setYearsOfExperience("");
       setSelectedExpertise([]);
       setIsOpen(false);
@@ -75,20 +97,31 @@ export default function CreateDentistForm() {
       toast.error(
         axios.isAxiosError(error)
           ? error.response?.data?.message || error.message
-          : "Failed to create dentist",
+          : "Failed to register dentist",
       );
     },
   });
 
-  // Function to create a new dentist
-  const handleCreateDentist = async () => {
-    if (!name || !yearsOfExperience || selectedExpertise.length === 0) {
+  // Function to register a new dentist
+  const handleRegisterDentist = async () => {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !tel ||
+      !yearsOfExperience ||
+      selectedExpertise.length === 0
+    ) {
       toast.error("Please fill in all fields");
       return;
     }
 
-    createDentistMutation.mutate({
+    registerDentistMutation.mutate({
       name,
+      email,
+      password,
+      tel,
+      role: Role_type.DENTIST,
       yearsOfExperience: Number(yearsOfExperience),
       areaOfExpertise: selectedExpertise,
     });
@@ -101,7 +134,7 @@ export default function CreateDentistForm() {
       </PopoverTrigger>
       <PopoverContent className="mx-3 max-w-screen min-w-fit space-y-3 p-4 sm:w-sm">
         <CardHeader>
-          <h2 className="font-semibold">Create New Dentist</h2>
+          <h2 className="font-semibold">Register New Dentist</h2>
         </CardHeader>
 
         <div>
@@ -110,7 +143,39 @@ export default function CreateDentistForm() {
             placeholder="Enter Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            disabled={createDentistMutation.isPending}
+            disabled={registerDentistMutation.isPending}
+          />
+        </div>
+
+        <div>
+          <p className="text-sm">Email</p>
+          <Input
+            placeholder="Enter Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={registerDentistMutation.isPending}
+          />
+        </div>
+
+        <div>
+          <p className="text-sm">Password</p>
+          <Input
+            placeholder="Enter Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={registerDentistMutation.isPending}
+          />
+        </div>
+
+        <div>
+          <p className="text-sm">Telephone</p>
+          <Input
+            placeholder="Enter Telephone"
+            value={tel}
+            onChange={(e) => setTel(e.target.value)}
+            disabled={registerDentistMutation.isPending}
           />
         </div>
 
@@ -121,7 +186,8 @@ export default function CreateDentistForm() {
             type="number"
             value={yearsOfExperience}
             onChange={(e) => setYearsOfExperience(Number(e.target.value) || "")}
-            disabled={createDentistMutation.isPending}
+            disabled={registerDentistMutation.isPending}
+            min={0}
           />
         </div>
 
@@ -132,7 +198,7 @@ export default function CreateDentistForm() {
               <Button
                 variant="outline"
                 className="w-full justify-between"
-                disabled={createDentistMutation.isPending}
+                disabled={registerDentistMutation.isPending}
               >
                 {selectedExpertise.length > 0
                   ? selectedExpertise.join(", ")
@@ -170,10 +236,12 @@ export default function CreateDentistForm() {
         <div className="px-1.5 py-1">
           <CustomButton
             useFor="confirm-info"
-            onClick={handleCreateDentist}
-            disabled={createDentistMutation.isPending}
+            onClick={handleRegisterDentist}
+            disabled={registerDentistMutation.isPending}
           >
-            {createDentistMutation.isPending ? "Creating..." : "Create Dentist"}
+            {registerDentistMutation.isPending
+              ? "Registering..."
+              : "Register Dentist"}
           </CustomButton>
         </div>
       </PopoverContent>
