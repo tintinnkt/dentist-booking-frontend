@@ -15,9 +15,10 @@ interface BookingUserProps {
 
 export interface Booking {
   _id: string;
-  apptDate: string;
+  apptDateAndTime: string;
   user: BookingUserProps;
   dentist: DentistProps | null;
+  status: string;
   createdAt: string;
   __v: number;
 }

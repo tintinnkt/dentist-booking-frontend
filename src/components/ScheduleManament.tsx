@@ -12,6 +12,7 @@ export default function ScheduleManagement() {
   const [schedules, setSchedules] = useState<Booking[]>([]);
   const [message, setMessage] = useState("");
   const { data: session} = useSession();
+  const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
     if (!session || !session.user.token) {
@@ -19,8 +20,12 @@ export default function ScheduleManagement() {
       setShow(false);
       return;
     }
+
+    setLoading(true);
+    
     try {
       const data = await getDentistSchedule(session.user.token);
+      console.log("schedule data:", data);
       setSchedules(data);
 
       if(!data) {
@@ -29,6 +34,7 @@ export default function ScheduleManagement() {
 
       if (data.length === 0) {
         setMessage("ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก");
+        console.log("AAAAAAAAAAAAA")
       } else {
         setMessage("");
         setShow(true);
@@ -36,6 +42,8 @@ export default function ScheduleManagement() {
     } catch (err) {
       setMessage("เกิดข้อผิดพลาดในการดึงข้อมูลตารางนัดหมาย");
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,27 +69,39 @@ export default function ScheduleManagement() {
           >
             Search
           </button>
+          
         </div>
+        
+          {loading && (
+            <div className="mt-4 text-blue-500 font-semibold">Loading...</div>
+          )}
 
         {message && (
           <div className="mt-4 text-red-600 font-semibold">{message}</div>
         )}
-
         {show && schedules.length > 0 && (
           <div className="mt-4 text-sm text-black font-bold">
             Schedule on {selectedDate || "this day"}
             {schedules.map((item) => {
-              const bookingDate = new Date(item.apptDate).toISOString().split("T")[0];
+              const apptDate = new Date(item.apptDateAndTime);
+
+              if (isNaN(apptDate.getTime())) {
+                console.warn("Invalid date:", item.apptDateAndTime);
+                return null; // หรือจะแสดง error ก็ได้
+              }
+            
+              const bookingDate = apptDate.toISOString().split("T")[0];
               if (bookingDate !== selectedDate) return null;
+
               if (!item.dentist) return null;
         return (
-          <div key={item.dentist.id} className="mt-4">
-            <h3 className="text-blue-600">{item.user.name}</h3>
+          <div key={item._id} className="mt-4">
+            <h3 className="text-blue-600 text-xl">{item.user.name}</h3>
             <ul className="list-disc ml-5 text-gray-700">
               <li>
                 <strong>User ID:</strong> {item.user._id} <br />
-                <strong>User Name:</strong> {item.user.name} <br />
-                <strong>Appointment:</strong> {new Date(item.apptDate).toLocaleString()}
+                <strong>Appointment:</strong> {new Date(item.apptDateAndTime).toLocaleString()}<br />
+                <strong>Status:</strong> {item.status}
               </li>
           </ul>
         </div>

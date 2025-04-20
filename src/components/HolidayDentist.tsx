@@ -17,7 +17,7 @@ export default function CommentDentist() {
       <div className="p-5">
         <div className="flex justify-between items-center">
           <div>
-            <div className="text-md font-bold">Day off Management</div>
+            <div className="text-md font-bold">Day off Management 123 131 </div>
             <div className="text-sm text-gray-500">
               Schedule clinic-wide holidays and off-service hours
             </div>
