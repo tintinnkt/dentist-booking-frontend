@@ -1,142 +1,226 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Trash2 } from "lucide-react";
+import { BackendRoutes } from "@/config/apiRoutes";
+import { Role_type } from "@/config/role";
+import { useUser } from "@/hooks/useUser";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { LoaderIcon, XCircleIcon } from "lucide-react";
+import { useState } from "react";
+import Link from "next/link";
 
-interface Holiday {
-  id: number;
-  name: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  fullDay: boolean;
+interface OffHour {
+  _id: string;
+  owner: {
+    _id: string;
+    name?: string;
+  };
+  startDate: string;
+  endDate: string;
+  description: string;
+  isForAllDentist: boolean;
+  createdAt: string;
 }
 
-const initialHolidays: Holiday[] = [
-  {
-    id: 1,
-    name: "Clinic Holiday",
-    date: "2025-04-15",
-    startTime: "00:00",
-    endTime: "23:59",
-    fullDay: true,
-  },
-  {
-    id: 2,
-    name: "Songkran Holiday",
-    date: "2025-04-15",
-    startTime: "00:00",
-    endTime: "23:59",
-    fullDay: true,
-  },
-];
+const fetchOffHours = async (): Promise<OffHour[]> => {
+  const response = await axios.get(BackendRoutes.OFF_HOURS);
+  if (Array.isArray(response.data.data)) {
+    return response.data.data;
+  }
+  throw new Error("Failed to fetch holiday data");
+};
 
-export default function HolidayManagement() {
-  const [holidays, setHolidays] = useState<Holiday[]>(initialHolidays);
+export default function OffHoursManagement() {
+  const { user } = useUser();
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleDelete = (id: number) => {
-    setHolidays(holidays.filter((h) => h.id !== id));
+  const {
+    data: offHours = [],
+    isLoading,
+    isError,
+    error: queryError,
+  } = useQuery<OffHour[], Error>({
+    queryKey: ["offHours"],
+    queryFn: fetchOffHours,
+    enabled: !!user, // Only fetch when user is available
+    select: (data) => {
+      if (user?.role === Role_type.ADMIN) {
+        return data;
+      }
+      return data.filter(
+        (offHour) => offHour.owner._id === user?._id || offHour.isForAllDentist
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`${BackendRoutes.OFF_HOUR}/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["offHours"] });
+    },
+    onError: (error: Error) => {
+      setError(error.message);
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (newOffHour: Omit<OffHour, "_id" | "createdAt">) => {
+      const response = await axios.post(BackendRoutes.OFF_HOURS, newOffHour);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["offHours"] });
+      setShowModal(false);
+      setError("");
+    },
+    onError: (error: Error) => {
+      setError(error.message);
+    },
+  });
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  const handleAddHoliday = (
-    name: string,
-    date: string,
-    startTime: string,
-    endTime: string,
-    fullDay: boolean
-  ) => {
-    const newHoliday: Holiday = {
-      id: holidays.length + 1,
-      name,
-      date,
-      startTime,
-      endTime,
-      fullDay,
-    };
-    setHolidays([...holidays, newHoliday]);
-    setShowModal(false);
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
+
+  if (!user) {
+    return (
+      <div className="p-8 text-center">
+        Please <Link href="/login" className="text-blue-500 underline">login</Link> to view off hours
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-3 pt-10">
+        <LoaderIcon /> Loading off hours...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8 text-red-500">
+        <XCircleIcon /> Error: {queryError.message}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
-      <div className="font-bold text-lg mb-2">Holiday Management</div>
+      {/* Header and controls */}
+      <div className="font-bold text-lg mb-2">Off Hours Management</div>
       <div className="text-gray-400 mb-4 text-sm">
-        Schedule clinic-wide holidays and off-service hours
+        {user.role === Role_type.ADMIN
+          ? "Manage clinic-wide and personal off-hours"
+          : "Manage your personal unavailable periods"}
       </div>
 
       <div className="flex justify-end mb-4">
         <Button variant="secondary" onClick={() => setShowModal(true)}>
-          + add holiday
+          + Add Off Hours
         </Button>
       </div>
 
-      {holidays.map((holiday) => (
-        <Card key={holiday.id} className="mb-4">
-          <CardContent className="flex justify-between items-center p-4">
-            <div>
-              <div className="font-bold">{holiday.name}</div>
-              <div className="text-sm text-gray-600">{holiday.date}</div>
-              <div className="flex items-center text-sm mt-2">
-                <span className="mr-2">🕑</span>
-                <span>
-                  {holiday.fullDay
-                    ? "Full day"
-                    : `${holiday.startTime} - ${holiday.endTime}`}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => handleDelete(holiday.id)}
-              className="text-gray-500 hover:text-red-500"
-            >
-              <Trash2 size={20} />
-            </button>
-          </CardContent>
-        </Card>
-      ))}
+      {/* Error display */}
+      {error && (
+        <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg">
+          <XCircleIcon className="inline mr-2" />
+          {error}
+        </div>
+      )}
 
+      {/* Off Hours list */}
+      {offHours.length === 0 ? (
+        <div className="text-gray-500 text-center py-8">
+          No off hours periods scheduled yet
+        </div>
+      ) : (
+        offHours.map((offHour) => (
+          <Card key={offHour._id} className="mb-4">
+            <CardContent className="flex justify-between items-center p-4">
+              <div>
+                <div className="font-bold">{offHour.description}</div>
+                <div className="text-sm text-gray-600">
+                  {formatDate(offHour.startDate)} - {formatDate(offHour.endDate)}
+                </div>
+                <div className="flex items-center text-sm mt-2">
+                  <span className="mr-2">🕑</span>
+                  <span>
+                    {formatTime(offHour.startDate)} - {formatTime(offHour.endDate)}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {offHour.isForAllDentist
+                    ? "Applies to all dentists"
+                    : `Personal (${offHour.owner.name || "you"})`}
+                </div>
+              </div>
+              {(user._id === offHour.owner._id || user.role === Role_type.ADMIN) && (
+                <button
+                  onClick={() => deleteMutation.mutate(offHour._id)}
+                  className="text-gray-500 hover:text-red-500"
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? (
+                    <LoaderIcon className="animate-spin" size={20} />
+                  ) : (
+                    <Trash2 size={20} />
+                  )}
+                </button>
+              )}
+            </CardContent>
+          </Card>
+        ))
+      )}
+
+      {/* Add Off Hours Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-lg">
-            <div className="text-xl font-bold mb-1">schedule a Holiday</div>
-            <div className="text-sm text-gray-500 mb-6">
-              Add a holiday or off-service period. Any existing appointments during this time will be canceled.
-            </div>
+            <div className="text-xl font-bold mb-1">Schedule Off Hours</div>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                const form = e.target as any;
-                const name = form.name.value;
-                const date = form.date.value;
-                const fullDay = form.fullDay.checked;
-                const startTime = fullDay ? "00:00" : form.startTime.value;
-                const endTime = fullDay ? "23:59" : form.endTime.value;
-
-                if (name && date) {
-                  handleAddHoliday(name, date, startTime, endTime, fullDay);
-                }
+                const form = e.target as HTMLFormElement;
+                createMutation.mutate({
+                  owner: user._id,
+                  startDate: (form.startDate as HTMLInputElement).value,
+                  endDate: (form.endDate as HTMLInputElement).value,
+                  description: (form.description as HTMLInputElement).value,
+                  isForAllDentist: user.role === Role_type.ADMIN 
+                    ? (form.isForAllDentist as HTMLInputElement)?.checked 
+                    : false,
+                });
               }}
               className="space-y-4"
             >
+              {/* Form fields */}
               <div>
-                <label className="text-sm font-semibold block mb-1">Title</label>
+                <label className="text-sm font-semibold block mb-1">
+                  Description*
+                </label>
                 <input
                   type="text"
-                  name="name"
-                  required
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                  placeholder="Songkran"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold block mb-1">Date</label>
-                <input
-                  type="date"
-                  name="date"
+                  name="description"
                   required
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                 />
@@ -145,60 +229,59 @@ export default function HolidayManagement() {
               <div className="flex gap-2">
                 <div className="w-1/2">
                   <label className="text-sm font-semibold block mb-1">
-                    Start time
+                    Start Date & Time*
                   </label>
                   <input
-                    type="time"
-                    name="startTime"
-                    defaultValue="00:00"
+                    type="datetime-local"
+                    name="startDate"
+                    required
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   />
                 </div>
                 <div className="w-1/2">
                   <label className="text-sm font-semibold block mb-1">
-                    End time
+                    End Date & Time*
                   </label>
                   <input
-                    type="time"
-                    name="endTime"
-                    defaultValue="23:59"
+                    type="datetime-local"
+                    name="endDate"
+                    required
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="fullDay"
-                  id="fullDay"
-                  defaultChecked
-                  className="w-4 h-4"
-                  onChange={(e) => {
-                    const form = e.target.form as any;
-                    const disabled = e.target.checked;
-                    form.startTime.disabled = disabled;
-                    form.endTime.disabled = disabled;
-                  }}
-                />
-                <label htmlFor="fullDay" className="text-sm font-medium">
-                  All day holiday
-                </label>
-              </div>
+              {user.role === Role_type.ADMIN && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="isForAllDentist"
+                    id="isForAllDentist"
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="isForAllDentist" className="text-sm font-medium">
+                    Apply to all dentists
+                  </label>
+                </div>
+              )}
 
               <div className="flex justify-between pt-4">
                 <button
                   type="submit"
                   className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 text-sm"
+                  disabled={createMutation.isPending}
                 >
-                  save holiday
+                  {createMutation.isPending ? (
+                    <LoaderIcon className="animate-spin inline mr-2" size={16} />
+                  ) : null}
+                  Save Off Hours
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="bg-orange-500 text-white px-4 py-2 rounded font-semibold hover:bg-orange-600 text-sm"
                 >
-                  cancel
+                  Cancel
                 </button>
               </div>
             </form>
