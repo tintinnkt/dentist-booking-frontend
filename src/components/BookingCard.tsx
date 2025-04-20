@@ -37,15 +37,19 @@ import {
 } from "./ui/Select";
 import { Separator } from "./ui/Separator";
 
-export function combineDateAndTime(date: Date, time: string): Date {
-  const newDate = new Date(date);
+export const combineDateAndTime = (date: Date, time: string) => {
+  const combined = new Date(date);
 
-  const [hours, minutes] = time.split(":").map(Number);
+  const [hourMin, period] = time.split(" ");
+  let [hours, minutes] = hourMin.split(":").map(Number);
 
-  newDate.setHours(hours, minutes, 0, 0);
+  if (period === "PM" && hours < 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
 
-  return newDate;
-}
+  combined.setHours(hours, minutes, 0, 0);
+
+  return combined;
+};
 
 interface BookingCardProps {
   booking: Booking;

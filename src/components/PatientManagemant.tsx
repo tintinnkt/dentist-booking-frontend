@@ -129,7 +129,7 @@ export default function PatientManagement() {
                     <div key={appt._id} className="flex items-center justify-between border-b pb-2">
                       <div className="flex items-center">
                         <span className="mr-2">
-                          {appt.status === "Cancel" ? (
+                          {appt.status === "cancel" ? (
                             <X size={16} className="text-red-500" />
                           ) : (
                             <Check size={16} className="text-green-500" />

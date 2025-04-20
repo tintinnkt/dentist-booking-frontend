@@ -11,36 +11,46 @@ import { useUser } from "@/hooks/useUser";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-interface Appointment {
-  date: string;
-  timeRange: string;
-  patientName: string;
-}
-
-interface Comment {
-  id: number;
-  title: string;
-  content: string;
-  dateTime: string;
+// Updated interface to match your API response structure
+interface Booking {
+  _id: string;
+  apptDateAndTime: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    tel: string;
+  };
+  dentist: {
+    _id: string;
+    user: {
+      _id: string;
+      name: string;
+      tel: string;
+      email: string;
+    };
+    yearsOfExperience: number;
+    areaOfExpertise: string[];
+    id: string;
+  };
+  isUnavailable: boolean;
+  status: string;
+  createdAt: string;
+  comment?: string;
 }
 
 interface Dentist {
   id: string;
+  _id: string;
   user: {
     _id: string;
     name: string;
+    tel: string;
+    email: string;
   };
   yearsOfExperience: number;
   areaOfExpertise: string[];
-  bookings: Array<{
-    _id: string;
-    apptDateAndTime: string;
-    user: string;
-    dentist: string;
-    isUnavailable: boolean;
-    status: string;
-    createdAt: string;
-  }>;
+  bookings: Booking[];
 }
 
 export default function DentistManagement() {
@@ -53,18 +63,17 @@ export default function DentistManagement() {
 
   const fetchDentists = async (): Promise<Array<Dentist>> => {
     if (!session?.user.token) return [];
-    
+
     const response = await axios.get(BackendRoutes.DENTIST, {
       headers: { Authorization: `Bearer ${session.user.token}` },
     });
-    
+
     if (Array.isArray(response.data.data)) {
       return response.data.data;
     }
     throw new Error("Failed to fetch dentists data");
   };
 
-  // Sort bookings by date function
   const getSortedBookings = (bookings) => {
     return [...bookings].sort((a, b) => {
       return new Date(a.apptDateAndTime).getTime() - new Date(b.apptDateAndTime).getTime();
@@ -76,19 +85,19 @@ export default function DentistManagement() {
     isLoading,
     isError,
     error: queryError,
-    refetch
+    refetch,
   } = useQuery<Dentist[], Error>({
     queryKey: ["dentists"],
     queryFn: fetchDentists,
-    enabled: !!user && !!session?.user.token, // Only fetch when user and token are available
+    enabled: !!user && !!session?.user.token,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async ({ dentistId, commentId }: { dentistId: string, commentId: string }) => {
+    mutationFn: async ({ dentistId, bookingId }: { dentistId: string; bookingId: string }) => {
       if (!session?.user.token) throw new Error("Authentication required");
-      
-      await axios.delete(`${BackendRoutes.DENTIST}/${dentistId}/comments/${commentId}`, {
-        headers: { Authorization: `Bearer ${session.user.token}` }
+
+      await axios.delete(`${BackendRoutes.DENTIST}/${dentistId}/bookings/${bookingId}`, {
+        headers: { Authorization: `Bearer ${session.user.token}` },
       });
     },
     onSuccess: () => {
@@ -104,8 +113,8 @@ export default function DentistManagement() {
     setSelectedDentistId(id === selectedDentistId ? null : id);
   };
 
-  const handleDeleteComment = async (dentistId: string, commentId: string) => {
-    deleteMutation.mutate({ dentistId, commentId });
+  const handleDeleteBooking = async (dentistId: string, bookingId: string) => {
+    deleteMutation.mutate({ dentistId, bookingId });
   };
 
   const filteredDentists = dentists.filter((dentist) =>
@@ -147,7 +156,6 @@ export default function DentistManagement() {
         View and manage dentist information, schedules, and comments
       </div>
 
-      {/* Error display */}
       {error && (
         <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg">
           <XCircleIcon className="inline mr-2" size={16} />
@@ -155,7 +163,6 @@ export default function DentistManagement() {
         </div>
       )}
 
-      {/* Search Bar */}
       <div className="mb-6">
         <input
           type="text"
@@ -166,15 +173,16 @@ export default function DentistManagement() {
         />
       </div>
 
-      {/* Dentist Cards */}
       {filteredDentists.length === 0 ? (
         <div className="text-gray-500 text-sm italic">No dentists found.</div>
       ) : (
         filteredDentists.map((dentist) => (
-          <div key={dentist.id}>
+          <div key={dentist.id || dentist._id}>
             <Card
-              className={`mb-4 cursor-pointer hover:shadow-lg ${selectedDentistId === dentist.id ? "border-2 border-orange-400" : ""}`}
-              onClick={() => handleCardClick(dentist.id)}
+              className={`mb-4 cursor-pointer hover:shadow-lg ${
+                selectedDentistId === (dentist.id || dentist._id) ? "border-2 border-orange-400" : ""
+              }`}
+              onClick={() => handleCardClick(dentist.id || dentist._id)}
             >
               <CardContent className="flex justify-between p-4">
                 <div>
@@ -186,81 +194,103 @@ export default function DentistManagement() {
                     {dentist.yearsOfExperience} years of experience
                   </div>
 
-                  <div className="mt-3 font-bold text-sm">Today's Schedule</div>
-                  <div className="text-sm">
-                    {dentist.bookings.length > 0 ? (
-                      getSortedBookings(dentist.bookings).map((booking, idx) => (
-                        <div key={idx} className="flex items-center gap-2 mt-1">
-                          <span>
-                            {new Date(booking.apptDateAndTime).toLocaleDateString()} -{" "}
-                            {new Date(booking.apptDateAndTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          <span
-                            className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                              booking.status.toLowerCase() === "cancel"
-                                ? "bg-red-100 text-red-600"
-                                : "bg-green-100 text-green-600"
-                            }`}
-                          >
-                            {booking.status === "cancel" ? "Cancel" : "Booked"}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-gray-500 text-sm italic">No schedule for today</div>
-                    )}
-                  </div>
+                  {dentist.bookings && dentist.bookings.length > 0 && (
+                    <>
+                      <div className="mt-3 font-bold text-sm">Today's Schedule</div>
+                      <div className="text-sm">
+                        {getSortedBookings(dentist.bookings).map((booking, idx) => (
+                          <div key={idx} className="flex items-center gap-2 mt-1">
+                            <span>
+                              {new Date(booking.apptDateAndTime).toLocaleDateString()} -{" "}
+                              {new Date(booking.apptDateAndTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            <span
+                              className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                                booking.status.toLowerCase() === "cancel"
+                                  ? "bg-red-100 text-red-600"
+                                  : "bg-green-100 text-green-600"
+                              }`}
+                            >
+                              {booking.status === "cancel" ? "Cancel" : "Booked"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Comments Section */}
-            {selectedDentistId === dentist.id && (
+            {selectedDentistId === (dentist.id || dentist._id) && dentist.bookings && dentist.bookings.length > 0 && (
               <div className="bg-white rounded-xl shadow-md p-6 mt-2 mb-6">
-                <div className="font-bold mb-3">{dentist.user.name}'s Bookings</div>
-                {dentist.bookings.length === 0 ? (
-                  <div className="text-gray-500 text-sm italic">No bookings available</div>
-                ) : (
-                  getSortedBookings(dentist.bookings).map((booking, idx) => (
-                    <div
-                      key={idx}
-                      className="border rounded-xl p-4 mb-3 shadow-sm bg-white flex justify-between"
-                    >
-                      <div>
-                        <div className="font-bold text-sm">{booking._id}</div>
-                        <div className="text-sm mt-1">{booking.status}</div>
-                        <div className="text-sm text-black font-bold mt-2">
-                          Appointment on {new Date(booking.apptDateAndTime).toLocaleDateString()} at {new Date(booking.apptDateAndTime).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                <div className="font-bold mb-3">{dentist.user.name}'s Comments</div>
+                {getSortedBookings(dentist.bookings).map((booking, idx) => (
+                  <div
+                    key={idx}
+                    className="border rounded-xl p-4 mb-3 shadow-sm bg-white flex justify-between"
+                  >
+                    <div className="w-full">
+                      {/* Display patient name correctly from the API response structure */}
+                      <div className="font-bold text-sm">
+                        {booking.user && booking.user.name}
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(booking.apptDateAndTime).toLocaleString([], {
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })}
+                      </div>
+
+                      <div className="text-sm mt-1">
+                        Status:{" "}
+                        <span
+                          className={`${
+                            booking.status.toLowerCase() === "cancel"
+                              ? "text-red-600"
+                              : "text-green-600"
+                          } font-semibold`}
+                        >
+                          {booking.status}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 mb-2">
+                        <div className="text-sm font-semibold text-gray-700">Comment:</div>
+                        <div className="p-3 bg-gray-50 rounded-lg mt-1 text-sm">
+                          {booking.comment ? (
+                            booking.comment
+                          ) : (
+                            <span className="text-gray-400 italic">No comment for this appointment.</span>
+                          )}
                         </div>
                       </div>
-                      {/* Only show delete button for admins */}
-                      {user.role === Role_type.ADMIN && (
-                        <div className="flex flex-col items-end justify-between">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteComment(dentist.id, booking._id);
-                            }}
-                            className="text-gray-500 hover:text-red-500"
-                            disabled={deleteMutation.isPending}
-                          >
-                            {deleteMutation.isPending ? (
-                              <LoaderIcon className="animate-spin" size={16} />
-                            ) : (
-                              <Trash2 size={16} />
-                            )}
-                          </button>
-                        </div>
-                      )}
                     </div>
-                  ))
-                )}
+
+                    {user.role === Role_type.ADMIN && (
+                      <div className="flex flex-col items-end justify-between">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteBooking(dentist.id || dentist._id, booking._id);
+                          }}
+                          className="text-gray-500 hover:text-red-500"
+                          disabled={deleteMutation.isPending}
+                        >
+                          {deleteMutation.isPending ? (
+                            <LoaderIcon className="animate-spin" size={16} />
+                          ) : (
+                            <Trash2 size={16} />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
