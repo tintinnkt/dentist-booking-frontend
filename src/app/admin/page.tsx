@@ -38,12 +38,12 @@ export default function PatientDashboard() {
       </div>
 
       <div className="mb-6 flex gap-2 px-10">
-        <button
+        {/* <button
           className="rounded bg-white px-4 py-1 text-sm font-semibold text-black"
           onClick={ScheduleClick}
         >
           Schedules
-        </button>
+        </button> */}
 
         <button
           className="rounded bg-orange-400 px-4 py-1 text-sm font-semibold text-black hover:bg-white"
