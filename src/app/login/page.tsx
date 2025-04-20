@@ -44,26 +44,28 @@ const Page = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-  
+
     const toastId = toast.loading("Logging in...");
-  
+
     try {
-      const response = await axios.post("http://localhost:5000/api/v1/auth/login", {
+      const result = await signIn("credentials", {
+        redirect: false,
         email,
         password,
       });
-  
-      const token = response.data.token;
-      localStorage.setItem("authToken", token);
-  
-      toast.success("Logged in successfully!", { id: toastId });
-      router.push(FrontendRoutes.DENTIST_LIST);
-    } catch (err) {
-      toast.error("Invalid credentials. Please try again.", { id: toastId });
-      setError("Login failed");
+
+      if (result?.error) {
+        toast.error("Invalid credentials. Please try again.", { id: toastId });
+        setError(result.error);
+      } else {
+        toast.success("Logged in successfully!", { id: toastId });
+        router.push(FrontendRoutes.DENTIST_LIST);
+      }
+    } catch {
+      toast.error("Login failed. Please try again.", { id: toastId });
+      setError("An unexpected error occurred.");
     }
   };
-  
 
   // Registration handler
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
