@@ -17,7 +17,7 @@ interface Booking {
     _id: string;
     name: string;
   };
-  isUnavailable: boolean;
+  // Only use status with "Booked" or "Cancel"
   status: "Booked" | "Cancel";
 }
 
@@ -118,15 +118,15 @@ export default function ScheduleManagement() {
       dentistName: booking.dentist.name,
       date: format(bookingDate, "yyyy-MM-dd"),
       time: format(bookingDate, "HH:mm - ") + format(new Date(bookingDate.getTime() + 60 * 60 * 1000), "HH:mm"), // Assuming 1 hour appointments
-      type: booking.isUnavailable ? "Unavailable Time" : "Booked Appointment",
-      status: booking.status
+      status: booking.status,
+      type: viewMode === "Dental schedules" ? "Unavailable Time" : "Booked Appointment"
     };
   });
 
   // Filter bookings based on the view mode
   const filteredBookings = viewMode === "Dental schedules" 
-    ? formattedBookings.filter(booking => booking.type === "Unavailable Time")
-    : formattedBookings.filter(booking => booking.type === "Booked Appointment");
+    ? formattedBookings // Unavailable times are fetched by the API
+    : formattedBookings.filter(booking => booking.status === "Booked" || booking.status === "Cancel");
 
   if (dentistsError || bookingsError) {
     const error = dentistsError || bookingsError;
@@ -221,11 +221,7 @@ export default function ScheduleManagement() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center text-sm mt-2">
                   <span className="mr-2">
-                    {booking.type === "Unavailable Time" ? (
-                      <Calendar size={16} className="text-gray-500" />
-                    ) : (
-                      <Calendar size={16} className="text-blue-500" />
-                    )}
+                    <Calendar size={16} className={viewMode === "Dental schedules" ? "text-gray-500" : "text-blue-500"} />
                   </span>
                   <span>{booking.type}</span>
                 </div>
