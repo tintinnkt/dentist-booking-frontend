@@ -1,10 +1,11 @@
 "use client";
-import { FrontendRoutes } from "@/config/apiRoutes";
+import { FrontendRootRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
 import {
   BriefcaseMedicalIcon,
   CalendarPlusIcon,
+  FolderKanban,
   LogInIcon,
   MenuIcon,
   StethoscopeIcon,
@@ -51,6 +52,13 @@ const NavBar = () => {
             >
               <StethoscopeIcon />
               <>Dentists</>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="flex items-center space-x-1.5"
+              onClick={() => router.push(`${FrontendRootRoutes.ADMIN}/holiday`)}
+            >
+              <FolderKanban />
+              <>Admins</>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center space-x-1.5"
