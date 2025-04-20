@@ -1,6 +1,8 @@
 export interface DentistProps {
   _id: string;
-  name: string;
+  user: {
+    name: string;
+  };
   yearsOfExperience: number;
   areaOfExpertise: Array<string>;
   id: string;
@@ -13,7 +15,7 @@ interface BookingUserProps {
 
 export interface Booking {
   _id: string;
-  apptDate: string;
+  apptDateAndTime: string;
   user: BookingUserProps;
   dentist: DentistProps | null;
   createdAt: string;

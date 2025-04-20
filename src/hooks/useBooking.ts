@@ -30,12 +30,12 @@ export const useBooking = () => {
 
   // Create a new booking
   const createBookingMutation = useMutation({
-    mutationFn: async (appointmentData: {
+    mutationFn: async (apptDateAndTime: {
       apptDate: Date;
       user: string;
       dentist: string;
     }) => {
-      return axios.post(BackendRoutes.BOOKING, appointmentData, {
+      return axios.post(BackendRoutes.BOOKING, apptDateAndTime, {
         headers: {
           Authorization: `Bearer ${session?.user.token}`,
           "Content-Type": "application/json",
@@ -62,14 +62,14 @@ export const useBooking = () => {
   const updateBookingMutation = useMutation({
     mutationFn: async ({
       bookingId,
-      appointmentDate,
+      apptDateAndTime,
     }: {
       bookingId: string;
-      appointmentDate: Date;
+      apptDateAndTime: Date;
     }) => {
       return axios.put(
         `${BackendRoutes.BOOKING}/${bookingId}`,
-        { apptDate: appointmentDate.toISOString() },
+        { apptDateAndTime: apptDateAndTime.toISOString() },
         {
           headers: {
             Authorization: `Bearer ${session?.user.token}`,
@@ -78,8 +78,26 @@ export const useBooking = () => {
         },
       );
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Make sure to invalidate the correct query
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+
+      // You can also update the cache directly
+      queryClient.setQueryData(["bookings"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        // Update the specific booking in the cache
+        return oldData.map((booking: Booking) => {
+          if (booking._id === variables.bookingId) {
+            return {
+              ...booking,
+              apptDateAndTime: variables.apptDateAndTime.toISOString(),
+            };
+          }
+          return booking;
+        });
+      });
+
       toast.success("Appointment successfully rescheduled.");
     },
     onError: (error) => {
@@ -135,6 +153,7 @@ export const useBooking = () => {
     bookingId: string,
     date: Date,
     time: string,
+    onSuccess?: () => void,
   ) => {
     const combinedDateTime = combineDateAndTime(date, time);
 
@@ -143,10 +162,17 @@ export const useBooking = () => {
       return;
     }
 
-    updateBookingMutation.mutate({
-      bookingId,
-      appointmentDate: combinedDateTime,
-    });
+    updateBookingMutation.mutate(
+      {
+        bookingId,
+        apptDateAndTime: combinedDateTime,
+      },
+      {
+        onSuccess: () => {
+          if (onSuccess) onSuccess();
+        },
+      },
+    );
 
     return combinedDateTime;
   };
@@ -164,7 +190,7 @@ export const useBooking = () => {
       const lowercasedSearchTerm = searchTerm.toLowerCase().trim();
       return (
         booking.user.name.toLowerCase().includes(lowercasedSearchTerm) ||
-        booking.dentist?.name?.toLowerCase().includes(lowercasedSearchTerm)
+        booking.dentist?.user.name.toLowerCase().includes(lowercasedSearchTerm)
       );
     });
   };

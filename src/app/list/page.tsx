@@ -65,7 +65,7 @@ const Page = () => {
   const filterDentists = useCallback(
     (term: string, experience: number, expertises: Array<string>) => {
       const filtered = dentists.filter((dentist) => {
-        const matchesSearch = dentist.name
+        const matchesSearch = dentist.user.name
           .toLowerCase()
           .includes(term.toLowerCase());
         const matchesExperience = dentist.yearsOfExperience >= experience;

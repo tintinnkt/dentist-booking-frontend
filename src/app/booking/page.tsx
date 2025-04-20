@@ -25,13 +25,16 @@ const Page = () => {
   useEffect(() => {
     if (user?.role === Role_type.ADMIN && bookings) {
       setFilteredBookings((prevFilteredBookings) => {
-        if (prevFilteredBookings !== bookings) {
+        if (
+          prevFilteredBookings.length === 0 ||
+          prevFilteredBookings !== bookings
+        ) {
           return bookings;
         }
         return prevFilteredBookings;
       });
     }
-  }, [bookings, user]);
+  }, [bookings, user?.role]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);

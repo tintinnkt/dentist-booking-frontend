@@ -1,4 +1,5 @@
-const BACKEND_URL = "https://project-s-backend-cyan.vercel.app";
+// const BACKEND_URL = "https://project-s-backend-cyan.vercel.app";
+const BACKEND_URL = "http://127.0.0.1:5003";
 const BackendRootRoutes = `${BACKEND_URL}/api/v1`;
 
 export enum BackendRoutes {
@@ -10,7 +11,7 @@ export enum BackendRoutes {
 
   DENTIST = `${BackendRootRoutes}/dentists`,
   BOOKING = `${BackendRootRoutes}/bookings`,
-  REGISTER_DENTIST = `${BackendRootRoutes}/registerDent`,
+  REGISTER_DENTIST = `${BackendRootRoutes}/auth/registerDent`,
   UNAVAILABLE_BOOKING = `${BackendRootRoutes}/bookings/unavailable`,
   GET_ALL_DENTISTS_SCHEDULES = `${BackendRootRoutes}/bookings/schedules`,
   UNAVAILABLE_BOOKING_BY_DENTIST_ID = `${BackendRootRoutes}/dentists/:dentistId/unavailable`,
