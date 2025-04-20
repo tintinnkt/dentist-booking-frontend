@@ -3,9 +3,19 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Trash2, LoaderIcon, XCircleIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { BackendRoutes } from "@/config/apiRoutes";
+import { Role_type } from "@/config/role";
+import { useUser } from "@/hooks/useUser";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+
+interface Appointment {
+  date: string;
+  timeRange: string;
+  patientName: string;
+}
 
 interface Comment {
   id: number;
@@ -31,58 +41,74 @@ interface Dentist {
     status: string;
     createdAt: string;
   }>;
-  comments?: Comment[]; // <--- Add this line
 }
 
-const fetchDentists = async (): Promise<Array<Dentist>> => {
-  const response = await axios.get(BackendRoutes.DENTIST);
-  if (Array.isArray(response.data.data)) {
-    return response.data.data;
-  }
-  throw new Error("Failed to fetch dentists data");
-};
-
-const deleteComment = async (dentistId: number, commentId: number): Promise<void> => {
-  await axios.delete(`${BackendRoutes.DENTIST}/${dentistId}/comments/${commentId}`);
-};
-
 export default function DentistManagement() {
-  const [selectedDentistId, setSelectedDentistId] = useState<number | null>(null);
+  const { user } = useUser();
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+  const [selectedDentistId, setSelectedDentistId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState("");
+
+  const fetchDentists = async (): Promise<Array<Dentist>> => {
+    if (!session?.user.token) return [];
+    
+    const response = await axios.get(BackendRoutes.DENTIST, {
+      headers: { Authorization: `Bearer ${session.user.token}` },
+    });
+    
+    if (Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    throw new Error("Failed to fetch dentists data");
+  };
 
   const {
     data: dentists = [],
     isLoading,
-    error,
+    isError,
+    error: queryError,
     refetch
-  } = useQuery({
+  } = useQuery<Dentist[], Error>({
     queryKey: ["dentists"],
     queryFn: fetchDentists,
+    enabled: !!user && !!session?.user.token, // Only fetch when user and token are available
   });
 
-  const handleCardClick = (id: number) => {
+  const deleteMutation = useMutation({
+    mutationFn: async ({ dentistId, commentId }: { dentistId: string, commentId: string }) => {
+      if (!session?.user.token) throw new Error("Authentication required");
+      
+      await axios.delete(`${BackendRoutes.DENTIST}/${dentistId}/comments/${commentId}`, {
+        headers: { Authorization: `Bearer ${session.user.token}` }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dentists"] });
+      setError("");
+    },
+    onError: (error: Error) => {
+      setError(error.message);
+    },
+  });
+
+  const handleCardClick = (id: string) => {
     setSelectedDentistId(id === selectedDentistId ? null : id);
   };
 
-  const handleDeleteComment = async (dentistId: number, commentId: number) => {
-    try {
-      await deleteComment(dentistId, commentId);
-      refetch();
-    } catch (err) {
-      console.error("Failed to delete comment:", err);
-    }
+  const handleDeleteComment = async (dentistId: string, commentId: string) => {
+    deleteMutation.mutate({ dentistId, commentId });
   };
 
   const filteredDentists = dentists.filter((dentist) =>
     `${dentist.user.name} ${dentist.areaOfExpertise?.join(" ")}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (error) {
+  if (!user) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
-        <p className="text-red-500 flex items-center gap-2">
-          <XCircleIcon size={18} /> Error: {(error as Error).message}
-        </p>
+      <div className="p-8 text-center">
+        Please <Link href="/login" className="text-blue-500 underline">login</Link> to view dentist information
       </div>
     );
   }
@@ -90,9 +116,19 @@ export default function DentistManagement() {
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
-        <p className="flex items-center justify-center gap-3 pt-4">
+        <div className="flex items-center justify-center gap-3 pt-4">
           <LoaderIcon className="animate-spin" size={18} /> Loading dentists data...
-        </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
+        <div className="text-red-500 flex items-center gap-2">
+          <XCircleIcon size={18} /> Error: {queryError.message}
+        </div>
       </div>
     );
   }
@@ -103,6 +139,14 @@ export default function DentistManagement() {
       <div className="text-gray-400 mb-4 text-sm">
         View and manage dentist information, schedules, and comments
       </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg">
+          <XCircleIcon className="inline mr-2" size={16} />
+          {error}
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="mb-6">
@@ -122,8 +166,7 @@ export default function DentistManagement() {
         filteredDentists.map((dentist) => (
           <div key={dentist.id}>
             <Card
-              className={`mb-4 cursor-pointer hover:shadow-lg ${selectedDentistId === dentist.id ? "border-2 border-orange-400" : ""
-                }`}
+              className={`mb-4 cursor-pointer hover:shadow-lg ${selectedDentistId === dentist.id ? "border-2 border-orange-400" : ""}`}
               onClick={() => handleCardClick(dentist.id)}
             >
               <CardContent className="flex justify-between p-4">
@@ -149,12 +192,13 @@ export default function DentistManagement() {
                             })}
                           </span>
                           <span
-                            className={`text-xs font-semibold px-2 py-0.5 rounded ${booking.status.toLowerCase() === "cancel"
+                            className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                              booking.status.toLowerCase() === "cancel"
                                 ? "bg-red-100 text-red-600"
                                 : "bg-green-100 text-green-600"
-                              }`}
+                            }`}
                           >
-                            {booking.status}
+                            {booking.status === "cancel" ? "Cancel" : "Booked"}
                           </span>
                         </div>
                       ))
@@ -169,30 +213,46 @@ export default function DentistManagement() {
             {/* Comments Section */}
             {selectedDentistId === dentist.id && (
               <div className="bg-white rounded-xl shadow-md p-6 mt-2 mb-6">
-                <div className="font-bold mb-3">{dentist.user.name}'s Comments</div>
-                {dentist.comments && dentist.comments.length > 0 ? (
-                  dentist.comments.map((comment) => (
+                <div className="font-bold mb-3">{dentist.user.name}'s Bookings</div>
+                {dentist.bookings.length === 0 ? (
+                  <div className="text-gray-500 text-sm italic">No bookings available</div>
+                ) : (
+                  dentist.bookings.map((booking, idx) => (
                     <div
-                      key={comment.id}
+                      key={idx}
                       className="border rounded-xl p-4 mb-3 shadow-sm bg-white flex justify-between"
                     >
                       <div>
-                        <div className="font-bold text-sm">{comment.title}</div>
-                        <div className="text-sm mt-1">{comment.content}</div>
-                        <div className="text-xs text-gray-400 mt-2">{new Date(comment.dateTime).toLocaleString()}</div>
+                        <div className="font-bold text-sm">{booking._id}</div>
+                        <div className="text-sm mt-1">{booking.status}</div>
+                        <div className="text-sm text-black font-bold mt-2">
+                          Appointment on {new Date(booking.apptDateAndTime).toLocaleDateString()} at {new Date(booking.apptDateAndTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
                       </div>
-                      <div className="flex flex-col items-end justify-between">
-                        <button
-                          onClick={() => handleDeleteComment(Number(dentist.id), comment.id)}
-                          className="text-gray-500 hover:text-red-500"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      {/* Only show delete button for admins */}
+                      {user.role === Role_type.ADMIN && (
+                        <div className="flex flex-col items-end justify-between">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteComment(dentist.id, booking._id);
+                            }}
+                            className="text-gray-500 hover:text-red-500"
+                            disabled={deleteMutation.isPending}
+                          >
+                            {deleteMutation.isPending ? (
+                              <LoaderIcon className="animate-spin" size={16} />
+                            ) : (
+                              <Trash2 size={16} />
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
-                ) : (
-                  <div className="text-gray-500 text-sm italic">No comments available</div>
                 )}
               </div>
             )}
