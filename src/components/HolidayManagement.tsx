@@ -32,7 +32,6 @@ export default function OffHoursManagement() {
   const { data: session } = useSession(); // Move useSession to component level
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
-
   // Define fetchOffHours using the session from component scope
   const fetchOffHours = async (): Promise<OffHour[]> => {
     if (!session?.user.token) return [];
@@ -44,7 +43,6 @@ export default function OffHoursManagement() {
     }
     throw new Error("Failed to fetch holiday data");
   };
-
   const {
     data: offHours = [],
     isLoading,
