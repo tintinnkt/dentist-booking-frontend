@@ -7,12 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { BackendRoutes } from "@/config/apiRoutes";
 
-interface Appointment {
-  date: string;
-  timeRange: string;
-  patientName: string;
-}
-
 interface Comment {
   id: number;
   title: string;
@@ -27,7 +21,7 @@ interface Dentist {
     name: string;
   };
   yearsOfExperience: number;
-  areaOfExpertise: string[]; // List of specialties or expertise areas
+  areaOfExpertise: string[];
   bookings: Array<{
     _id: string;
     apptDateAndTime: string;
@@ -37,9 +31,9 @@ interface Dentist {
     status: string;
     createdAt: string;
   }>;
+  comments?: Comment[]; // <--- Add this line
 }
 
-// API call to fetch dentists data
 const fetchDentists = async (): Promise<Array<Dentist>> => {
   const response = await axios.get(BackendRoutes.DENTIST);
   if (Array.isArray(response.data.data)) {
@@ -48,7 +42,6 @@ const fetchDentists = async (): Promise<Array<Dentist>> => {
   throw new Error("Failed to fetch dentists data");
 };
 
-// API call to delete a comment
 const deleteComment = async (dentistId: number, commentId: number): Promise<void> => {
   await axios.delete(`${BackendRoutes.DENTIST}/${dentistId}/comments/${commentId}`);
 };
@@ -80,7 +73,6 @@ export default function DentistManagement() {
     }
   };
 
-  // Filter dentists based on the search query
   const filteredDentists = dentists.filter((dentist) =>
     `${dentist.user.name} ${dentist.areaOfExpertise?.join(" ")}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -130,14 +122,16 @@ export default function DentistManagement() {
         filteredDentists.map((dentist) => (
           <div key={dentist.id}>
             <Card
-              className={`mb-4 cursor-pointer hover:shadow-lg ${selectedDentistId === dentist.id ? "border-2 border-orange-400" : ""}`}
+              className={`mb-4 cursor-pointer hover:shadow-lg ${selectedDentistId === dentist.id ? "border-2 border-orange-400" : ""
+                }`}
               onClick={() => handleCardClick(dentist.id)}
             >
               <CardContent className="flex justify-between p-4">
                 <div>
-                  {/* Display dentist name here */}
                   <div className="font-bold">{dentist.user.name}</div>
-                  <div className="text-sm text-gray-400">{dentist.areaOfExpertise?.join(", ")}</div>
+                  <div className="text-sm text-gray-400">
+                    {dentist.areaOfExpertise?.join(", ")}
+                  </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {dentist.yearsOfExperience} years of experience
                   </div>
@@ -146,9 +140,22 @@ export default function DentistManagement() {
                   <div className="text-sm">
                     {dentist.bookings.length > 0 ? (
                       dentist.bookings.map((booking, idx) => (
-                        <div key={idx}>
-                          {new Date(booking.apptDateAndTime).toLocaleDateString()} -{" "}
-                          {new Date(booking.apptDateAndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <div key={idx} className="flex items-center gap-2 mt-1">
+                          <span>
+                            {new Date(booking.apptDateAndTime).toLocaleDateString()} -{" "}
+                            {new Date(booking.apptDateAndTime).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <span
+                            className={`text-xs font-semibold px-2 py-0.5 rounded ${booking.status.toLowerCase() === "cancel"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-green-100 text-green-600"
+                              }`}
+                          >
+                            {booking.status}
+                          </span>
                         </div>
                       ))
                     ) : (
@@ -163,24 +170,20 @@ export default function DentistManagement() {
             {selectedDentistId === dentist.id && (
               <div className="bg-white rounded-xl shadow-md p-6 mt-2 mb-6">
                 <div className="font-bold mb-3">{dentist.user.name}'s Comments</div>
-                {dentist.bookings.length === 0 ? (
-                  <div className="text-gray-500 text-sm italic">No bookings available</div>
-                ) : (
-                  dentist.bookings.map((comment, idx) => (
+                {dentist.comments && dentist.comments.length > 0 ? (
+                  dentist.comments.map((comment) => (
                     <div
-                      key={idx}
+                      key={comment.id}
                       className="border rounded-xl p-4 mb-3 shadow-sm bg-white flex justify-between"
                     >
                       <div>
-                        <div className="font-bold text-sm">{comment._id}</div>
-                        <div className="text-sm mt-1">{comment.status}</div>
-                        <div className="text-sm text-black font-bold mt-2">
-                          Appointment to {dentist.user.name}
-                        </div>
+                        <div className="font-bold text-sm">{comment.title}</div>
+                        <div className="text-sm mt-1">{comment.content}</div>
+                        <div className="text-xs text-gray-400 mt-2">{new Date(comment.dateTime).toLocaleString()}</div>
                       </div>
                       <div className="flex flex-col items-end justify-between">
                         <button
-                          onClick={() => handleDeleteComment(dentist.id, comment._id)}
+                          onClick={() => handleDeleteComment(Number(dentist.id), comment.id)}
                           className="text-gray-500 hover:text-red-500"
                         >
                           <Trash2 size={16} />
@@ -188,6 +191,8 @@ export default function DentistManagement() {
                       </div>
                     </div>
                   ))
+                ) : (
+                  <div className="text-gray-500 text-sm italic">No comments available</div>
                 )}
               </div>
             )}
