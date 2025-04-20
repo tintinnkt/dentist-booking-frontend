@@ -83,7 +83,7 @@ export const useBooking = () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
 
       // You can also update the cache directly
-      queryClient.setQueryData(["bookings"], (oldData: any) => {
+      queryClient.setQueryData(["bookings"], (oldData: Array<Booking>) => {
         if (!oldData) return oldData;
 
         // Update the specific booking in the cache

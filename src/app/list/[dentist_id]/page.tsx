@@ -22,7 +22,9 @@ interface DentistDetailsProps extends DentistProps {
 const DentistDetailsMock: DentistDetailsProps = {
   id: "001",
   _id: "001",
-  name: "allie",
+  user: {
+    name: "Ollie",
+  },
   yearsOfExperience: 1,
   areaOfExpertise: ["Orthodontics", "Periodontics", "Oral Surgery"],
   comments: [
@@ -50,7 +52,7 @@ const DentistDetails = () => {
         <Card className="w-full rounded-3xl bg-white p-5 shadow-md shadow-neutral-200 sm:p-8">
           <CardHeader>
             <CardTitle className="text-4xl">
-              {DentistDetailsMock.name}
+              {DentistDetailsMock.user.name}
             </CardTitle>
             <CardContent className="prose-h4:font-bold prose-p:max-sm:indent-2 grid w-fit gap-2 sm:grid-cols-2 lg:gap-x-4">
               <div>year</div>
