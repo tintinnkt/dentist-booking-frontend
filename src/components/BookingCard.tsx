@@ -38,14 +38,13 @@ import {
 import { Separator } from "./ui/Separator";
 
 export function combineDateAndTime(date: Date, time: string): Date {
-  const nextDay = new Date(date);
-  nextDay.setDate(nextDay.getDate() + 1);
+  const newDate = new Date(date);
 
-  const dateString = nextDay.toISOString().split("T")[0];
-  const combinedDateTimeString = `${dateString}T${time}:00`;
-  const combinedDateTime = new Date(combinedDateTimeString);
+  const [hours, minutes] = time.split(":").map(Number);
 
-  return combinedDateTime;
+  newDate.setHours(hours, minutes, 0, 0);
+
+  return newDate;
 }
 
 interface BookingCardProps {
@@ -59,11 +58,11 @@ const BookingCard: React.FC<BookingCardProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(
-    new Date(booking.apptDate),
+    new Date(booking.apptDateAndTime),
   );
   const [appTime, setAppTime] = useState<string>(
-    booking.apptDate
-      ? format(new Date(booking.apptDate), "HH:mm")
+    booking.apptDateAndTime
+      ? format(new Date(booking.apptDateAndTime), "HH:mm")
       : timeSlots[0],
   );
 
@@ -73,15 +72,15 @@ const BookingCard: React.FC<BookingCardProps> = ({
   const toggleEditMode = () => {
     if (isEditing) {
       // Reset selected date and time when canceling edit
-      setSelectedDate(new Date(booking.apptDate));
-      setAppTime(format(new Date(booking.apptDate), "HH:mm"));
+      setSelectedDate(new Date(booking.apptDateAndTime));
+      setAppTime(format(new Date(booking.apptDateAndTime), "HH:mm"));
     }
     setIsEditing((prev) => !prev);
   };
 
   // Handle confirm edit
   const handleConfirmEdit = () => {
-    const originalDate = new Date(booking.apptDate);
+    const originalDate = new Date(booking.apptDateAndTime);
     const combinedDateTime = combineDateAndTime(selectedDate, appTime);
 
     if (combinedDateTime.toISOString() === originalDate.toISOString()) {
@@ -89,7 +88,11 @@ const BookingCard: React.FC<BookingCardProps> = ({
       return;
     }
 
-    rescheduleAppointment(booking._id, selectedDate, appTime);
+    // Pass a callback to update local state after successful reschedule
+    rescheduleAppointment(booking._id, selectedDate, appTime, () => {
+      // Update the booking reference with the new date/time
+      booking.apptDateAndTime = combinedDateTime.toISOString();
+    });
     setIsEditing(false);
   };
 
@@ -113,9 +116,11 @@ const BookingCard: React.FC<BookingCardProps> = ({
         <p>Owner</p>
         <p className="col-span-1 px-1 sm:col-span-2">{booking.user.name}</p>
         <p>Dentist</p>
-        <p className="col-span-1 px-1 sm:col-span-2">{booking.dentist?.name}</p>
+        <p className="col-span-1 px-1 sm:col-span-2">
+          {booking.dentist?.user.name}
+        </p>
         <p>Date</p>
-        <span>{format(new Date(booking.apptDate), "PP | HH:mm")}</span>
+        <span>{format(new Date(booking.apptDateAndTime), "PP | HH:mm")}</span>
       </CardContent>
       <Separator />
       <CardFooter className="flex justify-end space-x-2">

@@ -1,6 +1,8 @@
 export interface DentistProps {
   _id: string;
-  name: string;
+  user: {
+    name: string;
+  };
   yearsOfExperience: number;
   areaOfExpertise: Array<string>;
   id: string;
