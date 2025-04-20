@@ -35,20 +35,30 @@ export const useBooking = () => {
       user: string;
       dentist: string;
     }) => {
-      return axios.post(BackendRoutes.BOOKING, booking, {
+      // Make sure date is properly serialized as ISO string for API
+      const payload = {
+        ...booking,
+        apptDateAndTime: booking.apptDateAndTime.toISOString(),
+      };
+
+      console.log("Sending booking payload:", payload);
+
+      return axios.post(BackendRoutes.BOOKING, payload, {
         headers: {
           Authorization: `Bearer ${session?.user.token}`,
           "Content-Type": "application/json",
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log("Booking success response:", response.data);
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       toast.success("Appointment booked successfully");
     },
     onError: (error) => {
       if (axios.isAxiosError(error)) {
-        toast.error(error.message);
+        console.error("Booking error details:", error.message);
+        toast.error(error.response?.data?.message || error.message);
       } else {
         toast.error("An unexpected error occurred");
         console.error(error);
@@ -130,20 +140,32 @@ export const useBooking = () => {
     date: Date,
     time: string,
   ) => {
-    const combinedDateTime = combineDateAndTime(date, time);
+    try {
+      const combinedDateTime = combineDateAndTime(date, time);
 
-    if (isNaN(combinedDateTime.getTime())) {
-      toast.error("Invalid date or time");
-      return;
+      if (isNaN(combinedDateTime.getTime())) {
+        toast.error("Invalid date or time");
+        return;
+      }
+
+      // Debug log
+      console.log("Booking payload:", {
+        apptDateAndTime: combinedDateTime.toISOString(), // Use ISO format
+        user: userId,
+        dentist: dentistId,
+      });
+
+      createBookingMutation.mutate({
+        apptDateAndTime: combinedDateTime,
+        user: userId,
+        dentist: dentistId,
+      });
+
+      return combinedDateTime;
+    } catch (error) {
+      console.error("Error in bookAppointment:", error);
+      toast.error("Failed to process booking request");
     }
-
-    createBookingMutation.mutate({
-      apptDateAndTime: combinedDateTime,
-      user: userId,
-      dentist: dentistId,
-    });
-
-    return combinedDateTime;
   };
 
   // Reschedule an appointment
