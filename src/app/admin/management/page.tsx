@@ -1,5 +1,5 @@
 "use client";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+// import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
-import { Switch } from "@/components/ui/Switch";
+// import { Switch } from "@/components/ui/Switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { DentistProps } from "@/types/api/Dentist";

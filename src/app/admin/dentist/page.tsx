@@ -1,12 +1,13 @@
-"use client";
+// pages/dentists.tsx
+"use client"
 
 import DentistManagement from "@/components/DentistMangement";
-import { FrontendRootRoutes } from "@/config/apiRoutes";
+import { FrontendRootRoutes, BackendRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
 
-export default function DentistDashboard() {
-  const router = useRouter();
 
+export default function DentistsPage() {
+  const router = useRouter();
   const ScheduleClick = () => {
     router.push(FrontendRootRoutes.ADMIN);
   };
@@ -22,7 +23,6 @@ export default function DentistDashboard() {
   const HolidayClick = () => {
     router.push(`${FrontendRootRoutes.ADMIN}/holiday`);
   };
-
   return (
     <main>
       <div className="m-3 flex justify-center text-3xl font-bold">
