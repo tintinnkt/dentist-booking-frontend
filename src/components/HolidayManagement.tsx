@@ -29,9 +29,15 @@ interface OffHour {
 export default function OffHoursManagement() {
   const { user } = useUser();
   const queryClient = useQueryClient();
-  const { data: session } = useSession(); // Move useSession to component level
+  const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    startDate: "",
+    endDate: "",
+    description: "",
+    isForAllDentist: false
+  });
   
   // Define fetchOffHours using the session from component scope
   const fetchOffHours = async (): Promise<OffHour[]> => {
@@ -93,25 +99,110 @@ export default function OffHoursManagement() {
       queryClient.invalidateQueries({ queryKey: ["offHours"] });
       setShowModal(false);
       setError("");
+      setFormData({
+        startDate: "",
+        endDate: "",
+        description: "",
+        isForAllDentist: false
+      });
     },
-    onError: (error: Error) => {
-      setError(error.message);
+    onError: (error: any) => {
+      // Extract error message from response if available
+      const errorMessage = error.response?.data?.message || error.message;
+      setError(errorMessage);
     },
   });
 
+  // Improved date formatting function to handle timezone correctly
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    // Create a date object with the UTC time
+    const date = new Date(dateString);
+    
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
+      timeZone: "UTC" // Ensure date is treated as UTC
     });
   };
 
+  // Improved time formatting function to handle timezone correctly
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("en-US", {
+    // Create a date object with the UTC time
+    const date = new Date(dateString);
+    
+    return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "UTC" // Ensure time is treated as UTC
     });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+  };
+
+  const validateForm = () => {
+    // Reset any previous errors
+    setError("");
+    
+    if (!formData.description.trim()) {
+      setError("Description is required");
+      return false;
+    }
+    
+    if (!formData.startDate) {
+      setError("Start date is required");
+      return false;
+    }
+    
+    if (!formData.endDate) {
+      setError("End date is required");
+      return false;
+    }
+    
+    const startDate = new Date(formData.startDate);
+    const endDate = new Date(formData.endDate);
+    const current = new Date();
+    
+    if (startDate >= endDate) {
+      setError("End date must be after start date");
+      return false;
+    }
+    
+    if (startDate < current) {
+      setError("Start date must be in the future");
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    createMutation.mutate({
+      owner: user?._id || "",
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      description: formData.description,
+      isForAllDentist: user?.role === Role_type.ADMIN ? formData.isForAllDentist : false,
+    });
+  };
+
+  // Get current date and time in ISO format for min attribute
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    // Format as YYYY-MM-DDThh:mm
+    return now.toISOString().slice(0, 16);
   };
 
   if (!user) {
@@ -125,7 +216,7 @@ export default function OffHoursManagement() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-3 pt-10">
-        <LoaderIcon /> Loading off hours...
+        <LoaderIcon className="animate-spin" /> Loading off hours...
       </div>
     );
   }
@@ -133,7 +224,7 @@ export default function OffHoursManagement() {
   if (isError) {
     return (
       <div className="p-8 text-red-500">
-        <XCircleIcon /> Error: {queryError.message}
+        <XCircleIcon className="inline mr-2" /> Error: {queryError.message}
       </div>
     );
   }
@@ -156,9 +247,9 @@ export default function OffHoursManagement() {
 
       {/* Error display */}
       {error && (
-        <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg">
-          <XCircleIcon className="inline mr-2" />
-          {error}
+        <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg flex items-center">
+          <XCircleIcon className="mr-2" size={20} />
+          <span>{error}</span>
         </div>
       )}
 
@@ -211,22 +302,7 @@ export default function OffHoursManagement() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-lg">
             <div className="text-xl font-bold mb-1">Schedule Off Hours</div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                createMutation.mutate({
-                  owner: user._id,
-                  startDate: (form.startDate as HTMLInputElement).value,
-                  endDate: (form.endDate as HTMLInputElement).value,
-                  description: (form.description as HTMLInputElement).value,
-                  isForAllDentist: user.role === Role_type.ADMIN 
-                    ? (form.isForAllDentist as HTMLInputElement)?.checked 
-                    : false,
-                });
-              }}
-              className="space-y-4"
-            >
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Form fields */}
               <div>
                 <label className="text-sm font-semibold block mb-1">
@@ -235,6 +311,8 @@ export default function OffHoursManagement() {
                 <input
                   type="text"
                   name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
                   required
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                 />
@@ -248,6 +326,9 @@ export default function OffHoursManagement() {
                   <input
                     type="datetime-local"
                     name="startDate"
+                    value={formData.startDate}
+                    onChange={handleInputChange}
+                    min={getCurrentDateTime()}
                     required
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   />
@@ -259,6 +340,9 @@ export default function OffHoursManagement() {
                   <input
                     type="datetime-local"
                     name="endDate"
+                    value={formData.endDate}
+                    onChange={handleInputChange}
+                    min={formData.startDate || getCurrentDateTime()}
                     required
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                   />
@@ -271,6 +355,8 @@ export default function OffHoursManagement() {
                     type="checkbox"
                     name="isForAllDentist"
                     id="isForAllDentist"
+                    checked={formData.isForAllDentist}
+                    onChange={handleInputChange}
                     className="w-4 h-4"
                   />
                   <label htmlFor="isForAllDentist" className="text-sm font-medium">
@@ -282,18 +368,31 @@ export default function OffHoursManagement() {
               <div className="flex justify-between pt-4">
                 <button
                   type="submit"
-                  className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 text-sm"
+                  className="bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600 text-sm"
                   disabled={createMutation.isPending}
                 >
                   {createMutation.isPending ? (
-                    <LoaderIcon className="animate-spin inline mr-2" size={16} />
-                  ) : null}
-                  Save Off Hours
+                    <>
+                      <LoaderIcon className="animate-spin inline mr-2" size={16} />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Off Hours"
+                  )}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
-                  className="bg-orange-500 text-white px-4 py-2 rounded font-semibold hover:bg-orange-600 text-sm"
+                  onClick={() => {
+                    setShowModal(false);
+                    setError("");
+                    setFormData({
+                      startDate: "",
+                      endDate: "",
+                      description: "",
+                      isForAllDentist: false
+                    });
+                  }}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded font-semibold hover:bg-gray-400 text-sm"
                 >
                   Cancel
                 </button>
