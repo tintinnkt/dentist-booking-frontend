@@ -1,6 +1,6 @@
 "use client";
 
-import ScheduleManagement from "@/components/ScheduleManament";
+import ScheduleManagement from "@/components/ScheduleManagement";
 import { useRouter } from "next/navigation";
 
 export default function DentistDashboard() {

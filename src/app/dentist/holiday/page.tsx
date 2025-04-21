@@ -1,6 +1,6 @@
 "use client";
 
-import HolidayDentist from "@/components/HolidayDentist";
+import OffHoursManagement from "@/components/HolidayManagement";
 import { useRouter } from "next/navigation";
 
 export default function HolidayDashboard() {
@@ -39,7 +39,7 @@ export default function HolidayDashboard() {
       </div>
 
       <div className="flex justify-center">
-        <HolidayDentist></HolidayDentist>
+        <OffHoursManagement/>
       </div>
     </main>
   );

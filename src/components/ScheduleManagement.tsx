@@ -1,283 +1,149 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/Card";
-import { DatePickerWithPresets } from "@/components/ui/DatePicker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
-import { BackendRoutes } from "@/config/apiRoutes";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { format } from "date-fns";
-import { Calendar, LoaderIcon, XCircleIcon } from "lucide-react";
+import { getDentistSchedule } from "@/lib/dentist/getDentistSchedule";
+import { Booking } from "@/types/api/Dentist";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
-interface Booking {
-  _id: string;
-  apptDateAndTime: string;
-  dentist: {
-    _id: string;
-    name: string;
-  };
-  isUnavailable: boolean;
-  status: "Booked" | "Cancel";
-}
-
-interface Dentist {
-  id: number;
-  _id: string;
-  name: string;
-}
-
-// API calls
-const fetchUnavailableBookings = async (
-  dentistId?: string,
-  date?: string,
-): Promise<Array<Booking>> => {
-  const url = BackendRoutes.UNAVAILABLE_BOOKING;
-  const params: Record<string, string> = {};
-
-  if (dentistId) params.dentistId = dentistId;
-  if (date) params.date = date;
-
-  const response = await axios.get(url, { params });
-  if (Array.isArray(response.data.data)) {
-    return response.data.data;
-  }
-  throw new Error("Failed to fetch bookings data");
-};
-
-const fetchDentists = async (): Promise<Array<Dentist>> => {
-  const response = await axios.get(BackendRoutes.DENTIST);
-  if (Array.isArray(response.data.data)) {
-    return response.data.data;
-  }
-  throw new Error("Failed to fetch dentists data");
-};
-
 export default function ScheduleManagement() {
-  const [selectedDentist, setSelectedDentist] = useState<string>("");
-  const [selectedDentistId, setSelectedDentistId] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [viewMode, setViewMode] = useState("Dental schedules");
-  const [formattedDate, setFormattedDate] = useState<string | undefined>();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [show, setShow] = useState(true);
+  const [schedules, setSchedules] = useState<Array<Booking>>([]);
+  const [message, setMessage] = useState("");
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(false);
 
-  // Format the date for API calls whenever selectedDate changes
   useEffect(() => {
-    if (selectedDate) {
-      // Format date as YYYY-MM-DD for API
-      setFormattedDate(format(selectedDate, "yyyy-MM-dd"));
-    } else {
-      setFormattedDate(undefined);
-    }
-  }, [selectedDate]);
-
-  // Fetch dentists data
-  const {
-    data: dentists = [],
-    isLoading: isLoadingDentists,
-    error: dentistsError,
-  } = useQuery({
-    queryKey: ["dentists"],
-    queryFn: fetchDentists,
-  });
-
-  // Fetch bookings data with filters
-  const {
-    data: bookings = [],
-    isLoading: isLoadingBookings,
-    error: bookingsError,
-    refetch: refetchBookings,
-  } = useQuery({
-    queryKey: ["unavailableBookings", selectedDentistId, formattedDate],
-    queryFn: () => fetchUnavailableBookings(selectedDentistId, formattedDate),
-    enabled: !!selectedDentistId || !!formattedDate, // Only run if there's a selected dentist or date
-  });
-
-  // Update selected dentist ID when dentist name changes
-  useEffect(() => {
-    if (selectedDentist && dentists.length > 0) {
-      const dentist = dentists.find((d) => d.name === selectedDentist);
-      if (dentist) {
-        setSelectedDentistId(dentist._id);
+    const fetchSchedule = async () => {
+      if (!session || !session.user.token) {
+        setMessage("กรุณาเข้าสู่ระบบเพื่อดูตารางนัดหมาย");
+        setShow(false);
+        return;
       }
-    }
-  }, [selectedDentist, dentists]);
-
-  // Set initial dentist when dentists are loaded
-  useEffect(() => {
-    if (dentists.length > 0 && !selectedDentist) {
-      setSelectedDentist(dentists[0].name);
-    }
-  }, [dentists, selectedDentist]);
-
-  const handleSearch = () => {
-    refetchBookings();
-  };
-
-  // Format bookings for display
-  const formattedBookings = bookings.map((booking) => {
-    const bookingDate = new Date(booking.apptDateAndTime);
-    return {
-      id: booking._id,
-      dentistName: booking.dentist.name, // Ensure dentist's name is available
-      date: format(bookingDate, "yyyy-MM-dd"),
-      time:
-        format(bookingDate, "HH:mm - ") +
-        format(new Date(bookingDate.getTime() + 60 * 60 * 1000), "HH:mm"), // Assuming 1 hour appointments
-      type: booking.isUnavailable ? "Unavailable Time" : "Booked Appointment",
-      status: booking.status,
+      setLoading(true);
+  
+      try {
+        const data = await getDentistSchedule(session.user.token);
+        console.log("schedule data:", data);
+        setSchedules(data);
+  
+        if (!data) {
+          setMessage("รับข้อมูลไม่ได้");
+        } else if (data.length === 0) {
+          setMessage("ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก");
+          console.log("AAAAAAAAAAAAA");
+        } else {
+          setMessage("");
+          setShow(true);
+        }
+      } catch (err) {
+        setMessage("เกิดข้อผิดพลาดในการดึงข้อมูลตารางนัดหมาย");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
-  });
+  
+    fetchSchedule();
+  }, [session?.user?.token]); // Add dependencies here
+  
+  /*
+  const handleSearch = async () => {
+    if (!session || !session.user.token) {
+      setMessage("กรุณาเข้าสู่ระบบเพื่อดูตารางนัดหมาย");
+      setShow(false);
+      return;
+    }
 
-  // Filter bookings based on the view mode
-  const filteredBookings =
-    viewMode === "Dental schedules"
-      ? formattedBookings.filter(
-          (booking) => booking.type === "Unavailable Time",
-        )
-      : formattedBookings.filter(
-          (booking) => booking.type === "Booked Appointment",
-        );
 
-  if (dentistsError || bookingsError) {
-    const error = dentistsError || bookingsError;
-    return (
-      <div className="w-[90%] rounded-xl bg-white p-8 shadow-md">
-        <p className="flex items-center gap-2 text-red-500">
-          <XCircleIcon size={18} /> Error: {(error as Error).message}
-        </p>
-      </div>
-    );
-  }
+    try {
+      const data = await getDentistSchedule(session.user.token);
+      console.log("schedule data:", data);
+      setSchedules(data);
+
+      if (!data) {
+        setMessage("รับข้อมูลไม่ได้");
+      }
+
+      if (data.length === 0) {
+        setMessage("ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก");
+        console.log("AAAAAAAAAAAAA");
+      } else {
+        setMessage("");
+        setShow(true);
+      }
+    } catch (err) {
+      setMessage("เกิดข้อผิดพลาดในการดึงข้อมูลตารางนัดหมาย");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  */
 
   return (
-    <div className="w-[90%] rounded-xl bg-white p-8 shadow-md">
-      <div className="mb-2 text-lg font-bold">Schedule Management</div>
-      <div className="mb-4 text-sm text-gray-400">
-        View and manage dentist schedules and unavailable time slots
-      </div>
-
-      {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            Select Dentist
-          </label>
-          {isLoadingDentists ? (
-            <div className="flex h-10 w-[200px] items-center justify-center rounded bg-gray-100">
-              <LoaderIcon className="animate-spin" size={16} />
-            </div>
-          ) : (
-            <Select value={selectedDentist} onValueChange={setSelectedDentist}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select Dentist" />
-              </SelectTrigger>
-              <SelectContent>
-                {dentists.map((dentist) => (
-                  <SelectItem
-                    key={dentist._id || dentist.id}
-                    value={dentist.name}
-                  >
-                    {dentist.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+    <div className="h-auto min-h-[500px] w-[800px] rounded-lg bg-white shadow-lg">
+      <div className="p-5">
+        <div className="text-lg font-bold">Schedule Management</div>
+        <div className="text-sm text-gray-500">
+          View and manage dentist schedules and appointments
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium">Select Date</label>
-          <DatePickerWithPresets
+        <div className="py-3 text-sm font-bold">Select Date</div>
+        <div className="flex gap-x-3">
+          <input
+            type="date"
             value={selectedDate}
-            onChange={setSelectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">View mode</label>
-          <Select value={viewMode} onValueChange={setViewMode}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="View Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Dental schedules">
-                Unavailable Times
-              </SelectItem>
-              <SelectItem value="Appointments">Booked Appointments</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-end">
-          <button
-            className="rounded bg-orange-400 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-orange-300"
+          {/* <button
+            className="rounded bg-yellow-400 px-4 py-1 text-sm font-semibold text-black hover:bg-yellow-500"
             onClick={handleSearch}
           >
             Search
-          </button>
+          </button> */}
         </div>
-      </div>
 
-      {/* Title */}
-      <div className="mb-4 text-base font-semibold">
-        {viewMode === "Dental schedules" ? "Unavailable Times" : "Appointments"}{" "}
-        for {selectedDentist || "all dentists"}{" "}
-        {formattedDate ? `on ${formattedDate}` : ""}
-      </div>
+        {loading && (
+          <div className="mt-4 font-semibold text-blue-500">Loading...</div>
+        )}
 
-      {/* Loading State */}
-      {isLoadingBookings && (
-        <div className="flex items-center justify-center p-6">
-          <LoaderIcon className="mr-2 animate-spin" size={20} />
-          <span>Loading schedule data...</span>
-        </div>
-      )}
+        {message && (
+          <div className="mt-4 font-semibold text-red-600">{message}</div>
+        )}
+        {show && schedules.length > 0 && (
+          <div className="mt-4 text-sm font-bold text-black">
+            Schedule on {selectedDate || "this day"}
+            {schedules.map((item) => {
+              const apptDate = new Date(item.apptDateAndTime);
 
-      {/* Schedule Cards */}
-      {!isLoadingBookings && filteredBookings.length > 0
-        ? filteredBookings.map((booking) => (
-            <Card key={booking.id} className="mb-4">
-              <CardContent className="space-y-2 p-4">
-                <div className="font-bold">{booking.dentistName}</div>{" "}
-                {/* Display dentist's name here */}
-                <div className="text-sm text-gray-600">
-                  {booking.date} {booking.time}
+              if (isNaN(apptDate.getTime())) {
+                console.warn("Invalid date:", item.apptDateAndTime);
+                return null; // หรือจะแสดง error ก็ได้
+              }
+
+              const bookingDate = apptDate.toISOString().split("T")[0];
+              if (bookingDate !== selectedDate) return null;
+
+              if (!item.dentist) return null;
+              return (
+                <div key={item._id} className="mt-4">
+                  <h3 className="text-xl text-blue-600">{item.user.name}</h3>
+                  <ul className="ml-5 list-disc text-gray-700">
+                    <li>
+                      <strong>Appointment:</strong>{" "}
+                      {new Date(item.apptDateAndTime).toLocaleString()}
+                      <br />
+                      <strong>Status:</strong> {item.status}
+                    </li>
+                  </ul>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="mt-2 flex items-center text-sm">
-                    <span className="mr-2">
-                      {booking.type === "Unavailable Time" ? (
-                        <Calendar size={16} className="text-gray-500" />
-                      ) : (
-                        <Calendar size={16} className="text-blue-500" />
-                      )}
-                    </span>
-                    <span>{booking.type}</span>
-                  </div>
-                  {booking.status === "Cancel" && (
-                    <span className="rounded bg-red-100 px-2 py-1 text-xs text-red-800">
-                      Cancelled
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        : !isLoadingBookings && (
-            <div className="rounded-lg bg-gray-50 p-4 text-center text-sm text-gray-400">
-              No{" "}
-              {viewMode === "Dental schedules"
-                ? "unavailable times"
-                : "appointments"}{" "}
-              found for selected criteria.
-            </div>
-          )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
