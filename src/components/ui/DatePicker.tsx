@@ -21,12 +21,12 @@ import {
 import { cn } from "@/lib/utils";
 
 interface DatePickerWithPresetsProps {
-  date?: Date;       // Changed from 'selected' to 'date'
+  date?: Date; // Changed from 'selected' to 'date'
   onSelect?: (date: Date | undefined) => void;
 }
 
 export function DatePickerWithPresets({
-  date: selectedDate,  // Renamed prop here for internal usage
+  date: selectedDate, // Renamed prop here for internal usage
   onSelect,
 }: DatePickerWithPresetsProps) {
   const [date, setDate] = React.useState<Date | undefined>(selectedDate);
@@ -76,11 +76,7 @@ export function DatePickerWithPresets({
           </SelectContent>
         </Select>
         <div className="rounded-md border">
-          <Calendar 
-            mode="single" 
-            selected={date} 
-            onSelect={handleDateSelect} 
-          />
+          <Calendar mode="single" selected={date} onSelect={handleDateSelect} />
         </div>
       </PopoverContent>
     </Popover>

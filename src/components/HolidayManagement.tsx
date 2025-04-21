@@ -1,17 +1,16 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/Card";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { LoaderIcon, XCircleIcon } from "lucide-react";
-import { useState } from "react";
+import { LoaderIcon, Trash2, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useState } from "react";
 
 interface OffHour {
   _id: string;
@@ -36,11 +35,11 @@ export default function OffHoursManagement() {
     startDate: "",
     endDate: "",
     description: "",
-    isForAllDentist: false
+    isForAllDentist: false,
   });
 
   // Define fetchOffHours using the session from component scope
-  const fetchOffHours = async (): Promise<OffHour[]> => {
+  const fetchOffHours = async (): Promise<Array<OffHour>> => {
     if (!session?.user.token) return [];
     const response = await axios.get(BackendRoutes.OFF_HOURS, {
       headers: { Authorization: `Bearer ${session.user.token}` },
@@ -55,7 +54,7 @@ export default function OffHoursManagement() {
     isLoading,
     isError,
     error: queryError,
-  } = useQuery<OffHour[], Error>({
+  } = useQuery<Array<OffHour>, Error>({
     queryKey: ["offHours"],
     queryFn: fetchOffHours,
     enabled: !!user && !!session?.user.token, // Only fetch when user and token are available
@@ -64,7 +63,7 @@ export default function OffHoursManagement() {
         return data;
       }
       return data.filter(
-        (offHour) => offHour.owner._id === user?._id || offHour.isForAllDentist
+        (offHour) => offHour.owner._id === user?._id || offHour.isForAllDentist,
       );
     },
   });
@@ -73,7 +72,7 @@ export default function OffHoursManagement() {
     mutationFn: async (id: string) => {
       if (!session?.user.token) throw new Error("Authentication required");
       await axios.delete(`${BackendRoutes.OFF_HOURS}/${id}`, {
-        headers: { Authorization: `Bearer ${session.user.token}` }
+        headers: { Authorization: `Bearer ${session.user.token}` },
       });
     },
     onSuccess: () => {
@@ -87,11 +86,9 @@ export default function OffHoursManagement() {
   const createMutation = useMutation({
     mutationFn: async (newOffHour: Omit<OffHour, "_id" | "createdAt">) => {
       if (!session?.user.token) throw new Error("Authentication required");
-      const response = await axios.post(
-        BackendRoutes.OFF_HOURS,
-        newOffHour,
-        { headers: { Authorization: `Bearer ${session.user.token}` } }
-      );
+      const response = await axios.post(BackendRoutes.OFF_HOURS, newOffHour, {
+        headers: { Authorization: `Bearer ${session.user.token}` },
+      });
       return response.data.data;
     },
     onSuccess: () => {
@@ -102,7 +99,7 @@ export default function OffHoursManagement() {
         startDate: "",
         endDate: "",
         description: "",
-        isForAllDentist: false
+        isForAllDentist: false,
       });
     },
     onError: (error: any) => {
@@ -121,7 +118,7 @@ export default function OffHoursManagement() {
       year: "numeric",
       month: "short",
       day: "numeric",
-      timeZone: "UTC" // Ensure date is treated as UTC
+      timeZone: "UTC", // Ensure date is treated as UTC
     });
   };
 
@@ -133,15 +130,15 @@ export default function OffHoursManagement() {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "UTC" // Ensure time is treated as UTC
+      timeZone: "UTC", // Ensure time is treated as UTC
     });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -193,7 +190,8 @@ export default function OffHoursManagement() {
       startDate: formData.startDate,
       endDate: formData.endDate,
       description: formData.description,
-      isForAllDentist: user?.role === Role_type.ADMIN ? formData.isForAllDentist : false,
+      isForAllDentist:
+        user?.role === Role_type.ADMIN ? formData.isForAllDentist : false,
     });
   };
 
@@ -207,7 +205,11 @@ export default function OffHoursManagement() {
   if (!user) {
     return (
       <div className="p-8 text-center">
-        Please <Link href="/login" className="text-blue-500 underline">login</Link> to view off hours
+        Please{" "}
+        <Link href="/login" className="text-blue-500 underline">
+          login
+        </Link>{" "}
+        to view off hours
       </div>
     );
   }
@@ -223,22 +225,22 @@ export default function OffHoursManagement() {
   if (isError) {
     return (
       <div className="p-8 text-red-500">
-        <XCircleIcon className="inline mr-2" /> Error: {queryError.message}
+        <XCircleIcon className="mr-2 inline" /> Error: {queryError.message}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
+    <div className="w-[90%] rounded-xl bg-white p-8 shadow-md">
       {/* Header and controls */}
-      <div className="font-bold text-lg mb-2">Off Hours Management</div>
-      <div className="text-gray-400 mb-4 text-sm">
+      <div className="mb-2 text-lg font-bold">Off Hours Management</div>
+      <div className="mb-4 text-sm text-gray-400">
         {user.role === Role_type.ADMIN
           ? "Manage clinic-wide and personal off-hours"
           : "Manage your personal unavailable periods"}
       </div>
 
-      <div className="flex justify-end mb-4">
+      <div className="mb-4 flex justify-end">
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           + Add Off Hours
         </Button>
@@ -246,7 +248,7 @@ export default function OffHoursManagement() {
 
       {/* Error display */}
       {error && (
-        <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg flex items-center">
+        <div className="mb-4 flex items-center rounded-lg bg-red-50 p-4 text-red-500">
           <XCircleIcon className="mr-2" size={20} />
           <span>{error}</span>
         </div>
@@ -254,31 +256,34 @@ export default function OffHoursManagement() {
 
       {/* Off Hours list */}
       {offHours.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
+        <div className="py-8 text-center text-gray-500">
           No off hours periods scheduled yet
         </div>
       ) : (
         offHours.map((offHour) => (
           <Card key={offHour._id} className="mb-4">
-            <CardContent className="flex justify-between items-center p-4">
+            <CardContent className="flex items-center justify-between p-4">
               <div>
                 <div className="font-bold">{offHour.description}</div>
                 <div className="text-sm text-gray-600">
-                  {formatDate(offHour.startDate)} - {formatDate(offHour.endDate)}
+                  {formatDate(offHour.startDate)} -{" "}
+                  {formatDate(offHour.endDate)}
                 </div>
-                <div className="flex items-center text-sm mt-2">
+                <div className="mt-2 flex items-center text-sm">
                   <span className="mr-2">🕑</span>
                   <span>
-                    {formatTime(offHour.startDate)} - {formatTime(offHour.endDate)}
+                    {formatTime(offHour.startDate)} -{" "}
+                    {formatTime(offHour.endDate)}
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="mt-1 text-xs text-gray-500">
                   {offHour.isForAllDentist
                     ? "Applies to all dentists"
                     : `Personal (${offHour.owner.name || "you"})`}
                 </div>
               </div>
-              {(user._id === offHour.owner._id || user.role === Role_type.ADMIN) && (
+              {(user._id === offHour.owner._id ||
+                user.role === Role_type.ADMIN) && (
                 <button
                   onClick={() => deleteMutation.mutate(offHour._id)}
                   className="text-gray-500 hover:text-red-500"
@@ -298,13 +303,13 @@ export default function OffHoursManagement() {
 
       {/* Add Off Hours Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-lg">
-            <div className="text-xl font-bold mb-1">Schedule Off Hours</div>
+        <div className="bg-opacity-40 fixed inset-0 z-50 flex items-center justify-center bg-black">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
+            <div className="mb-1 text-xl font-bold">Schedule Off Hours</div>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Form fields */}
               <div>
-                <label className="text-sm font-semibold block mb-1">
+                <label className="mb-1 block text-sm font-semibold">
                   Description*
                 </label>
                 <input
@@ -313,13 +318,13 @@ export default function OffHoursManagement() {
                   value={formData.description}
                   onChange={handleInputChange}
                   required
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                 />
               </div>
 
               <div className="flex gap-2">
                 <div className="w-1/2">
-                  <label className="text-sm font-semibold block mb-1">
+                  <label className="mb-1 block text-sm font-semibold">
                     Start Date & Time*
                   </label>
                   <input
@@ -329,11 +334,11 @@ export default function OffHoursManagement() {
                     onChange={handleInputChange}
                     min={getCurrentDateTime()}
                     required
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                 </div>
                 <div className="w-1/2">
-                  <label className="text-sm font-semibold block mb-1">
+                  <label className="mb-1 block text-sm font-semibold">
                     End Date & Time*
                   </label>
                   <input
@@ -343,7 +348,7 @@ export default function OffHoursManagement() {
                     onChange={handleInputChange}
                     min={formData.startDate || getCurrentDateTime()}
                     required
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                   />
                 </div>
               </div>
@@ -356,9 +361,12 @@ export default function OffHoursManagement() {
                     id="isForAllDentist"
                     checked={formData.isForAllDentist}
                     onChange={handleInputChange}
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                   />
-                  <label htmlFor="isForAllDentist" className="text-sm font-medium">
+                  <label
+                    htmlFor="isForAllDentist"
+                    className="text-sm font-medium"
+                  >
                     Apply to all dentists
                   </label>
                 </div>
@@ -367,12 +375,15 @@ export default function OffHoursManagement() {
               <div className="flex justify-between pt-4">
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600 text-sm"
+                  className="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
                   disabled={createMutation.isPending}
                 >
                   {createMutation.isPending ? (
                     <>
-                      <LoaderIcon className="animate-spin inline mr-2" size={16} />
+                      <LoaderIcon
+                        className="mr-2 inline animate-spin"
+                        size={16}
+                      />
                       Saving...
                     </>
                   ) : (
@@ -388,10 +399,10 @@ export default function OffHoursManagement() {
                       startDate: "",
                       endDate: "",
                       description: "",
-                      isForAllDentist: false
+                      isForAllDentist: false,
                     });
                   }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded font-semibold hover:bg-gray-400 text-sm"
+                  className="rounded bg-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-400"
                 >
                   Cancel
                 </button>

@@ -1,49 +1,46 @@
-"use client"
-import NavBar from "@/components/NavBar";
+"use client";
 
-import ScheduleManagement from "@/components/ScheduleManament";
-import CommentDentist from "@/components/CommentDentist"
+import HolidayDentist from "@/components/HolidayDentist";
 import { useRouter } from "next/navigation";
-import HolidayDentist from "@/components/HolidayDentist"
 
 export default function HolidayDashboard() {
-    const router = useRouter();
+  const router = useRouter();
 
-    const ScheduleClick = () => {
-        router.push("/dentist"); 
-      };
+  const ScheduleClick = () => {
+    router.push("/dentist");
+  };
 
-      const CommentClick = () => {
-        router.push("/dentist/comment"); 
-      };
-    return (
-      <main>
-        <div className="text-3xl font-bold flex justify-center m-3">
-          Dental Clinic Dentist Dashboard
-        </div>
-        <div className="container mx-auto px-6 mb-6">
-          <button
-             className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded mr-2" 
-             onClick={ScheduleClick}>
-             Schedules
-          </button>
-          
-          <button
-            className="bg-orange-400 hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded mr-2" 
-            onClick={CommentClick}>
-            Comment
-          </button>
+  const CommentClick = () => {
+    router.push("/dentist/comment");
+  };
+  return (
+    <main>
+      <div className="m-3 flex justify-center text-3xl font-bold">
+        Dental Clinic Dentist Dashboard
+      </div>
+      <div className="container mx-auto mb-6 px-6">
+        <button
+          className="mr-2 rounded bg-orange-400 px-4 py-1 text-sm font-semibold text-black hover:bg-white"
+          onClick={ScheduleClick}
+        >
+          Schedules
+        </button>
 
-          <button
-            className="bg-white hover:bg-white text-black text-sm font-semibold px-4 py-1 rounded">
-            Holidays
-          </button>
-        </div>
-        
-        <div className="flex justify-center">
-          <HolidayDentist></HolidayDentist>
-        </div>
-        
-      </main>
-    );
-  }
+        <button
+          className="mr-2 rounded bg-orange-400 px-4 py-1 text-sm font-semibold text-black hover:bg-white"
+          onClick={CommentClick}
+        >
+          Comment
+        </button>
+
+        <button className="rounded bg-white px-4 py-1 text-sm font-semibold text-black hover:bg-white">
+          Holidays
+        </button>
+      </div>
+
+      <div className="flex justify-center">
+        <HolidayDentist></HolidayDentist>
+      </div>
+    </main>
+  );
+}

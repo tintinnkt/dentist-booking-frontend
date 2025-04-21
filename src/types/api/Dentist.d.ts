@@ -25,16 +25,16 @@ export interface Booking {
   __v: number;
 }
 
-type BookingItem = {
+interface BookingItem {
   id: string;
   date: string;
   patientName: string;
   patientContact: string;
   patientEmail: string;
   status: string;
-};
+}
 
-type DentistSchedule = {
+interface DentistSchedule {
   dentist: {
     id: string;
     user: {
@@ -43,12 +43,12 @@ type DentistSchedule = {
       email: string;
     };
     yearsOfExperience: number;
-    areaOfExpertise: string[];
+    areaOfExpertise: Array<string>;
   };
-  upcomingBookings: BookingItem[];
-  unavailableSlots: {
+  upcomingBookings: Array<BookingItem>;
+  unavailableSlots: Array<{
     id: string;
     date: string;
     createdAt: string;
-  }[];
-};
+  }>;
+}

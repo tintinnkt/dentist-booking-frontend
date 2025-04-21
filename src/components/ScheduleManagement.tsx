@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { DatePickerWithPresets } from "@/components/ui/DatePicker";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/Select";
+import { BackendRoutes } from "@/config/apiRoutes";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { BackendRoutes } from "@/config/apiRoutes";
-import { LoaderIcon, XCircleIcon, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { Calendar, LoaderIcon, XCircleIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Booking {
   _id: string;
@@ -28,13 +34,16 @@ interface Dentist {
 }
 
 // API calls
-const fetchUnavailableBookings = async (dentistId?: string, date?: string): Promise<Array<Booking>> => {
-  let url = BackendRoutes.UNAVAILABLE_BOOKING;
+const fetchUnavailableBookings = async (
+  dentistId?: string,
+  date?: string,
+): Promise<Array<Booking>> => {
+  const url = BackendRoutes.UNAVAILABLE_BOOKING;
   const params: Record<string, string> = {};
-  
+
   if (dentistId) params.dentistId = dentistId;
   if (date) params.date = date;
-  
+
   const response = await axios.get(url, { params });
   if (Array.isArray(response.data.data)) {
     return response.data.data;
@@ -71,7 +80,7 @@ export default function ScheduleManagement() {
   const {
     data: dentists = [],
     isLoading: isLoadingDentists,
-    error: dentistsError
+    error: dentistsError,
   } = useQuery({
     queryKey: ["dentists"],
     queryFn: fetchDentists,
@@ -82,7 +91,7 @@ export default function ScheduleManagement() {
     data: bookings = [],
     isLoading: isLoadingBookings,
     error: bookingsError,
-    refetch: refetchBookings
+    refetch: refetchBookings,
   } = useQuery({
     queryKey: ["unavailableBookings", selectedDentistId, formattedDate],
     queryFn: () => fetchUnavailableBookings(selectedDentistId, formattedDate),
@@ -92,7 +101,7 @@ export default function ScheduleManagement() {
   // Update selected dentist ID when dentist name changes
   useEffect(() => {
     if (selectedDentist && dentists.length > 0) {
-      const dentist = dentists.find(d => d.name === selectedDentist);
+      const dentist = dentists.find((d) => d.name === selectedDentist);
       if (dentist) {
         setSelectedDentistId(dentist._id);
       }
@@ -111,28 +120,35 @@ export default function ScheduleManagement() {
   };
 
   // Format bookings for display
-  const formattedBookings = bookings.map(booking => {
+  const formattedBookings = bookings.map((booking) => {
     const bookingDate = new Date(booking.apptDateAndTime);
     return {
       id: booking._id,
       dentistName: booking.dentist.name, // Ensure dentist's name is available
       date: format(bookingDate, "yyyy-MM-dd"),
-      time: format(bookingDate, "HH:mm - ") + format(new Date(bookingDate.getTime() + 60 * 60 * 1000), "HH:mm"), // Assuming 1 hour appointments
+      time:
+        format(bookingDate, "HH:mm - ") +
+        format(new Date(bookingDate.getTime() + 60 * 60 * 1000), "HH:mm"), // Assuming 1 hour appointments
       type: booking.isUnavailable ? "Unavailable Time" : "Booked Appointment",
-      status: booking.status
+      status: booking.status,
     };
   });
 
   // Filter bookings based on the view mode
-  const filteredBookings = viewMode === "Dental schedules" 
-    ? formattedBookings.filter(booking => booking.type === "Unavailable Time")
-    : formattedBookings.filter(booking => booking.type === "Booked Appointment");
+  const filteredBookings =
+    viewMode === "Dental schedules"
+      ? formattedBookings.filter(
+          (booking) => booking.type === "Unavailable Time",
+        )
+      : formattedBookings.filter(
+          (booking) => booking.type === "Booked Appointment",
+        );
 
   if (dentistsError || bookingsError) {
     const error = dentistsError || bookingsError;
     return (
-      <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
-        <p className="text-red-500 flex items-center gap-2">
+      <div className="w-[90%] rounded-xl bg-white p-8 shadow-md">
+        <p className="flex items-center gap-2 text-red-500">
           <XCircleIcon size={18} /> Error: {(error as Error).message}
         </p>
       </div>
@@ -140,18 +156,20 @@ export default function ScheduleManagement() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-8 w-[90%]">
-      <div className="font-bold text-lg mb-2">Schedule Management</div>
-      <div className="text-gray-400 mb-4 text-sm">
+    <div className="w-[90%] rounded-xl bg-white p-8 shadow-md">
+      <div className="mb-2 text-lg font-bold">Schedule Management</div>
+      <div className="mb-4 text-sm text-gray-400">
         View and manage dentist schedules and unavailable time slots
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="mb-6 flex flex-wrap gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Select Dentist</label>
+          <label className="mb-1 block text-sm font-medium">
+            Select Dentist
+          </label>
           {isLoadingDentists ? (
-            <div className="w-[200px] h-10 flex items-center justify-center bg-gray-100 rounded">
+            <div className="flex h-10 w-[200px] items-center justify-center rounded bg-gray-100">
               <LoaderIcon className="animate-spin" size={16} />
             </div>
           ) : (
@@ -160,8 +178,11 @@ export default function ScheduleManagement() {
                 <SelectValue placeholder="Select Dentist" />
               </SelectTrigger>
               <SelectContent>
-                {dentists.map(dentist => (
-                  <SelectItem key={dentist._id || dentist.id} value={dentist.name}>
+                {dentists.map((dentist) => (
+                  <SelectItem
+                    key={dentist._id || dentist.id}
+                    value={dentist.name}
+                  >
                     {dentist.name}
                   </SelectItem>
                 ))}
@@ -171,26 +192,31 @@ export default function ScheduleManagement() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Select Date</label>
-          <DatePickerWithPresets value={selectedDate} onChange={setSelectedDate} />
+          <label className="mb-1 block text-sm font-medium">Select Date</label>
+          <DatePickerWithPresets
+            value={selectedDate}
+            onChange={setSelectedDate}
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">View mode</label>
+          <label className="mb-1 block text-sm font-medium">View mode</label>
           <Select value={viewMode} onValueChange={setViewMode}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="View Mode" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Dental schedules">Unavailable Times</SelectItem>
+              <SelectItem value="Dental schedules">
+                Unavailable Times
+              </SelectItem>
               <SelectItem value="Appointments">Booked Appointments</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="flex items-end">
-          <button 
-            className="bg-orange-400 hover:bg-orange-300 text-black text-sm font-semibold px-4 py-2 rounded transition-colors"
+          <button
+            className="rounded bg-orange-400 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-orange-300"
             onClick={handleSearch}
           >
             Search
@@ -199,52 +225,59 @@ export default function ScheduleManagement() {
       </div>
 
       {/* Title */}
-      <div className="font-semibold text-base mb-4">
-        {viewMode === "Dental schedules" ? "Unavailable Times" : "Appointments"} for {selectedDentist || "all dentists"} {formattedDate ? `on ${formattedDate}` : ""}
+      <div className="mb-4 text-base font-semibold">
+        {viewMode === "Dental schedules" ? "Unavailable Times" : "Appointments"}{" "}
+        for {selectedDentist || "all dentists"}{" "}
+        {formattedDate ? `on ${formattedDate}` : ""}
       </div>
 
       {/* Loading State */}
       {isLoadingBookings && (
         <div className="flex items-center justify-center p-6">
-          <LoaderIcon className="animate-spin mr-2" size={20} />
+          <LoaderIcon className="mr-2 animate-spin" size={20} />
           <span>Loading schedule data...</span>
         </div>
       )}
 
       {/* Schedule Cards */}
-      {!isLoadingBookings && filteredBookings.length > 0 ? (
-        filteredBookings.map((booking) => (
-          <Card key={booking.id} className="mb-4">
-            <CardContent className="p-4 space-y-2">
-              <div className="font-bold">{booking.dentistName}</div> {/* Display dentist's name here */}
-              <div className="text-sm text-gray-600">{booking.date} {booking.time}</div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-sm mt-2">
-                  <span className="mr-2">
-                    {booking.type === "Unavailable Time" ? (
-                      <Calendar size={16} className="text-gray-500" />
-                    ) : (
-                      <Calendar size={16} className="text-blue-500" />
-                    )}
-                  </span>
-                  <span>{booking.type}</span>
+      {!isLoadingBookings && filteredBookings.length > 0
+        ? filteredBookings.map((booking) => (
+            <Card key={booking.id} className="mb-4">
+              <CardContent className="space-y-2 p-4">
+                <div className="font-bold">{booking.dentistName}</div>{" "}
+                {/* Display dentist's name here */}
+                <div className="text-sm text-gray-600">
+                  {booking.date} {booking.time}
                 </div>
-                {booking.status === "Cancel" && (
-                  <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
-                    Cancelled
-                  </span>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))
-      ) : (
-        !isLoadingBookings && (
-          <div className="text-sm text-gray-400 p-4 text-center bg-gray-50 rounded-lg">
-            No {viewMode === "Dental schedules" ? "unavailable times" : "appointments"} found for selected criteria.
-          </div>
-        )
-      )}
+                <div className="flex items-center justify-between">
+                  <div className="mt-2 flex items-center text-sm">
+                    <span className="mr-2">
+                      {booking.type === "Unavailable Time" ? (
+                        <Calendar size={16} className="text-gray-500" />
+                      ) : (
+                        <Calendar size={16} className="text-blue-500" />
+                      )}
+                    </span>
+                    <span>{booking.type}</span>
+                  </div>
+                  {booking.status === "Cancel" && (
+                    <span className="rounded bg-red-100 px-2 py-1 text-xs text-red-800">
+                      Cancelled
+                    </span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        : !isLoadingBookings && (
+            <div className="rounded-lg bg-gray-50 p-4 text-center text-sm text-gray-400">
+              No{" "}
+              {viewMode === "Dental schedules"
+                ? "unavailable times"
+                : "appointments"}{" "}
+              found for selected criteria.
+            </div>
+          )}
     </div>
   );
 }

@@ -1,10 +1,9 @@
 // pages/dentists.tsx
-"use client"
+"use client";
 
 import DentistManagement from "@/components/DentistManagement";
 import { FrontendRootRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
-
 
 export default function DentistsPage() {
   const router = useRouter();

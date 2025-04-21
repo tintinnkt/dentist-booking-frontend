@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { getDentistSchedule } from "@/lib/dentist/getDentistSchedule";
 import { Booking } from "@/types/api/Dentist";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 export default function ScheduleManagement() {
   const [selectedDate, setSelectedDate] = useState("");
   const [show, setShow] = useState(false);
-  const [schedules, setSchedules] = useState<Booking[]>([]);
+  const [schedules, setSchedules] = useState<Array<Booking>>([]);
   const [message, setMessage] = useState("");
-  const { data: session} = useSession();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
@@ -22,19 +21,19 @@ export default function ScheduleManagement() {
     }
 
     setLoading(true);
-    
+
     try {
       const data = await getDentistSchedule(session.user.token);
       console.log("schedule data:", data);
       setSchedules(data);
 
-      if(!data) {
+      if (!data) {
         setMessage("รับข้อมูลไม่ได้");
       }
 
       if (data.length === 0) {
         setMessage("ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก");
-        console.log("AAAAAAAAAAAAA")
+        console.log("AAAAAAAAAAAAA");
       } else {
         setMessage("");
         setShow(true);
@@ -48,39 +47,38 @@ export default function ScheduleManagement() {
   };
 
   return (
-    <div className="w-[800px] h-auto min-h-[500px] rounded-lg shadow-lg bg-white">
+    <div className="h-auto min-h-[500px] w-[800px] rounded-lg bg-white shadow-lg">
       <div className="p-5">
         <div className="text-lg font-bold">Schedule Management</div>
         <div className="text-sm text-gray-500">
           View and manage dentist schedules and appointments
         </div>
 
-        <div className="text-sm font-bold py-3">Select Date</div>
+        <div className="py-3 text-sm font-bold">Select Date</div>
         <div className="flex gap-x-3">
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
           <button
-            className="bg-yellow-400 hover:bg-yellow-500 text-black text-sm font-semibold px-4 py-1 rounded"
+            className="rounded bg-yellow-400 px-4 py-1 text-sm font-semibold text-black hover:bg-yellow-500"
             onClick={handleSearch}
           >
             Search
           </button>
-          
         </div>
-        
-          {loading && (
-            <div className="mt-4 text-blue-500 font-semibold">Loading...</div>
-          )}
+
+        {loading && (
+          <div className="mt-4 font-semibold text-blue-500">Loading...</div>
+        )}
 
         {message && (
-          <div className="mt-4 text-red-600 font-semibold">{message}</div>
+          <div className="mt-4 font-semibold text-red-600">{message}</div>
         )}
         {show && schedules.length > 0 && (
-          <div className="mt-4 text-sm text-black font-bold">
+          <div className="mt-4 text-sm font-bold text-black">
             Schedule on {selectedDate || "this day"}
             {schedules.map((item) => {
               const apptDate = new Date(item.apptDateAndTime);
@@ -89,26 +87,28 @@ export default function ScheduleManagement() {
                 console.warn("Invalid date:", item.apptDateAndTime);
                 return null; // หรือจะแสดง error ก็ได้
               }
-            
+
               const bookingDate = apptDate.toISOString().split("T")[0];
               if (bookingDate !== selectedDate) return null;
 
               if (!item.dentist) return null;
-        return (
-          <div key={item._id} className="mt-4">
-            <h3 className="text-blue-600 text-xl">{item.user.name}</h3>
-            <ul className="list-disc ml-5 text-gray-700">
-              <li>
-                <strong>User ID:</strong> {item.user._id} <br />
-                <strong>Appointment:</strong> {new Date(item.apptDateAndTime).toLocaleString()}<br />
-                <strong>Status:</strong> {item.status}
-              </li>
-          </ul>
-        </div>
-      );
-    })}
-  </div>
-)}
+              return (
+                <div key={item._id} className="mt-4">
+                  <h3 className="text-xl text-blue-600">{item.user.name}</h3>
+                  <ul className="ml-5 list-disc text-gray-700">
+                    <li>
+                      <strong>User ID:</strong> {item.user._id} <br />
+                      <strong>Appointment:</strong>{" "}
+                      {new Date(item.apptDateAndTime).toLocaleString()}
+                      <br />
+                      <strong>Status:</strong> {item.status}
+                    </li>
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
