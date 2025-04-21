@@ -58,7 +58,7 @@ const NavBar = () => {
               onClick={() => router.push(`${FrontendRootRoutes.ADMIN}/holiday`)}
             >
               <FolderKanban />
-              <>Admins</>
+              <>Management Panel</>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex items-center space-x-1.5"
