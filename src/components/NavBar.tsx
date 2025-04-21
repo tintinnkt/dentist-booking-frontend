@@ -53,13 +53,21 @@ const NavBar = () => {
               <StethoscopeIcon />
               <>Dentists</>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="flex items-center space-x-1.5"
-              onClick={() => router.push(`${FrontendRootRoutes.ADMIN}/holiday`)}
-            >
-              <FolderKanban />
-              <>Management Panel</>
-            </DropdownMenuItem>
+            {user && user.role != Role_type.USER && (
+              <DropdownMenuItem
+                className="flex items-center space-x-1.5"
+                onClick={() =>
+                  router.push(
+                    user.role == Role_type.ADMIN
+                      ? `${FrontendRootRoutes.ADMIN}/holiday`
+                      : FrontendRoutes.DENTIST,
+                  )
+                }
+              >
+                <FolderKanban />
+                <>Management Panel</>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               className="flex items-center space-x-1.5"
               onClick={() => router.push(FrontendRoutes.BOOKING)}
