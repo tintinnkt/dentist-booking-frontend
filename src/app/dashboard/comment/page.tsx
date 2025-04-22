@@ -24,7 +24,7 @@ export default function Page() {
 
           <div>
             <div className="text-md font-bold">comment from user 1</div>
-            <div>"You are the worst dentist I have ever met."</div>
+            <div>{"You are the worst dentist I have ever met."}</div>
           </div>
 
           <div className="flex items-end justify-between text-sm text-gray-500">
@@ -40,7 +40,7 @@ export default function Page() {
 
           <div>
             <div className="text-md font-bold">comment from user 2</div>
-            <div>"Stupid shit."</div>
+            <div>{"Stupid shit."}</div>
           </div>
 
           <div className="flex items-end justify-between text-sm text-gray-500">

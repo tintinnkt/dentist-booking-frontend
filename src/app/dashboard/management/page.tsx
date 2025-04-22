@@ -893,7 +893,7 @@ export default function DentalAdminDashboard() {
           <DialogHeader>
             <DialogTitle>Edit Schedule</DialogTitle>
             <DialogDescription>
-              Update the dentist's schedule details.
+              {"Update the dentist's schedule details."}
             </DialogDescription>
           </DialogHeader>
 

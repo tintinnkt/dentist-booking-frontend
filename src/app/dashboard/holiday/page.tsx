@@ -15,7 +15,7 @@ import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
 import { OffHour } from "@/types/api/OffHour";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Clock10Icon, LoaderIcon, Trash2, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -97,9 +97,9 @@ export default function Page() {
         isForAllDentist: false,
       });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       // Extract error message from response if available
-      const errorMessage = error.response?.data?.message || error.message;
+      const errorMessage = error.message;
       setError(errorMessage);
     },
   });

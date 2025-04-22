@@ -2,18 +2,24 @@
 
 import { Card, CardContent } from "@/components/ui/Card";
 import { BackendRoutes } from "@/config/apiRoutes";
+import { Booking, BookingUserProps } from "@/types/api/Booking";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { ArrowUpDown, Check, LoaderIcon, X, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 
+interface GroupedPatient {
+  user: BookingUserProps;
+  appointments: Array<Booking>;
+}
+
 export default function PatientManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { data: session } = useSession();
 
-  const fetchBookings = async (): Promise<Array<any>> => {
+  const fetchBookings = async (): Promise<Array<Booking>> => {
     if (!session?.user.token) throw new Error("Authentication required");
     const response = await axios.get(BackendRoutes.BOOKING, {
       headers: { Authorization: `Bearer ${session.user.token}` },
@@ -49,20 +55,19 @@ export default function PatientManagement() {
       acc[userId].appointments.push(booking);
       return acc;
     },
-    {} as Record<string, any>,
+    {} as Record<string, GroupedPatient>,
   );
 
   // Filter patients based on search query
-  const filteredPatients = Object.values(groupedBookings).filter(
-    (patient: any) =>
-      `${patient.user.name} ${patient.user.email} ${patient.user.tel}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()),
+  const filteredPatients = Object.values(groupedBookings).filter((patient) =>
+    `${patient.user.name} ${patient.user.email} ${patient.user.tel}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()),
   );
 
   // Sort appointments for each patient based on date
-  filteredPatients.forEach((patient: any) => {
-    patient.appointments.sort((a: any, b: any) => {
+  filteredPatients.forEach((patient) => {
+    patient.appointments.sort((a, b) => {
       const dateA = new Date(a.apptDateAndTime).getTime();
       const dateB = new Date(b.apptDateAndTime).getTime();
       return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
@@ -132,7 +137,7 @@ export default function PatientManagement() {
       {filteredPatients.length === 0 ? (
         <div className="text-sm text-gray-500 italic">No patients found.</div>
       ) : (
-        filteredPatients.map((patient: any) => (
+        filteredPatients.map((patient) => (
           <Card
             key={patient.user._id}
             className="mb-4 cursor-pointer hover:shadow-lg"
@@ -161,14 +166,14 @@ export default function PatientManagement() {
                   </span>
                 </div>
                 <div className="mt-2 space-y-2">
-                  {patient.appointments.map((appt: any) => (
+                  {patient.appointments.map((appt) => (
                     <div
                       key={appt._id}
                       className="flex items-center justify-between border-b pb-2"
                     >
                       <div className="flex items-center">
                         <span className="mr-2">
-                          {appt.status === "Cancel" ? (
+                          {appt.status === "cancel" ? (
                             <X size={16} className="text-red-500" />
                           ) : (
                             <Check size={16} className="text-green-500" />

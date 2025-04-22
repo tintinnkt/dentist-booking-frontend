@@ -39,15 +39,17 @@ import { Separator } from "./ui/Separator";
 
 export const combineDateAndTime = (date: Date, time: string) => {
   const combined = new Date(date);
-
   const [hourMin, period] = time.split(" ");
-  let [hours, minutes] = hourMin.split(":").map(Number);
+  const [hoursStr, minutesStr] = hourMin.split(":");
 
-  if (period === "PM" && hours < 12) hours += 12;
-  if (period === "AM" && hours === 12) hours = 0;
+  const hours = (() => {
+    const h = Number(hoursStr);
+    if (period === "PM" && h < 12) return h + 12;
+    if (period === "AM" && h === 12) return 0;
+    return h;
+  })();
 
-  combined.setHours(hours, minutes, 0, 0);
-
+  combined.setHours(hours, Number(minutesStr), 0, 0);
   return combined;
 };
 

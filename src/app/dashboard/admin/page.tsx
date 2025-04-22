@@ -189,7 +189,9 @@ export default function Page() {
                     {dentist.yearsOfExperience} years of experience
                   </div>
 
-                  <div className="mt-3 text-sm font-bold">Today's Schedule</div>
+                  <div className="mt-3 text-sm font-bold">
+                    {"Today's Schedule"}
+                  </div>
                   <div className="text-sm">
                     {dentist.bookings.length > 0 ? (
                       getSortedBookings(dentist.bookings).map(
@@ -238,7 +240,7 @@ export default function Page() {
             {selectedDentistId === dentist.id && (
               <div className="mt-2 mb-6 rounded-xl bg-white p-6 shadow-md">
                 <div className="mb-3 font-bold">
-                  {dentist.user.name}'s Bookings
+                  {`${dentist.user.name}'s Bookings`}
                 </div>
                 {dentist.bookings.length === 0 ? (
                   <div className="text-sm text-gray-500 italic">
