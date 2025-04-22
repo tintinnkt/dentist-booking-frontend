@@ -3,7 +3,7 @@
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
-export default function CommentDentist() {
+export default function Page() {
   const [selectedDate, setSelectedDate] = useState("");
   const [show, setShow] = useState(false);
 
@@ -12,7 +12,7 @@ export default function CommentDentist() {
   }
 
   return (
-    <div className="w-[800px] rounded-lg bg-white shadow-lg">
+    <div className="w-full rounded-lg bg-white shadow-lg">
       <div className="p-5">
         <div className="text-md font-bold">Comment Management</div>
         <div className="text-sm text-gray-500">view and manage comment</div>
@@ -24,7 +24,7 @@ export default function CommentDentist() {
 
           <div>
             <div className="text-md font-bold">comment from user 1</div>
-            <div>You are the worst dentist I have ever met.</div>
+            <div>"You are the worst dentist I have ever met."</div>
           </div>
 
           <div className="flex items-end justify-between text-sm text-gray-500">
@@ -40,7 +40,7 @@ export default function CommentDentist() {
 
           <div>
             <div className="text-md font-bold">comment from user 2</div>
-            <div>Stupid shit.</div>
+            <div>"Stupid shit."</div>
           </div>
 
           <div className="flex items-end justify-between text-sm text-gray-500">

@@ -1,12 +1,14 @@
 "use client";
 
 import { getDentistSchedule } from "@/lib/dentist/getDentistSchedule";
-import { Booking } from "@/types/api/Dentist";
+import { Booking } from "@/types/api/Booking";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 export default function ScheduleManagement() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [show, setShow] = useState(true);
   const [schedules, setSchedules] = useState<Array<Booking>>([]);
   const [message, setMessage] = useState("");
@@ -21,12 +23,12 @@ export default function ScheduleManagement() {
         return;
       }
       setLoading(true);
-  
+
       try {
         const data = await getDentistSchedule(session.user.token);
         console.log("schedule data:", data);
         setSchedules(data);
-  
+
         if (!data) {
           setMessage("รับข้อมูลไม่ได้");
         } else if (data.length === 0) {
@@ -43,10 +45,10 @@ export default function ScheduleManagement() {
         setLoading(false);
       }
     };
-  
+
     fetchSchedule();
   }, [session?.user?.token]); // Add dependencies here
-  
+
   /*
   const handleSearch = async () => {
     if (!session || !session.user.token) {
@@ -82,7 +84,7 @@ export default function ScheduleManagement() {
   */
 
   return (
-    <div className="h-auto min-h-[500px] w-[800px] rounded-lg bg-white shadow-lg">
+    <div className="h-auto min-h-[500px] w-full rounded-lg bg-white shadow-lg">
       <div className="p-5">
         <div className="text-lg font-bold">Schedule Management</div>
         <div className="text-sm text-gray-500">

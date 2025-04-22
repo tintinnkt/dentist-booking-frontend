@@ -28,7 +28,7 @@ export const getUnavailableBookingByDentistId = (dentistId: string): string =>
   );
 
 export enum FrontendRootRoutes {
-  ADMIN = "/admin",
+  DASHBOARD = "/dashboard",
   LIST = "/list",
   LOGIN = "/login",
   PROFILE = "/profile",
@@ -36,10 +36,12 @@ export enum FrontendRootRoutes {
   DENTIST = "/dentist",
 }
 export enum FrontendRoutes {
-  ADMIN_MANAGEMENT = `${FrontendRootRoutes.ADMIN}/management`,
-  DENTIST = `${FrontendRootRoutes.DENTIST}`,
-  DENTIST_COMMENT = `${FrontendRootRoutes.DENTIST}/comment`,
-  DENTIST_HOLIDAY = `${FrontendRootRoutes.DENTIST}/holiday`,
+  DASHBOARD = FrontendRootRoutes.DASHBOARD,
+  ADMIN = `${FrontendRoutes.DASHBOARD}/admin`,
+  COMMENT = `${FrontendRootRoutes.DASHBOARD}/comment`,
+  USER = `${FrontendRootRoutes.DASHBOARD}/users`,
+  HOLIDAY = `${FrontendRootRoutes.DASHBOARD}/holiday`,
+  DENTIST = `${FrontendRootRoutes.DASHBOARD}/dentist`,
   DENTIST_LIST = `${FrontendRootRoutes.LIST}`,
   LOGIN = `${FrontendRootRoutes.LOGIN}`,
   PROFILE = `${FrontendRootRoutes.PROFILE}`,

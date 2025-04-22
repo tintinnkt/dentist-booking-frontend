@@ -23,7 +23,7 @@ interface Dentist {
   bookings: Array<Booking>;
 }
 
-export default function DentistManagement() {
+export default function Page() {
   const { user } = useUser();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -32,6 +32,8 @@ export default function DentistManagement() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState("");
+  // if (!user || user.role !== Role_type.ADMIN)
+  //   redirect(FrontendRoutes.DENTIST_LIST);
 
   const fetchDentists = async (): Promise<Array<Dentist>> => {
     if (!session?.user.token) return [];
@@ -122,7 +124,7 @@ export default function DentistManagement() {
 
   if (isLoading) {
     return (
-      <div className="w-[90%] rounded-xl bg-white p-8 shadow-md">
+      <div className="w-full rounded-xl bg-white p-8 shadow-md">
         <div className="flex items-center justify-center gap-3 pt-4">
           <LoaderIcon className="animate-spin" size={18} /> Loading dentists
           data...

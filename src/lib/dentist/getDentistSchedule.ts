@@ -12,7 +12,7 @@ export const getDentistSchedule = async (token: string) => {
     return response.data.data;
   } catch (error) {
     if (error instanceof AxiosError) {
-      console.error("Axios error response:", error.response?.data);
+      console.error("Axios error response:", error.message);
       throw new Error(
         error.response?.data?.message || "Failed to get dentist schedule",
       );

@@ -1,5 +1,5 @@
 "use client";
-import { FrontendRootRoutes, FrontendRoutes } from "@/config/apiRoutes";
+import { FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
 import {
@@ -56,16 +56,10 @@ const NavBar = () => {
             {user && user.role != Role_type.USER && (
               <DropdownMenuItem
                 className="flex items-center space-x-1.5"
-                onClick={() =>
-                  router.push(
-                    user.role == Role_type.ADMIN
-                      ? `${FrontendRootRoutes.ADMIN}/holiday`
-                      : FrontendRoutes.DENTIST,
-                  )
-                }
+                onClick={() => router.push(FrontendRoutes.DASHBOARD)}
               >
                 <FolderKanban />
-                <>Management Panel</>
+                <>dashboard</>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem

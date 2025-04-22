@@ -102,7 +102,7 @@ export default function PatientManagement() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl rounded-xl bg-white p-8 shadow-md md:w-4/5 lg:w-3/4">
+    <div className="mx-auto w-full rounded-xl bg-white p-8 shadow-md">
       <div className="mb-2 text-lg font-bold">Patient Management</div>
       <div className="mb-4 text-sm text-gray-400">
         View and manage patient information and appointment status
