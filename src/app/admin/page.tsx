@@ -1,6 +1,6 @@
 "use client";
 
-import ScheduleManagement from "@/components/ScheduleMangement";
+import ScheduleManagement from "@/components/managementComponent/ScheduleMangement";
 import { FrontendRootRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

@@ -38,6 +38,8 @@ export enum FrontendRootRoutes {
 export enum FrontendRoutes {
   ADMIN_MANAGEMENT = `${FrontendRootRoutes.ADMIN}/management`,
   DENTIST = `${FrontendRootRoutes.DENTIST}`,
+  DENTIST_COMMENT = `${FrontendRootRoutes.DENTIST}/comment`,
+  DENTIST_HOLIDAY = `${FrontendRootRoutes.DENTIST}/holiday`,
   DENTIST_LIST = `${FrontendRootRoutes.LIST}`,
   LOGIN = `${FrontendRootRoutes.LOGIN}`,
   PROFILE = `${FrontendRootRoutes.PROFILE}`,

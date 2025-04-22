@@ -1,13 +1,14 @@
 "use client";
 
 import CommentDentist from "@/components/CommentDentist";
+import { FrontendRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
 
 export default function CommentDashboard() {
   const router = useRouter();
 
   const ScheduleClick = () => {
-    router.push("/dentist");
+    router.push(FrontendRoutes.DENTIST);
   };
 
   const HolidayClick = () => {

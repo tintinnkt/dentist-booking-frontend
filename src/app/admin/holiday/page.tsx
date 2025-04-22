@@ -1,6 +1,6 @@
 "use client";
 
-import HolidayManagement from "@/components/HolidayManagement";
+import HolidayManagement from "@/components/managementComponent/HolidayManagement";
 import { FrontendRootRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

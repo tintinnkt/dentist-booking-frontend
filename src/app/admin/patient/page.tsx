@@ -1,7 +1,7 @@
 // pages/dentists.tsx
 "use client";
 
-import PatientManagement from "@/components/PatientManagemant";
+import PatientManagement from "@/components/managementComponent/PatientManagemant";
 import { FrontendRootRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
 

@@ -4,25 +4,13 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
+import { Booking } from "@/types/api/Booking";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { LoaderIcon, Trash2, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
-
-interface Appointment {
-  date: string;
-  timeRange: string;
-  patientName: string;
-}
-
-interface Comment {
-  id: number;
-  title: string;
-  content: string;
-  dateTime: string;
-}
 
 interface Dentist {
   id: string;
@@ -32,15 +20,7 @@ interface Dentist {
   };
   yearsOfExperience: number;
   areaOfExpertise: Array<string>;
-  bookings: Array<{
-    _id: string;
-    apptDateAndTime: string;
-    user: string;
-    dentist: string;
-    isUnavailable: boolean;
-    status: string;
-    createdAt: string;
-  }>;
+  bookings: Array<Booking>;
 }
 
 export default function DentistManagement() {
@@ -67,7 +47,7 @@ export default function DentistManagement() {
   };
 
   // Sort bookings by date function
-  const getSortedBookings = (bookings) => {
+  const getSortedBookings = (bookings: Array<Booking>) => {
     return [...bookings].sort((a, b) => {
       return (
         new Date(a.apptDateAndTime).getTime() -

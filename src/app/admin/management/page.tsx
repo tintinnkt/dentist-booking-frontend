@@ -30,10 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { Switch } from "@/components/ui/switch";
 // import { Switch } from "@/components/ui/Switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { DentistProps } from "@/types/api/Dentist";
+import { User } from "@/types/User";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { format } from "date-fns";
@@ -44,18 +46,11 @@ import {
   LoaderIcon,
   Plus,
   Trash2,
-  User,
   UserCheck,
+  UserIcon,
   XCircleIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-
-interface Patient {
-  _id: string;
-  name: string;
-  phone: string;
-  email: string;
-}
 
 interface Schedule {
   _id: string;
@@ -89,7 +84,7 @@ const fetchDentists = async (): Promise<Array<DentistProps>> => {
   return response.data.data;
 };
 
-const fetchPatients = async (): Promise<Array<Patient>> => {
+const fetchPatients = async (): Promise<Array<User>> => {
   const response = await axios.get(BackendRoutes.PATIENTS);
   return response.data.data;
 };
@@ -252,7 +247,7 @@ export default function DentalAdminDashboard() {
 
   const getDentistName = (id: string): string => {
     const dentist = dentists.find((d) => d._id === id);
-    return dentist ? dentist.name : "Unknown Dentist";
+    return dentist ? dentist.user.name : "Unknown Dentist";
   };
 
   const getPatientName = (id: string): string => {
@@ -365,7 +360,7 @@ export default function DentalAdminDashboard() {
             Schedules
           </TabsTrigger>
           <TabsTrigger value="patients">
-            <User className="mr-2 h-4 w-4" />
+            <UserIcon className="mr-2 h-4 w-4" />
             Patients
           </TabsTrigger>
           <TabsTrigger value="dentists">
@@ -402,7 +397,7 @@ export default function DentalAdminDashboard() {
                       <SelectItem value="all">All Dentists</SelectItem>
                       {dentists.map((dentist) => (
                         <SelectItem key={dentist._id} value={dentist._id}>
-                          {dentist.name}
+                          {dentist.user.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -581,7 +576,7 @@ export default function DentalAdminDashboard() {
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                           <p className="font-medium">Contact Information</p>
-                          <p>Phone: {patient.phone}</p>
+                          <p>Phone: {patient.tel}</p>
                           <p>Email: {patient.email}</p>
                         </div>
                         <div>
@@ -631,7 +626,7 @@ export default function DentalAdminDashboard() {
                 {dentists.map((dentist) => (
                   <Card key={dentist._id}>
                     <CardHeader>
-                      <CardTitle>{dentist.name}</CardTitle>
+                      <CardTitle>{dentist.user.name}</CardTitle>
                       <CardDescription>
                         {dentist.areaOfExpertise}
                       </CardDescription>
@@ -801,7 +796,7 @@ export default function DentalAdminDashboard() {
                             newHoliday.startTime === "00:00" &&
                             newHoliday.endTime === "23:59"
                           }
-                          onCheckedChange={(checked) => {
+                          onCheckedChange={(checked: boolean) => {
                             if (checked) {
                               setNewHoliday({
                                 ...newHoliday,

@@ -5,25 +5,13 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
+import { OffHour } from "@/types/api/OffHour";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { LoaderIcon, Trash2, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
-
-interface OffHour {
-  _id: string;
-  owner: {
-    _id: string;
-    name?: string;
-  };
-  startDate: string;
-  endDate: string;
-  description: string;
-  isForAllDentist: boolean;
-  createdAt: string;
-}
 
 export default function OffHoursManagement() {
   const { user } = useUser();

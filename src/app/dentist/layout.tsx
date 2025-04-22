@@ -1,10 +1,13 @@
 "use client";
 
-import ScheduleManagement from "@/components/managementComponent/ScheduleManament";
 import { FrontendRoutes } from "@/config/apiRoutes";
 import { useRouter } from "next/navigation";
 
-export default function DentistDashboard() {
+const Layout = ({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) => {
   const router = useRouter();
   return (
     <main>
@@ -13,7 +16,10 @@ export default function DentistDashboard() {
       </div>
 
       <div className="container mx-auto mb-6 px-6">
-        <button className="mr-2 rounded bg-white px-4 py-1 text-sm font-semibold text-black">
+        <button
+          className="mr-2 rounded bg-white px-4 py-1 text-sm font-semibold text-black"
+          onClick={() => router.push(FrontendRoutes.DENTIST)}
+        >
           Schedules
         </button>
 
@@ -32,9 +38,9 @@ export default function DentistDashboard() {
         </button>
       </div>
 
-      <div className="flex justify-center">
-        <ScheduleManagement />
-      </div>
+      <div className="flex w-full justify-center">{children}</div>
     </main>
   );
-}
+};
+
+export default Layout;
