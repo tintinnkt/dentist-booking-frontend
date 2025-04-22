@@ -2,7 +2,7 @@
 
 import { timeSlots } from "@/constant/expertise";
 import { useBooking } from "@/hooks/useBooking";
-import { Booking } from "@/types/api/Dentist";
+import { Booking } from "@/types/api/Booking";
 import { format } from "date-fns";
 import { useState } from "react";
 import toast from "react-hot-toast";
