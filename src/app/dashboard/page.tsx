@@ -68,54 +68,52 @@ export default function ScheduleManagement() {
   const message = getStatusMessage(isLoading, filteredSchedules, session);
 
   return (
-    <div className="h-auto min-h-[500px] w-full rounded-lg bg-white shadow-lg">
-      <div className="p-5">
-        <div className="text-lg font-bold">Schedule Management</div>
-        <div className="text-sm text-gray-500">
-          View and manage dentist schedules and appointments
-        </div>
-
-        <div className="py-3 text-sm font-bold">Select Date</div>
-        <div className="flex gap-x-3">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
-        </div>
-
-        {isLoading && (
-          <div className="mt-4 font-semibold text-blue-500">Loading...</div>
-        )}
-
-        {message && (
-          <div className="mt-4 font-semibold text-red-600">{message}</div>
-        )}
-
-        {showSchedules && filteredSchedules.length > 0 && (
-          <div className="mt-4 text-sm font-bold text-black">
-            Schedule on {selectedDate || "this day"}
-            {filteredSchedules.map((item) => {
-              if (!item.dentist || !item.user) return null;
-
-              return (
-                <div key={item._id} className="mt-4">
-                  <h3 className="text-xl text-blue-600">{item.user.name}</h3>
-                  <ul className="ml-5 list-disc text-gray-700">
-                    <li>
-                      <strong>Appointment:</strong>{" "}
-                      {new Date(item.apptDateAndTime).toLocaleString()}
-                      <br />
-                      <strong>Status:</strong> {item.status}
-                    </li>
-                  </ul>
-                </div>
-              );
-            })}
-          </div>
-        )}
+    <div className="w-full">
+      <div className="pb-1 text-lg font-bold">Schedule Management</div>
+      <div className="pb-4 text-sm text-gray-500">
+        View and manage dentist schedules and appointments
       </div>
+
+      <div className="py-3 text-sm font-bold">Select Date</div>
+      <div className="flex gap-x-3">
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+      </div>
+
+      {isLoading && (
+        <div className="mt-4 font-semibold text-blue-500">Loading...</div>
+      )}
+
+      {message && (
+        <div className="mt-4 font-semibold text-red-600">{message}</div>
+      )}
+
+      {showSchedules && filteredSchedules.length > 0 && (
+        <div className="mt-4 text-sm font-bold text-black">
+          Schedule on {selectedDate || "this day"}
+          {filteredSchedules.map((item) => {
+            if (!item.dentist || !item.user) return null;
+
+            return (
+              <div key={item._id} className="mt-4">
+                <h3 className="text-xl text-blue-600">{item.user.name}</h3>
+                <ul className="ml-5 list-disc text-gray-700">
+                  <li>
+                    <strong>Appointment:</strong>{" "}
+                    {new Date(item.apptDateAndTime).toLocaleString()}
+                    <br />
+                    <strong>Status:</strong> {item.status}
+                  </li>
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

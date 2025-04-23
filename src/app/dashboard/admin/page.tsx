@@ -123,7 +123,7 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="w-full rounded-xl bg-white p-8 shadow-md">
+      <div className="w-full">
         <div className="flex items-center justify-center gap-3 pt-4">
           <LoaderIcon className="animate-spin" size={18} /> Loading dentists
           data...
@@ -143,9 +143,9 @@ export default function Page() {
   }
 
   return (
-    <div className="w-[90%] rounded-xl bg-white p-8 shadow-md">
-      <div className="mb-2 text-lg font-bold">Dentist Management</div>
-      <div className="mb-4 text-sm text-gray-400">
+    <div className="w-full">
+      <div className="pb-1 text-lg font-bold">Dentist Management</div>
+      <div className="pb-4 text-sm text-gray-400">
         View and manage dentist information, schedules, and comments
       </div>
 

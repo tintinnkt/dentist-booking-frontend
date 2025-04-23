@@ -15,13 +15,13 @@ const mockComments: Array<Comment> = [
     createdAt: new Date(),
   },
   {
-    _id: "mock123",
+    _id: "mock122",
     user: {
-      _id: "0012",
-      name: "Peter",
+      _id: "0011",
+      name: "Ann Ji",
     },
     dentist: "001",
-    detail: "You are awesome",
+    detail: "You are the worst",
     createdAt: new Date(),
   },
 ];
@@ -35,14 +35,12 @@ export default function Page() {
   }
 
   return (
-    <div className="w-full rounded-lg bg-white shadow-lg">
-      <div className="p-5">
-        <div className="text-md font-bold">Comment Management</div>
-        <div className="text-sm text-gray-500">view and manage comment</div>
-        {comments.map((comment, index) => (
-          <CommentCard comment={comment} key={index} />
-        ))}
-      </div>
+    <div className="w-full">
+      <div className="pb-1 text-lg font-bold">Comment Management</div>
+      <div className="pb-4 text-sm text-gray-500">view and manage comment</div>
+      {comments.map((comment) => (
+        <CommentCard comment={comment} key={comment._id} />
+      ))}
     </div>
   );
 }

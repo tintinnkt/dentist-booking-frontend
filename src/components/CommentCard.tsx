@@ -1,5 +1,7 @@
 "use client";
 
+import { Role_type } from "@/config/role";
+import { useUser } from "@/hooks/useUser";
 import { Comment } from "@/types/api/Comment";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -18,6 +20,7 @@ export default function CommentCard({
   refetchComments,
 }: CommentCardProps) {
   const { data: session } = useSession();
+  const { user } = useUser();
   const queryClient = useQueryClient();
 
   const { mutate: deleteComment } = useMutation({
@@ -44,15 +47,17 @@ export default function CommentCard({
   });
 
   return (
-    <div className="relative m-2 flex h-[200px] w-full flex-col justify-between rounded-lg bg-white p-5 shadow-lg">
-      <Button
-        variant={"ghost"}
-        className="absolute top-3 right-3 text-gray-400 hover:text-red-500"
-        onClick={() => deleteComment()}
-        aria-label="Delete comment"
-      >
-        <Trash2 size={18} />
-      </Button>
+    <div className="relative m-2 flex w-full flex-col justify-between rounded-lg bg-white p-5 shadow-lg">
+      {user?.role == Role_type.ADMIN && (
+        <Button
+          variant={"ghost"}
+          className="absolute top-3 right-3 text-gray-400 hover:text-red-500"
+          onClick={() => deleteComment()}
+          aria-label="Delete comment"
+        >
+          <Trash2 size={18} />
+        </Button>
+      )}
 
       <div>
         <div className="text-md font-bold">{`Comment from ${comment.user.name}`}</div>

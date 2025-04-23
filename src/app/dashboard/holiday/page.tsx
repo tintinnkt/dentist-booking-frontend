@@ -1,5 +1,6 @@
 "use client";
 
+import { CustomButton } from "@/components/CustomButton";
 import { TimePicker } from "@/components/TimePicker";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -258,19 +259,22 @@ export default function Page() {
   }
 
   return (
-    <div className="w-full rounded-xl bg-white p-8 shadow-md">
+    <main className="w-full">
       {/* Header and controls */}
-      <div className="mb-2 text-lg font-bold">Off Hours Management</div>
-      <div className="mb-4 text-sm text-gray-400">
-        {user.role === Role_type.ADMIN
-          ? "Manage clinic-wide and personal off-hours"
-          : "Manage your personal unavailable periods"}
-      </div>
+      <div className="mb-4 flex justify-between">
+        <div>
+          <div className="mb-2 text-lg font-bold">Off Hours Management</div>
+          <div className="mb-4 text-sm text-gray-400">
+            {user.role === Role_type.ADMIN
+              ? "Manage clinic-wide and personal off-hours"
+              : "Manage your personal unavailable periods"}
+          </div>
+        </div>
 
-      <div className="mb-4 flex justify-end">
-        <Button variant="secondary" onClick={() => setShowModal(true)}>
-          + Add Off Hours
-        </Button>
+        <CustomButton
+          useFor="add-off-hours"
+          onClick={() => setShowModal(true)}
+        />
       </div>
 
       {/* Error display */}
@@ -434,6 +438,6 @@ export default function Page() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
   );
 }

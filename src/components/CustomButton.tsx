@@ -123,6 +123,11 @@ const buttonConfig: Record<string, ButtonConfig> = {
     variant: "outline",
     icon: CalendarX2Icon,
   },
+  "add-off-hours": {
+    label: "Add Off Hours",
+    variant: "default",
+    icon: CalendarPlusIcon,
+  },
 };
 export type ButtonConfigKeys =
   | "select"
