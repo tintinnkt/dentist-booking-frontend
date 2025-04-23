@@ -6,7 +6,7 @@ import { FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useBooking } from "@/hooks/useBooking";
 import { useUser } from "@/hooks/useUser";
-import { Booking } from "@/types/api/Dentist";
+import { Booking } from "@/types/api/Booking";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LoaderIcon } from "react-hot-toast";
