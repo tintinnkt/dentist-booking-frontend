@@ -1,94 +1,71 @@
 "use client";
 
-import { FrontendRoutes } from "@/config/apiRoutes";
+import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
-import { getDentistSchedule } from "@/lib/dentist/getDentistSchedule";
 import { Booking } from "@/types/api/Booking";
+import { useQuery } from "@tanstack/react-query";
+import axios, { AxiosError } from "axios";
+import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function ScheduleManagement() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0],
   );
-  const [show, setShow] = useState(true);
-  const [schedules, setSchedules] = useState<Array<Booking>>([]);
-  const [message, setMessage] = useState("");
   const { data: session } = useSession();
   const { user } = useUser();
-  const [loading, setLoading] = useState(false);
+
   if (!user || user.role == Role_type.USER)
     redirect(FrontendRoutes.DENTIST_LIST);
 
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      if (!session || !session.user.token) {
-        setMessage("กรุณาเข้าสู่ระบบเพื่อดูตารางนัดหมาย");
-        setShow(false);
-        return;
-      }
-      setLoading(true);
-
-      try {
-        const data = await getDentistSchedule(session.user.token);
-        console.log("schedule data:", data);
-        setSchedules(data);
-
-        if (!data) {
-          setMessage("รับข้อมูลไม่ได้");
-        } else if (data.length === 0) {
-          setMessage("ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก");
-          console.log("AAAAAAAAAAAAA");
-        } else {
-          setMessage("");
-          setShow(true);
-        }
-      } catch (err) {
-        setMessage("เกิดข้อผิดพลาดในการดึงข้อมูลตารางนัดหมาย");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSchedule();
-  }, []);
-
-  /*
-  const handleSearch = async () => {
-    if (!session || !session.user.token) {
-      setMessage("กรุณาเข้าสู่ระบบเพื่อดูตารางนัดหมาย");
-      setShow(false);
-      return;
+  const getDentistSchedule = async () => {
+    if (!session?.user?.token) {
+      throw new Error("Authentication token not available");
     }
-
 
     try {
-      const data = await getDentistSchedule(session.user.token);
-      console.log("schedule data:", data);
-      setSchedules(data);
-
-      if (!data) {
-        setMessage("รับข้อมูลไม่ได้");
+      const response = await axios.get(BackendRoutes.BOOKING_DENTIST, {
+        headers: {
+          Authorization: `Bearer ${session.user.token}`,
+        },
+      });
+      return response.data.data as Array<Booking>;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error("Axios error response:", error.message);
+        throw new Error(
+          error.response?.data?.message || "Failed to get dentist schedule",
+        );
       }
-
-      if (data.length === 0) {
-        setMessage("ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก");
-        console.log("AAAAAAAAAAAAA");
-      } else {
-        setMessage("");
-        setShow(true);
-      }
-    } catch (err) {
-      setMessage("เกิดข้อผิดพลาดในการดึงข้อมูลตารางนัดหมาย");
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.error("Unknown error:", error);
+      throw new Error("An unexpected error occurred");
     }
   };
-  */
+
+  const {
+    data: schedules = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["dentistSchedule", session?.user?.token],
+    queryFn: getDentistSchedule,
+    enabled: !!session?.user?.token,
+  });
+
+  const filteredSchedules = schedules.filter((item) => {
+    if (!item.apptDateAndTime) return false;
+    const apptDate = new Date(item.apptDateAndTime);
+    if (isNaN(apptDate.getTime())) return false;
+
+    const bookingDate = apptDate.toISOString().split("T")[0];
+    return bookingDate === selectedDate;
+  });
+
+  const showSchedules = schedules.length > 0;
+  const message = getStatusMessage(isLoading, filteredSchedules, session);
 
   return (
     <div className="h-auto min-h-[500px] w-full rounded-lg bg-white shadow-lg">
@@ -106,36 +83,22 @@ export default function ScheduleManagement() {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
-          {/* <button
-            className="rounded bg-yellow-400 px-4 py-1 text-sm font-semibold text-black hover:bg-yellow-500"
-            onClick={handleSearch}
-          >
-            Search
-          </button> */}
         </div>
 
-        {loading && (
+        {isLoading && (
           <div className="mt-4 font-semibold text-blue-500">Loading...</div>
         )}
 
         {message && (
           <div className="mt-4 font-semibold text-red-600">{message}</div>
         )}
-        {show && schedules.length > 0 && (
+
+        {showSchedules && filteredSchedules.length > 0 && (
           <div className="mt-4 text-sm font-bold text-black">
             Schedule on {selectedDate || "this day"}
-            {schedules.map((item) => {
-              const apptDate = new Date(item.apptDateAndTime);
+            {filteredSchedules.map((item) => {
+              if (!item.dentist || !item.user) return null;
 
-              if (isNaN(apptDate.getTime())) {
-                console.warn("Invalid date:", item.apptDateAndTime);
-                return null; // หรือจะแสดง error ก็ได้
-              }
-
-              const bookingDate = apptDate.toISOString().split("T")[0];
-              if (bookingDate !== selectedDate) return null;
-
-              if (!item.dentist) return null;
               return (
                 <div key={item._id} className="mt-4">
                   <h3 className="text-xl text-blue-600">{item.user.name}</h3>
@@ -155,4 +118,25 @@ export default function ScheduleManagement() {
       </div>
     </div>
   );
+}
+
+// Helper function to determine status message
+function getStatusMessage(
+  isLoading: boolean,
+  filteredSchedules: Array<Booking>,
+  session: Session | null,
+): string {
+  if (!session?.user?.token) {
+    return "กรุณาเข้าสู่ระบบเพื่อดูตารางนัดหมาย";
+  }
+
+  if (isLoading) {
+    return "";
+  }
+
+  if (filteredSchedules.length === 0) {
+    return "ไม่พบตารางนัดหมายของทันตแพทย์ในวันที่เลือก";
+  }
+
+  return "";
 }

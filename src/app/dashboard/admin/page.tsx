@@ -63,7 +63,6 @@ export default function Page() {
     isLoading,
     isError,
     error: queryError,
-    refetch,
   } = useQuery<Array<Dentist>, Error>({
     queryKey: ["dentists"],
     queryFn: fetchDentists,
