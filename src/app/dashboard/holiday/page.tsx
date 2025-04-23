@@ -1,7 +1,9 @@
 "use client";
 
+import { TimePicker } from "@/components/TimePicker";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { DatePickerWithPresets } from "@/components/ui/DatePicker";
 import {
   Dialog,
   DialogClose,
@@ -16,6 +18,7 @@ import { useUser } from "@/hooks/useUser";
 import { OffHour } from "@/types/api/OffHour";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
+import { set } from "date-fns";
 import { Clock10Icon, LoaderIcon, Trash2, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -28,11 +31,15 @@ export default function Page() {
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    startDate: "",
-    endDate: "",
     description: "",
     isForAllDentist: false,
   });
+
+  // State for date and time pickers
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("17:00");
 
   const fetchOffHours = async (): Promise<Array<OffHour>> => {
     if (!session?.user.token) return [];
@@ -89,43 +96,45 @@ export default function Page() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["offHours"] });
       setShowModal(false);
-      setError("");
-      setFormData({
-        startDate: "",
-        endDate: "",
-        description: "",
-        isForAllDentist: false,
-      });
+      resetForm();
     },
     onError: (error: AxiosError) => {
-      // Extract error message from response if available
       const errorMessage = error.message;
       setError(errorMessage);
     },
   });
 
-  // Improved date formatting function to handle timezone correctly
-  const formatDate = (dateString: string) => {
-    // Create a date object with the UTC time
-    const date = new Date(dateString);
+  // Reset form function
+  const resetForm = () => {
+    setFormData({
+      description: "",
+      isForAllDentist: false,
+    });
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setStartTime("09:00");
+    setEndTime("17:00");
+    setError("");
+  };
 
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-      timeZone: "UTC", // Ensure date is treated as UTC
+      timeZone: "UTC",
     });
   };
 
-  // Improved time formatting function to handle timezone correctly
+  // Format time for display
   const formatTime = (dateString: string) => {
-    // Create a date object with the UTC time
     const date = new Date(dateString);
-
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "UTC", // Ensure time is treated as UTC
+      timeZone: "UTC",
     });
   };
 
@@ -138,7 +147,6 @@ export default function Page() {
   };
 
   const validateForm = () => {
-    // Reset any previous errors
     setError("");
 
     if (!formData.description.trim()) {
@@ -146,25 +154,38 @@ export default function Page() {
       return false;
     }
 
-    if (!formData.startDate) {
+    if (!startDate) {
       setError("Start date is required");
       return false;
     }
 
-    if (!formData.endDate) {
+    if (!endDate) {
       setError("End date is required");
       return false;
     }
 
-    const startDate = new Date(formData.startDate);
-    const endDate = new Date(formData.endDate);
-    const current = new Date();
-
-    if (startDate >= endDate) {
+    // Validate that end date is after start date
+    if (startDate > endDate) {
       setError("End date must be after start date");
       return false;
     }
 
+    // If dates are the same, check if end time is after start time
+    if (startDate.toDateString() === endDate.toDateString()) {
+      const [startHour, startMinute] = startTime.split(":").map(Number);
+      const [endHour, endMinute] = endTime.split(":").map(Number);
+
+      if (
+        startHour > endHour ||
+        (startHour === endHour && startMinute >= endMinute)
+      ) {
+        setError("End time must be after start time when on the same day");
+        return false;
+      }
+    }
+
+    // Validate start date is in the future
+    const current = new Date();
     if (startDate < current) {
       setError("Start date must be in the future");
       return false;
@@ -176,25 +197,36 @@ export default function Page() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!validateForm() || !startDate || !endDate) {
       return;
     }
 
+    // Create complete date-time objects by combining dates with times
+    const [startHours, startMinutes] = startTime.split(":").map(Number);
+    const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+    const completeStartDate = set(new Date(startDate), {
+      hours: startHours,
+      minutes: startMinutes,
+      seconds: 0,
+      milliseconds: 0,
+    });
+
+    const completeEndDate = set(new Date(endDate), {
+      hours: endHours,
+      minutes: endMinutes,
+      seconds: 0,
+      milliseconds: 0,
+    });
+
     createMutation.mutate({
       owner: user?._id || "",
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      startDate: completeStartDate.toISOString(),
+      endDate: completeEndDate.toISOString(),
       description: formData.description,
       isForAllDentist:
         user?.role === Role_type.ADMIN ? formData.isForAllDentist : false,
     });
-  };
-
-  // Get current date and time in ISO format for min attribute
-  const getCurrentDateTime = () => {
-    const now = new Date();
-    // Format as YYYY-MM-DDThh:mm
-    return now.toISOString().slice(0, 16);
   };
 
   if (!user) {
@@ -267,7 +299,7 @@ export default function Page() {
                   {formatDate(offHour.endDate)}
                 </div>
                 <div className="mt-2 flex items-center space-x-1.5 text-sm">
-                  <Clock10Icon />
+                  <Clock10Icon size={16} />
                   <span>
                     {formatTime(offHour.startDate)} -{" "}
                     {formatTime(offHour.endDate)}
@@ -293,20 +325,26 @@ export default function Page() {
         ))
       )}
 
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog
+        open={showModal}
+        onOpenChange={(open) => {
+          setShowModal(open);
+          if (!open) resetForm();
+        }}
+      >
+        <DialogContent className="sm:max-w-md [&>button:last-child]:hidden">
           <DialogHeader>
             <DialogTitle>Schedule Off Hours</DialogTitle>
           </DialogHeader>
 
           <form
             onSubmit={handleSubmit}
-            className="space-y-4"
-            onClick={(e) => e.stopPropagation()} // prevent accidental outside clicks during typing
+            className="w-full space-y-4"
+            onClick={(e) => e.stopPropagation()}
           >
             <div>
               <label className="mb-1 block text-sm font-semibold">
-                Description*
+                Description
               </label>
               <input
                 type="text"
@@ -315,42 +353,43 @@ export default function Page() {
                 onChange={handleInputChange}
                 required
                 className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                placeholder="Vacation, Conference, Personal day, etc."
               />
             </div>
 
-            <div className="flex gap-2">
-              <div className="w-1/2">
-                <label className="mb-1 block text-sm font-semibold">
-                  Start Date & Time*
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold">
+                  Start Date
                 </label>
-                <input
-                  type="datetime-local"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
-                  min={getCurrentDateTime()}
-                  required
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                <DatePickerWithPresets
+                  date={startDate}
+                  onSelect={setStartDate}
                 />
               </div>
-              <div className="w-1/2">
-                <label className="mb-1 block text-sm font-semibold">
-                  End Date & Time*
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold">
+                  Start Time
                 </label>
-                <input
-                  type="datetime-local"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  min={formData.startDate || getCurrentDateTime()}
-                  required
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-                />
+                <TimePicker time={startTime} onSelect={setStartTime} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold">End Date</label>
+                <DatePickerWithPresets date={endDate} onSelect={setEndDate} />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold">End Time</label>
+                <TimePicker time={endTime} onSelect={setEndTime} />
               </div>
             </div>
 
             {user.role === Role_type.ADMIN && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-2">
                 <input
                   type="checkbox"
                   name="isForAllDentist"
@@ -369,10 +408,10 @@ export default function Page() {
             )}
 
             <DialogFooter className="flex justify-between pt-4">
-              <button
+              <Button
                 type="submit"
-                className="rounded bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
                 disabled={createMutation.isPending}
+                className="bg-blue-500 hover:bg-blue-600"
               >
                 {createMutation.isPending ? (
                   <>
@@ -385,23 +424,11 @@ export default function Page() {
                 ) : (
                   "Save Off Hours"
                 )}
-              </button>
+              </Button>
               <DialogClose asChild>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError("");
-                    setFormData({
-                      startDate: "",
-                      endDate: "",
-                      description: "",
-                      isForAllDentist: false,
-                    });
-                  }}
-                  className="rounded bg-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-400"
-                >
+                <Button variant="secondary" type="button" onClick={resetForm}>
                   Cancel
-                </button>
+                </Button>
               </DialogClose>
             </DialogFooter>
           </form>

@@ -30,6 +30,7 @@ export function DatePickerWithPresets({
   onSelect,
 }: DatePickerWithPresetsProps) {
   const [date, setDate] = React.useState<Date | undefined>(selectedDate);
+  const [open, setOpen] = React.useState(true);
 
   React.useEffect(() => {
     setDate(selectedDate);
@@ -37,18 +38,19 @@ export function DatePickerWithPresets({
 
   const handleDateSelect = (newDate: Date | undefined) => {
     setDate(newDate);
+    setOpen(false);
     if (onSelect) {
       onSelect(newDate);
     }
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
           className={cn(
-            "w-[240px] justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal",
             !date && "text-muted-foreground",
           )}
         >
