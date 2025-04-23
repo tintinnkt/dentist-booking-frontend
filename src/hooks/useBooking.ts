@@ -1,6 +1,6 @@
 import { combineDateAndTime } from "@/components/BookingCard";
 import { BackendRoutes } from "@/config/apiRoutes";
-import { Booking } from "@/types/api/Dentist";
+import { Booking } from "@/types/api/Booking";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useSession } from "next-auth/react";

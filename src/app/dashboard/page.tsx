@@ -1,8 +1,12 @@
 "use client";
 
+import { FrontendRoutes } from "@/config/apiRoutes";
+import { Role_type } from "@/config/role";
+import { useUser } from "@/hooks/useUser";
 import { getDentistSchedule } from "@/lib/dentist/getDentistSchedule";
 import { Booking } from "@/types/api/Booking";
 import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ScheduleManagement() {
@@ -13,7 +17,10 @@ export default function ScheduleManagement() {
   const [schedules, setSchedules] = useState<Array<Booking>>([]);
   const [message, setMessage] = useState("");
   const { data: session } = useSession();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
+  if (!user || user.role == Role_type.USER)
+    redirect(FrontendRoutes.DENTIST_LIST);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -47,7 +54,7 @@ export default function ScheduleManagement() {
     };
 
     fetchSchedule();
-  }, [session?.user?.token]); // Add dependencies here
+  }, []);
 
   /*
   const handleSearch = async () => {
