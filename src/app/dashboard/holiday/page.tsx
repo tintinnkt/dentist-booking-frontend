@@ -221,12 +221,11 @@ export default function Page() {
     });
 
     createMutation.mutate({
-      owner: user?._id || "",
+      owner: user._id,
       startDate: completeStartDate.toISOString(),
       endDate: completeEndDate.toISOString(),
       description: formData.description,
-      isForAllDentist:
-        user?.role === Role_type.ADMIN ? formData.isForAllDentist : false,
+      isForAllDentist: user?.role === Role_type.ADMIN,
     });
   };
 
@@ -391,25 +390,6 @@ export default function Page() {
                 <TimePicker time={endTime} onSelect={setEndTime} />
               </div>
             </div>
-
-            {user.role === Role_type.ADMIN && (
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  name="isForAllDentist"
-                  id="isForAllDentist"
-                  checked={formData.isForAllDentist}
-                  onChange={handleInputChange}
-                  className="h-4 w-4"
-                />
-                <label
-                  htmlFor="isForAllDentist"
-                  className="text-sm font-medium"
-                >
-                  Apply to all dentists
-                </label>
-              </div>
-            )}
 
             <DialogFooter className="flex justify-between pt-4">
               <Button
