@@ -11,6 +11,7 @@ import {
   LogOutIcon,
   LucideIcon,
   LucideProps,
+  MessageSquarePlusIcon,
   PencilIcon,
   Plus,
   SearchIcon,
@@ -127,6 +128,11 @@ const buttonConfig: Record<string, ButtonConfig> = {
     label: "Add Off Hours",
     variant: "default",
     icon: CalendarPlusIcon,
+  },
+  "add-comment": {
+    label: "Add Comment",
+    variant: "outline",
+    icon: MessageSquarePlusIcon,
   },
 };
 export type ButtonConfigKeys =

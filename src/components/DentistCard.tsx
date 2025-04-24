@@ -1,4 +1,10 @@
 "use client";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/Accordion";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { expertiseOptions, timeSlots } from "@/constant/expertise";
 import { useBooking } from "@/hooks/useBooking";
@@ -7,7 +13,7 @@ import { User } from "@/types/User";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
-import { Check } from "lucide-react";
+import { Check, MessageCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -102,8 +108,8 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
       toast.success("Dentist updated successfully!");
       setIsEditing(false);
     },
-    onError: (error) => {
-      console.error((error as AxiosError).message);
+    onError: (error: AxiosError) => {
+      console.error(error.message);
       toast.error("Failed to update dentist. Please try again!");
     },
   });
@@ -190,7 +196,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
 
     updateDentist.mutate({
       user: {
-        name: formData.user?.name || "",
+        name: formData.user?.name,
       },
       yearsOfExperience: formData.yearsOfExperience,
       areaOfExpertise: selectedExpertise,
@@ -198,15 +204,128 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   };
 
   return (
-    <Card className="w-full max-w-xl rounded-xl">
-      <CardHeader>
-        <CardTitle className="flex flex-wrap items-center space-y-1 space-x-4">
+    <Card className="w-full max-w-3xl rounded-xl">
+      <CardHeader className="flex flex-wrap lg:flex-nowrap">
+        <CardTitle className="flex items-center space-y-1 space-x-4">
           <h2 className="text-2xl">{dentist.user.name}</h2>
           <Badge variant={"secondary"}>
             {dentist.yearsOfExperience} year
             {dentist.yearsOfExperience > 1 ? "s" : ""} of experience
           </Badge>
         </CardTitle>
+        <div className="flex w-full max-w-md flex-wrap items-center justify-end space-x-2 gap-y-2">
+          {isAdmin && (
+            <>
+              {isEditing ? (
+                <>
+                  <CustomButton
+                    useFor="cancel"
+                    onClick={handleEditToggle}
+                    disabled={updateDentist.isPending}
+                  />
+                  <CustomButton
+                    useFor="confirm-info"
+                    onClick={handleSave}
+                    isLoading={updateDentist.isPending}
+                  />
+                </>
+              ) : (
+                <CustomButton useFor="edit" onClick={handleEditToggle} />
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <CustomButton useFor="delete-dentist" hideTextOnMobile />
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                  </AlertDialogHeader>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete{" "}
+                    <Badge variant={"destructive"}>{dentist.user.name}</Badge>{" "}
+                    and remove data from our servers.
+                  </AlertDialogDescription>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteDentistMutation()}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? "Deleting..." : "Continue"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          )}
+
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild className="w-fit">
+              <CustomButton useFor="booking" hideTextOnMobile />
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <div className="space-y-4 p-3">
+                <h3 className="font-medium">Select Appointment Date & Time</h3>
+                <Calendar
+                  mode="single"
+                  selected={appDate}
+                  onSelect={setAppDate}
+                  disabled={(date) => date < new Date()}
+                  className="rounded-md border"
+                />
+
+                {appDate && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">
+                      Time for {format(appDate, "EEEE, MMMM do")}
+                    </h4>
+                    <Select value={appTime} onValueChange={setAppTime}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeSlots.map((time) => (
+                          <SelectItem key={time} value={time}>
+                            {time}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <CustomButton
+                    hideTextOnMobile={true}
+                    useFor="add-booking-section"
+                    onClick={() => {
+                      if (user && appDate && appTime) {
+                        bookAppointment(
+                          dentist._id,
+                          user._id,
+                          appDate,
+                          appTime,
+                        );
+                        if (!isCreating) {
+                          setPopoverOpen(false);
+                        }
+                      } else {
+                        toast.error("Please select a date and time");
+                      }
+                    }}
+                    disabled={!appDate || !appTime || isCreating}
+                    className="w-full"
+                    isLoading={isCreating}
+                  >
+                    {isCreating ? "Booking..." : "Book Appointment"}
+                  </CustomButton>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </CardHeader>
       <Separator />
       <CardContent
@@ -246,7 +365,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
             open={expertisePopoverOpen}
             onOpenChange={setExpertisePopoverOpen}
           >
-            <PopoverTrigger asChild>
+            <PopoverTrigger asChild className="pt-72">
               <Button
                 variant="outline"
                 className="w-full justify-between text-wrap sm:col-span-2"
@@ -304,119 +423,48 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
       {user && (
         <>
           <CardFooter className="flex flex-row flex-wrap items-center justify-end space-y-2 space-x-2">
-            {isAdmin && (
-              <div className="flex space-x-2 pt-2">
-                {isEditing ? (
-                  <>
-                    <CustomButton
-                      useFor="cancel"
-                      onClick={handleEditToggle}
-                      disabled={updateDentist.isPending}
-                    />
-                    <CustomButton
-                      useFor="confirm-info"
-                      onClick={handleSave}
-                      isLoading={updateDentist.isPending}
-                    />
-                  </>
-                ) : (
-                  <CustomButton useFor="edit" onClick={handleEditToggle} />
-                )}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <CustomButton useFor="delete-dentist" hideTextOnMobile />
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Are you absolutely sure?
-                      </AlertDialogTitle>
-                    </AlertDialogHeader>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete{" "}
-                      <Badge variant={"destructive"}>{dentist.user.name}</Badge>{" "}
-                      and remove data from our servers.
-                    </AlertDialogDescription>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => deleteDentistMutation()}
-                        disabled={isDeleting}
-                      >
-                        {isDeleting ? "Deleting..." : "Continue"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
-
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild>
-                <CustomButton useFor="booking" hideTextOnMobile />
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <div className="space-y-4 p-3">
-                  <h3 className="font-medium">
-                    Select Appointment Date & Time
-                  </h3>
-                  <Calendar
-                    mode="single"
-                    selected={appDate}
-                    onSelect={setAppDate}
-                    disabled={(date) => date < new Date()}
-                    className="rounded-md border"
-                  />
-
-                  {appDate && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">
-                        Time for {format(appDate, "EEEE, MMMM do")}
-                      </h4>
-                      <Select value={appTime} onValueChange={setAppTime}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeSlots.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <div className="pt-2">
-                    <CustomButton
-                      hideTextOnMobile={true}
-                      useFor="add-booking-section"
-                      onClick={() => {
-                        if (user && appDate && appTime) {
-                          bookAppointment(
-                            dentist._id,
-                            user._id,
-                            appDate,
-                            appTime,
-                          );
-                          if (!isCreating) {
-                            setPopoverOpen(false);
-                          }
-                        } else {
-                          toast.error("Please select a date and time");
-                        }
-                      }}
-                      disabled={!appDate || !appTime || isCreating}
-                      className="w-full"
-                      isLoading={isCreating}
-                    >
-                      {isCreating ? "Booking..." : "Book Appointment"}
-                    </CustomButton>
+            <Accordion type="single" collapsible className="mx-0 w-full">
+              <AccordionItem value="comment">
+                <AccordionTrigger className="py-1">
+                  <div className="flex items-center space-x-2">
+                    <MessageCircleIcon className="h-4 w-4" />
+                    <span>View Comments (3)</span>
                   </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                  <div className="space-y-3">
+                    {[
+                      {
+                        id: 1,
+                        author: "Patient A",
+                        text: "Great experience with this dentist!",
+                      },
+                      {
+                        id: 2,
+                        author: "Patient B",
+                        text: "Very thorough and professional.",
+                      },
+                      {
+                        id: 3,
+                        author: "Patient C",
+                        text: "Highly recommended for dental work.",
+                      },
+                    ].map((comment) => (
+                      <div key={comment.id} className="">
+                        <Separator />
+                        <div className="pt-2 font-medium">{comment.author}</div>
+                        <p className="mt-1 text-sm">{comment.text}</p>
+                      </div>
+                    ))}
+                    {user ? (
+                      <div className="flex w-full justify-end px-3">
+                        <CustomButton useFor="add-comment" />
+                      </div>
+                    ) : null}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </CardFooter>
         </>
       )}
