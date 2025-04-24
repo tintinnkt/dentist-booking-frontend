@@ -291,6 +291,9 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                             {time}
                           </SelectItem>
                         ))}
+                        <SelectItem key={"test"} value="test" disabled={true}>
+                          Items That is disabled
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
