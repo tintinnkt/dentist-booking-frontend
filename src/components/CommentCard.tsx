@@ -61,6 +61,7 @@ export default function CommentCard({
 
       <div>
         <div className="text-md font-bold">{`Comment from ${comment.user.name}`}</div>
+        <div className="text-md font-bold">to {comment.dentist.user.name}</div>
         <div className="mt-2 text-gray-700">{comment.detail}</div>
       </div>
 

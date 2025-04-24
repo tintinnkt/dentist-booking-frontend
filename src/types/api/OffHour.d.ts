@@ -1,9 +1,8 @@
+import { UserProps } from "./UserProps";
+
 export interface OffHour {
   _id: string;
-  owner: {
-    _id: string;
-    name?: string;
-  };
+  owner: UserProps;
   startDate: string;
   endDate: string;
   description: string;
