@@ -125,7 +125,7 @@ export default function Page() {
       year: "numeric",
       month: "short",
       day: "numeric",
-      timeZone: "UTC",
+      timeZone: "Asia/Bangkok",
     });
   };
 
@@ -135,7 +135,7 @@ export default function Page() {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "UTC",
+      timeZone: "Asia/Bangkok",
     });
   };
 

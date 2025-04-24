@@ -1,6 +1,7 @@
 "use client";
 import { BackendRoutes } from "@/config/apiRoutes";
 import { expertiseOptions, timeSlots } from "@/constant/expertise";
+import { useBooking } from "@/hooks/useBooking";
 import { DentistProps } from "@/types/api/Dentist";
 import { User } from "@/types/User";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,6 @@ import { useSession } from "next-auth/react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
-import { combineDateAndTime } from "./BookingCard";
 import { ButtonConfigKeys, CustomButton } from "./CustomButton";
 import {
   AlertDialog,
@@ -81,36 +81,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   const queryClient = useQueryClient();
 
   // Booking mutation (unchanged)
-  const handleBooking = useMutation({
-    mutationFn: async (appointmentData: {
-      apptDate: Date;
-      user: string;
-      dentist: string;
-    }) => {
-      return axios.post(BackendRoutes.BOOKING, appointmentData, {
-        headers: {
-          Authorization: `Bearer ${session?.user.token}`,
-          "Content-Type": "application/json",
-        },
-      });
-    },
-    onSuccess: () => {
-      toast.success("Appointment booked successfully");
-      setAppDate(undefined);
-      setAppTime("");
-      setPopoverOpen(false);
-    },
-    onError: (error) => {
-      if (axios.isAxiosError(error)) {
-        const errorMessage =
-          error.response?.data?.message || "Failed to book appointment";
-        toast.error(errorMessage);
-      } else {
-        toast.error("An unexpected error occurred");
-        console.error(error);
-      }
-    },
-  });
+  const { bookAppointment, isCreating } = useBooking();
 
   // Update dentist mutation
   const updateDentist = useMutation({
@@ -422,33 +393,25 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
                       hideTextOnMobile={true}
                       useFor="add-booking-section"
                       onClick={() => {
-                        if (session?.user && appDate && appTime) {
-                          const combinedDateTime = combineDateAndTime(
+                        if (user && appDate && appTime) {
+                          bookAppointment(
+                            dentist._id,
+                            user._id,
                             appDate,
                             appTime,
                           );
-
-                          if (isNaN(combinedDateTime.getTime())) {
-                            toast.error("Invalid date or time");
-                            return;
+                          if (!isCreating) {
+                            setPopoverOpen(false);
                           }
-
-                          handleBooking.mutate({
-                            apptDate: combinedDateTime,
-                            user: user._id,
-                            dentist: dentist._id,
-                          });
                         } else {
                           toast.error("Please select a date and time");
                         }
                       }}
-                      disabled={!appDate || !appTime || handleBooking.isPending}
+                      disabled={!appDate || !appTime || isCreating}
                       className="w-full"
-                      isLoading={handleBooking.isPending}
+                      isLoading={isCreating}
                     >
-                      {handleBooking.isPending
-                        ? "Booking..."
-                        : "Book Appointment"}
+                      {isCreating ? "Booking..." : "Book Appointment"}
                     </CustomButton>
                   </div>
                 </div>
