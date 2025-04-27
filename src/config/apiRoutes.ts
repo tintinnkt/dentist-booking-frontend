@@ -19,7 +19,7 @@ export enum BackendRoutes {
   SCHEDULES = `${BackendRootRoutes}/unavailable`,
   OFF_HOURS = `${BackendRootRoutes}/offHours`,
   OFF_HOURS_BY_OWNER = `${BackendRootRoutes}/offHours/owner/:ownerId`,
-  COMMENTS = `${BackendRootRoutes}/dentists`
+  COMMENTS = `${BackendRootRoutes}/comments`,
 }
 
 export const getUnavailableBookingByDentistId = (dentistId: string): string =>

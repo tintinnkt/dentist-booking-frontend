@@ -7,6 +7,4 @@ export interface Comment {
   dentist: DentistProps;
   comment: string;
   createdAt: Date;
-  editing?: boolean; 
-  editingText?: string; 
 }

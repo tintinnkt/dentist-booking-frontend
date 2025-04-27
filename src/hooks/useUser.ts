@@ -34,7 +34,7 @@ export const useUser = () => {
     data: user,
     isLoading: loading,
     error,
-  } = useQuery({
+  } = useQuery<User | null>({
     queryKey: ["userProfile", session?.user?.token],
     queryFn: () => {
       if (!session?.user?.token) return null;
