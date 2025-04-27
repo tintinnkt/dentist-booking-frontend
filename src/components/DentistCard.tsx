@@ -262,73 +262,77 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
             </>
           )}
 
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild className="w-fit">
-              <CustomButton useFor="booking" hideTextOnMobile />
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <div className="space-y-4 p-3">
-                <h3 className="font-medium">Select Appointment Date & Time</h3>
-                <Calendar
-                  mode="single"
-                  selected={appDate}
-                  onSelect={setAppDate}
-                  disabled={(date) => date < new Date()}
-                  className="rounded-md border"
-                />
+          {user && (
+            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+              <PopoverTrigger asChild className="w-fit">
+                <CustomButton useFor="booking" hideTextOnMobile />
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <div className="space-y-4 p-3">
+                  <h3 className="font-medium">
+                    Select Appointment Date & Time
+                  </h3>
+                  <Calendar
+                    mode="single"
+                    selected={appDate}
+                    onSelect={setAppDate}
+                    disabled={(date) => date < new Date()}
+                    className="rounded-md border"
+                  />
 
-                {appDate && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">
-                      Time for {format(appDate, "EEEE, MMMM do")}
-                    </h4>
-                    <Select value={appTime} onValueChange={setAppTime}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select time" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeSlots.map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
+                  {appDate && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">
+                        Time for {format(appDate, "EEEE, MMMM do")}
+                      </h4>
+                      <Select value={appTime} onValueChange={setAppTime}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeSlots.map((time) => (
+                            <SelectItem key={time} value={time}>
+                              {time}
+                            </SelectItem>
+                          ))}
+                          <SelectItem key={"test"} value="test" disabled={true}>
+                            Items That is disabled
                           </SelectItem>
-                        ))}
-                        <SelectItem key={"test"} value="test" disabled={true}>
-                          Items That is disabled
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
-                <div className="pt-2">
-                  <CustomButton
-                    hideTextOnMobile={true}
-                    useFor="add-booking-section"
-                    onClick={() => {
-                      if (user && appDate && appTime) {
-                        bookAppointment(
-                          dentist._id,
-                          user._id,
-                          appDate,
-                          appTime,
-                        );
-                        if (!isCreating) {
-                          setPopoverOpen(false);
+                  <div className="pt-2">
+                    <CustomButton
+                      hideTextOnMobile={true}
+                      useFor="add-booking-section"
+                      onClick={() => {
+                        if (user && appDate && appTime) {
+                          bookAppointment(
+                            dentist._id,
+                            user._id,
+                            appDate,
+                            appTime,
+                          );
+                          if (!isCreating) {
+                            setPopoverOpen(false);
+                          }
+                        } else {
+                          toast.error("Please select a date and time");
                         }
-                      } else {
-                        toast.error("Please select a date and time");
-                      }
-                    }}
-                    disabled={!appDate || !appTime || isCreating}
-                    className="w-full"
-                    isLoading={isCreating}
-                  >
-                    {isCreating ? "Booking..." : "Book Appointment"}
-                  </CustomButton>
+                      }}
+                      disabled={!appDate || !appTime || isCreating}
+                      className="w-full"
+                      isLoading={isCreating}
+                    >
+                      {isCreating ? "Booking..." : "Book Appointment"}
+                    </CustomButton>
+                  </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </CardHeader>
       <Separator />
