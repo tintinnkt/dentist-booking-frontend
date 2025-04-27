@@ -85,9 +85,6 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   
 
   const [formData, setFormData] = useState<Partial<DentistProps>>({
-    user: {
-      name: dentist.user.name,
-    },
     yearsOfExperience: dentist.yearsOfExperience,
     areaOfExpertise: dentist.areaOfExpertise,
   });
@@ -206,7 +203,6 @@ useEffect(() => {
     setIsEditing(!isEditing);
     if (isEditing) {
       setFormData({
-        user: { name: dentist.user.name },
         yearsOfExperience: dentist.yearsOfExperience,
         areaOfExpertise: dentist.areaOfExpertise,
       });
@@ -216,11 +212,6 @@ useEffect(() => {
 
   const handleSave = () => {
     // Validate inputs
-    if (!formData.user?.name || !formData.user?.name.trim()) {
-      toast.error("Name cannot be empty");
-      return;
-    }
-
     if (
       formData.yearsOfExperience === undefined ||
       formData.yearsOfExperience < 0
@@ -235,9 +226,6 @@ useEffect(() => {
     }
 
     updateDentist.mutate({
-      user: {
-        name: formData.user?.name,
-      },
       yearsOfExperience: formData.yearsOfExperience,
       areaOfExpertise: selectedExpertise,
     });
@@ -456,22 +444,10 @@ useEffect(() => {
       <Separator />
       <CardContent
         className={twJoin(
-          "grid w-full grid-cols-2 sm:grid-cols-3",
-          isEditing ? "space-y-3" : "",
+          "grid w-full grid-cols-2 sm:grid-cols-3 gap-4",
+          isEditing ? "space-y-0" : "",
         )}
       >
-        <p>Name</p>
-        {isEditing ? (
-          <Input
-            name="name"
-            type="text"
-            value={formData.user?.name || ""}
-            onChange={handleInputChange}
-            className="sm:col-span-2"
-          />
-        ) : (
-          <p className="sm:col-span-2">{dentist.user.name}</p>
-        )}
         <p className="min-w-fit">Years of experiences</p>
         {isEditing ? (
           <Input
@@ -487,61 +463,75 @@ useEffect(() => {
         )}
         <p>Expertises</p>
         {isEditing ? (
-          <Popover
-            open={expertisePopoverOpen}
-            onOpenChange={setExpertisePopoverOpen}
-          >
-            <PopoverTrigger asChild className="pt-72">
-              <Button
-                variant="outline"
-                className="w-full justify-between text-wrap sm:col-span-2"
-              >
-                {selectedExpertise.length > 0
-                  ? selectedExpertise.join(", ")
-                  : "Select expertise"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-2 text-wrap">
-              <Command>
-                <CommandInput placeholder="Search expertise..." />
-                <CommandList>
-                  <CommandGroup>
-                    {expertiseOptions.map((expertise) => (
-                      <CommandItem
-                        key={expertise}
-                        value={expertise}
-                        onSelect={() => toggleExpertise(expertise)}
-                      >
-                        <Check
-                          className={`mr-2 h-4 w-4 ${
-                            selectedExpertise.includes(expertise)
-                              ? "opacity-100"
-                              : "opacity-0"
-                          }`}
-                        />
-                        {expertise}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-              <div className="mt-2 flex justify-end space-x-2">
+          <div className="sm:col-span-2">
+            <Popover
+              open={expertisePopoverOpen}
+              onOpenChange={setExpertisePopoverOpen}
+            >
+              <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  onClick={() => setExpertisePopoverOpen(false)}
+                  className="w-full justify-between text-left"
                 >
-                  Cancel
+                  <span className="truncate">
+                    {selectedExpertise.length > 0
+                      ? selectedExpertise.join(", ")
+                      : "Select expertise"}
+                  </span>
                 </Button>
-                <Button onClick={handleExpertiseSave}>Save</Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-2 md:w-80">
+                <Command className="max-h-60 overflow-y-auto">
+                  <CommandInput placeholder="Search expertise..." />
+                  <CommandList>
+                    <CommandGroup>
+                      {expertiseOptions.map((expertise) => (
+                        <CommandItem
+                          key={expertise}
+                          value={expertise}
+                          onSelect={() => toggleExpertise(expertise)}
+                        >
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              selectedExpertise.includes(expertise)
+                                ? "opacity-100"
+                                : "opacity-0"
+                            }`}
+                          />
+                          {expertise}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+                <div className="mt-2 flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setExpertisePopoverOpen(false)}
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleExpertiseSave} size="sm">
+                    Save
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            {selectedExpertise.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {selectedExpertise.map((expertise) => (
+                  <Badge key={expertise} variant="secondary">
+                    {expertise}
+                  </Badge>
+                ))}
               </div>
-            </PopoverContent>
-          </Popover>
+            )}
+          </div>
         ) : (
           <ul className="list-inside list-disc sm:col-span-2">
             {dentist.areaOfExpertise.map((expertise, idx) => (
-              <li key={idx} className="">
-                {expertise}
-              </li>
+              <li key={idx}>{expertise}</li>
             ))}
           </ul>
         )}
