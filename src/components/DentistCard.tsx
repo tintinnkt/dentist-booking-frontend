@@ -10,11 +10,12 @@ import { Role_type } from "@/config/role";
 import { expertiseOptions, timeSlots } from "@/constant/expertise";
 import { useBooking } from "@/hooks/useBooking";
 import { useComments } from "@/hooks/useComments"; // Import our new hook
+import { useOffHours } from "@/hooks/useOffHours"; // Me too
 import { useUser } from "@/hooks/useUser";
 import { DentistProps } from "@/types/api/Dentist";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-import { format } from "date-fns";
+import { format, isWithinInterval } from "date-fns";
 import { Check, MessageCircleIcon, Trash2Icon, UserIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -96,6 +97,8 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
     handleDeleteComment,
   } = useComments(dentist._id);
 
+  const { filteredOffhours } = useOffHours(appDate, dentist.user._id);
+
   // Booking mutation
   const { bookAppointment, isCreating } = useBooking();
 
@@ -142,6 +145,27 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
       toast.error("Failed to delete dentist. Please try again!");
     },
   });
+
+  const isSlotDisabled = (time: string) => {
+    if (!filteredOffhours.length) return false;
+  
+    const [hours, minutes] = time.split(":").map(Number);
+    const selectedDateTime = new Date(appDate!);
+    selectedDateTime.setHours(hours, minutes, 0, 0);
+  
+    const minustHour = (date: Date, hours: number) => {
+      const newDate = new Date(date);
+      newDate.setHours(newDate.getHours() - hours);
+      return newDate;
+    };
+  
+    return filteredOffhours.some((offhour) => {
+      const start = minustHour(new Date(offhour.startDate), 7);
+      const end = minustHour(new Date(offhour.endDate), 7);
+  
+      return isWithinInterval(selectedDateTime, { start, end });
+    });
+  };
 
   // Handle input changes during editing
   const handleInputChange = (
@@ -280,28 +304,32 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
                     className="rounded-md border"
                   />
 
-                  {appDate && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">
-                        Time for {format(appDate, "EEEE, MMMM do")}
-                      </h4>
-                      <Select value={appTime} onValueChange={setAppTime}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeSlots.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
-                            </SelectItem>
-                          ))}
-                          <SelectItem key={"test"} value="test" disabled={true}>
-                            Items That is disabled
+                {appDate && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">
+                      Time for {format(appDate, "EEEE, MMMM do")}
+                    </h4>
+                    <Select value={appTime} onValueChange={setAppTime}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeSlots.map((time) => (
+                          <SelectItem 
+                            key={time}
+                            value={time}
+                            disabled={isSlotDisabled(time)}
+                          > 
+                            {time}
                           </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                        ))}
+                        <SelectItem key={"test"} value="test" disabled={true}>
+                          Items That is disabled
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                   <div className="pt-2">
                     <CustomButton
