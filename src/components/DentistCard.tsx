@@ -6,6 +6,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/Accordion";
 import { BackendRoutes } from "@/config/apiRoutes";
+import { MdEdit, MdDelete } from "react-icons/md"
+import { Comment } from "@/types/api/Comment";
 import { expertiseOptions, timeSlots } from "@/constant/expertise";
 import { useBooking } from "@/hooks/useBooking";
 import { DentistProps } from "@/types/api/Dentist";
@@ -15,10 +17,13 @@ import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
 import { Check, MessageCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
 import { ButtonConfigKeys, CustomButton } from "./CustomButton";
+import addComment from "@/lib/addComment";
+import getCommentByDentID from "@/lib/getCommentByDentID";
+import deleteComment from "@/lib/deleteComment";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +62,7 @@ import {
   SelectValue,
 } from "./ui/Select";
 import { Separator } from "./ui/Separator";
+import updateComment from "@/lib/updateComment";
 
 interface DentistCardProps {
   dentist: DentistProps;
@@ -72,6 +78,12 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   const [appTime, setAppTime] = useState<string>("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAddingComment, setIsAddingComment] = useState(false);
+  const [newComment, setNewComment] = useState<string>("");
+  const [commentEN , setCommentEN] = useState<any>(null);
+
+  
+
   const [formData, setFormData] = useState<Partial<DentistProps>>({
     user: {
       name: dentist.user.name,
@@ -86,9 +98,37 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
 
+  console.log("user_id : "+ session?.user?.token) ;
+ 
   // Booking mutation (unchanged)
   const { bookAppointment, isCreating } = useBooking();
+  const token_user: string | undefined = session?.user.token;
+  
+// ถ้าฟังก์ชันนี้ไม่ได้อยู่ใน async ให้ทำการประกาศให้เป็น async
+const fetchComment = async () => {
+  if (token_user) {
+    try {
+      const comment = await getCommentByDentID(dentist._id, token_user); // ใช้ await
+      console.log("เก็บค่า"); // แสดงผล comment ที่ได้รับ
+      setCommentEN(comment) ;
+    } catch (error) {
+      console.error("Error fetching comments:", error); // หากเกิดข้อผิดพลาด
+    }
+  } else {
+    console.error("Token is undefined, cannot fetch comments.");
+  }
+};
 
+useEffect(() => {
+  fetchComment();
+}, []); // Dependency array เพื่อให้ fetchComment เรียกใหม่เมื่อ dentist._id หรือ token_user เปลี่ยนแปลง
+
+useEffect(() => {
+  // เมื่อ commentEN มีการอัพเดทใหม่ จะทำการ log ค่าที่ได้
+  console.log(commentEN);
+}, [commentEN]); // การทำงานนี้จะเกิดขึ้นทุกครั้งที่ commentEN มีการเปลี่ยนแปลง
+
+  
   // Update dentist mutation
   const updateDentist = useMutation({
     mutationFn: async (updatedDentist: Partial<DentistProps>) => {
@@ -202,6 +242,89 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
       areaOfExpertise: selectedExpertise,
     });
   };
+  const handleEdit = (commentId: string) => {
+    setCommentEN((prevCommentData: { data: any; count: any; }) => {
+      const updatedComments = prevCommentData.data.map(comment => 
+        comment._id === commentId ? { ...comment, editing: true } : comment
+      );
+      return { ...prevCommentData, data: updatedComments };
+    });
+  };
+
+  
+  const handleDelete = async (commentId: string) => {
+    if (!token_user) {
+      alert("Missing user token.");
+      return;
+    }
+  
+    
+    const isConfirmed = window.confirm("Confirm to delete");
+    if (!isConfirmed) {
+      return; 
+    }
+  
+    try {
+      const deletedComment = await deleteComment(commentId, token_user);
+  
+      setCommentEN((prevCommentData: { data: any; count: any; }) => {
+        const updatedComments = prevCommentData.data.filter(
+          (comment: any) => comment._id !== commentId
+        );
+        return { ...prevCommentData, data: updatedComments, count: prevCommentData.count - 1 };
+      });
+  
+      alert("Comment deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert("Failed to delete comment.");
+    }
+  };
+  
+
+  const handleCancelEdit = (commentId: string) => {
+    setCommentEN((prevCommentData: { data: any; count: any; }) => {
+      const updatedComments = prevCommentData.data.map(comment => 
+        comment._id === commentId ? { ...comment, editing: false, editingText: '' } : comment
+      );
+      return { ...prevCommentData, data: updatedComments };
+    });
+  };
+
+  const handleEditTextChange = (event: React.ChangeEvent<HTMLInputElement>, commentId: string) => {
+    const updatedText = event.target.value;
+    setCommentEN((prevCommentData: { data: any; count: any; }) => {
+      const updatedComments = prevCommentData.data.map(comment =>
+        comment._id === commentId ? { ...comment, editingText: updatedText } : comment
+      );
+      return { ...prevCommentData, data: updatedComments };
+    });
+  };
+
+  const handleSaveEdit = async (commentId: string | undefined, editedText: string) => {
+    if (!commentId || !token_user) {
+      alert("Missing comment ID or token.");
+      return;
+    }
+  
+    try {
+      await updateComment(commentId, token_user, editedText); // ไม่ต้องรอผลลัพธ์อะไรจาก backend ก็ได้
+      setCommentEN((prevCommentData: { data: any; count: any; }) => {
+        const updatedComments = prevCommentData.data.map(comment =>
+          comment._id === commentId
+            ? { ...comment, comment: editedText, editing: false, editingText: undefined } // ใช้ editedText ที่เรามีอยู่
+            : comment
+        );
+        return { ...prevCommentData, data: updatedComments };
+      });
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      alert("Failed to update comment.");
+    }
+  };
+  
+  
+
 
   return (
     <Card className="w-full max-w-3xl rounded-xl">
@@ -428,44 +551,136 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
           <CardFooter className="flex flex-row flex-wrap items-center justify-end space-y-2 space-x-2">
             <Accordion type="single" collapsible className="mx-0 w-full">
               <AccordionItem value="comment">
-                <AccordionTrigger className="py-1">
-                  <div className="flex items-center space-x-2">
-                    <MessageCircleIcon className="h-4 w-4" />
-                    <span>View Comments (3)</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-2">
-                  <div className="space-y-3">
-                    {[
-                      {
-                        id: 1,
-                        author: "Patient A",
-                        text: "Great experience with this dentist!",
-                      },
-                      {
-                        id: 2,
-                        author: "Patient B",
-                        text: "Very thorough and professional.",
-                      },
-                      {
-                        id: 3,
-                        author: "Patient C",
-                        text: "Highly recommended for dental work.",
-                      },
-                    ].map((comment) => (
-                      <div key={comment.id} className="">
-                        <Separator />
-                        <div className="pt-2 font-medium">{comment.author}</div>
-                        <p className="mt-1 text-sm">{comment.text}</p>
-                      </div>
-                    ))}
-                    {user ? (
-                      <div className="flex w-full justify-end px-3">
-                        <CustomButton useFor="add-comment" />
-                      </div>
-                    ) : null}
-                  </div>
-                </AccordionContent>
+              <AccordionTrigger className="py-1">
+              <div className="flex items-center space-x-2">
+                <MessageCircleIcon className="h-4 w-4" />
+                <span>View Comments ({commentEN?.count ?? 0})</span>
+              </div>
+            </AccordionTrigger>
+            
+
+            <AccordionContent className="space-y-2">
+  <div className="space-y-3">
+    {commentEN?.data?.map((comment: Comment, index: number) => (
+      <div key={comment._id} className="p-4 border rounded-lg shadow-sm bg-white relative">
+        <Separator />
+        <div className="flex items-center space-x-2">
+          <span className="font-semibold text-lg">Comment {index + 1}</span>
+        </div>
+        
+        {/* การแสดงข้อความคอมเมนต์หรือช่องกรอกข้อความเมื่อแก้ไข */}
+        {comment.editing ? (
+          <div className="pt-2">
+            <Input
+              value={comment.editingText !== undefined ? comment.editingText : comment.comment}
+              onChange={(e) => handleEditTextChange(e, comment._id)} // ฟังก์ชันที่ใช้จัดการการเปลี่ยนแปลงข้อความ
+            />
+            <div className="flex justify-end space-x-2 mt-2">
+              <Button
+                variant="ghost"
+                onClick={() => handleCancelEdit(comment._id)} // ฟังก์ชันยกเลิกการแก้ไข
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleSaveEdit(comment._id, comment.editingText ?? comment.comment)} // ฟังก์ชันบันทึกการแก้ไข
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="pt-2 font-medium text-gray-800">
+            {comment.comment}
+          </div>
+        )}
+        
+        {/* Optionally add who commented if you want */}
+        <div className="pt-2 text-sm text-gray-500">By User ID: {comment.user}</div>
+        
+        {/* ปุ่มอัพเดท (Update) อยู่ที่มุมขวาบน */}
+        {user && (user._id === comment.user || user.role === "admin") && !comment.editing && (
+          <div className="absolute top-2 right-2">
+            <button
+              onClick={() => handleEdit(comment._id)} // ฟังก์ชันเปิดการแก้ไขคอมเมนต์
+              className="text-blue-500 hover:text-blue-700"
+            >
+              <MdEdit size={18} />
+            </button>
+          </div>
+        )}
+        
+        {/* ปุ่มลบ (Delete) อยู่ที่มุมขวาล่าง */}
+        {user && (user._id === comment.user || user.role === "admin") && (
+          <div className="absolute bottom-2 right-2">
+            <button
+              onClick={() => handleDelete(comment._id)} // ฟังก์ชันลบคอมเมนต์
+              className="text-red-500 hover:text-red-700"
+            >
+              <MdDelete size={18} />
+            </button>
+          </div>
+        )}
+      </div>
+    ))}
+    {user ? (
+      <div className="flex w-full justify-end px-3">
+        {isAddingComment ? (
+          <div className="w-full space-y-2 px-3">
+            <Input
+              placeholder="Write your comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsAddingComment(false);
+                  setNewComment("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (newComment.trim() && user?._id && dentist?._id && token_user) {
+                    try {
+                      await addComment(newComment, user._id, dentist._id, token_user);
+                      console.log("Submit comment:", newComment);
+                
+                      // ใหม่! ดึง comment ใหม่จากเซิร์ฟเวอร์
+                      await fetchComment();  
+                
+                      toast.success("Comment added!");
+                      setIsAddingComment(false);
+                      setNewComment(""); // Clear the input
+                    } catch (error) {
+                      console.error("Error adding comment:", error);
+                      toast.error("Failed to add comment.");
+                    }
+                  } else {
+                    toast.error("Please write something before sending.");
+                  }
+                }}
+                
+              >
+                Send
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex w-full justify-end px-3">
+            <CustomButton
+              useFor="add-comment"
+              onClick={() => setIsAddingComment(true)}
+            />
+          </div>
+        )}
+      </div>
+    ) : null}
+  </div>
+</AccordionContent>
               </AccordionItem>
             </Accordion>
           </CardFooter>
