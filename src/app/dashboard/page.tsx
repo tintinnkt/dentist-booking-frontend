@@ -45,11 +45,7 @@ export default function ScheduleManagement() {
     }
   };
 
-  const {
-    data: schedules = [],
-    isLoading,
-    error,
-  } = useQuery({
+  const { data: schedules = [], isLoading } = useQuery({
     queryKey: ["dentistSchedule", session?.user?.token],
     queryFn: getDentistSchedule,
     enabled: !!session?.user?.token,
