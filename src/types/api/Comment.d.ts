@@ -5,6 +5,8 @@ export interface Comment {
   _id: string;
   user: UserProps;
   dentist: DentistProps;
-  detail: string;
+  comment: string;
   createdAt: Date;
+  editing?: boolean; 
+  editingText?: string; 
 }

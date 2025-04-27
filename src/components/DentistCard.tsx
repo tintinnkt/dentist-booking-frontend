@@ -103,7 +103,7 @@ const DentistCard = ({ dentist, isAdmin, user }: DentistCardProps) => {
   
 // ถ้าฟังก์ชันนี้ไม่ได้อยู่ใน async ให้ทำการประกาศให้เป็น async
 const fetchComment = async () => {
-  if (token_user) {
+  if (token_user) 
     try {
       const comment = await getCommentByDentID(dentist._id, token_user); // ใช้ await
       console.log("เก็บค่า"); // แสดงผล comment ที่ได้รับ
@@ -111,7 +111,7 @@ const fetchComment = async () => {
     } catch (error) {
       console.error("Error fetching comments:", error); // หากเกิดข้อผิดพลาด
     }
-  } else {
+   else {
     console.error("Token is undefined, cannot fetch comments.");
   }
 };
@@ -125,6 +125,7 @@ useEffect(() => {
   console.log(commentEN);
 }, [commentEN]); // การทำงานนี้จะเกิดขึ้นทุกครั้งที่ commentEN มีการเปลี่ยนแปลง
 
+console.log(commentEN);
   
   // Update dentist mutation
   const updateDentist = useMutation({
@@ -232,7 +233,7 @@ useEffect(() => {
   };
   const handleEdit = (commentId: string) => {
     setCommentEN((prevCommentData: { data: any; count: any; }) => {
-      const updatedComments = prevCommentData.data.map(comment => 
+      const updatedComments = prevCommentData.data.map((comment: { _id: string; }) => 
         comment._id === commentId ? { ...comment, editing: true } : comment
       );
       return { ...prevCommentData, data: updatedComments };
@@ -272,7 +273,7 @@ useEffect(() => {
 
   const handleCancelEdit = (commentId: string) => {
     setCommentEN((prevCommentData: { data: any; count: any; }) => {
-      const updatedComments = prevCommentData.data.map(comment => 
+      const updatedComments = prevCommentData.data.map((comment: { _id: string; }) => 
         comment._id === commentId ? { ...comment, editing: false, editingText: '' } : comment
       );
       return { ...prevCommentData, data: updatedComments };
@@ -282,7 +283,7 @@ useEffect(() => {
   const handleEditTextChange = (event: React.ChangeEvent<HTMLInputElement>, commentId: string) => {
     const updatedText = event.target.value;
     setCommentEN((prevCommentData: { data: any; count: any; }) => {
-      const updatedComments = prevCommentData.data.map(comment =>
+      const updatedComments = prevCommentData.data.map((comment: { _id: string; }) =>
         comment._id === commentId ? { ...comment, editingText: updatedText } : comment
       );
       return { ...prevCommentData, data: updatedComments };
@@ -298,7 +299,7 @@ useEffect(() => {
     try {
       await updateComment(commentId, token_user, editedText); // ไม่ต้องรอผลลัพธ์อะไรจาก backend ก็ได้
       setCommentEN((prevCommentData: { data: any; count: any; }) => {
-        const updatedComments = prevCommentData.data.map(comment =>
+        const updatedComments = prevCommentData.data.map((comment: { _id: string; }) =>
           comment._id === commentId
             ? { ...comment, comment: editedText, editing: false, editingText: undefined } // ใช้ editedText ที่เรามีอยู่
             : comment
@@ -551,11 +552,11 @@ useEffect(() => {
 
             <AccordionContent className="space-y-2">
   <div className="space-y-3">
-    {commentEN?.data?.map((comment: Comment, index: number) => (
+    {commentEN?.data?.map((comment : Comment, index: number) => (
       <div key={comment._id} className="p-4 border rounded-lg shadow-sm bg-white relative">
         <Separator />
         <div className="flex items-center space-x-2">
-          <span className="font-semibold text-lg">Comment {index + 1}</span>
+          <span className="font-semibold text-lg">{comment.user.name} : </span>
         </div>
         
         {/* การแสดงข้อความคอมเมนต์หรือช่องกรอกข้อความเมื่อแก้ไข */}
@@ -586,10 +587,10 @@ useEffect(() => {
         )}
         
         {/* Optionally add who commented if you want */}
-        <div className="pt-2 text-sm text-gray-500">By User ID: {comment.user}</div>
+        {/* <div className="pt-2 text-sm text-gray-500">By User ID: {comment.user._id}</div> */}
         
         {/* ปุ่มอัพเดท (Update) อยู่ที่มุมขวาบน */}
-        {user && (user._id === comment.user || user.role === "admin") && !comment.editing && (
+        {user && (user._id === comment.user._id || user.role === "admin") && !comment.editing && (
           <div className="absolute top-2 right-2">
             <button
               onClick={() => handleEdit(comment._id)} // ฟังก์ชันเปิดการแก้ไขคอมเมนต์
@@ -601,7 +602,7 @@ useEffect(() => {
         )}
         
         {/* ปุ่มลบ (Delete) อยู่ที่มุมขวาล่าง */}
-        {user && (user._id === comment.user || user.role === "admin") && (
+        {user && (user._id === comment.user._id || user.role === "admin") && (
           <div className="absolute bottom-2 right-2">
             <button
               onClick={() => handleDelete(comment._id)} // ฟังก์ชันลบคอมเมนต์
@@ -613,7 +614,7 @@ useEffect(() => {
         )}
       </div>
     ))}
-    {user ? (
+    {(user && user.role !== "dentist")? (
       <div className="flex w-full justify-end px-3">
         {isAddingComment ? (
           <div className="w-full space-y-2 px-3">
