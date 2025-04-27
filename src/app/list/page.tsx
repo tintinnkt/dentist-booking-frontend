@@ -167,12 +167,7 @@ const Page = () => {
           <div className="col-span-8 w-full space-y-6 sm:p-5">
             {filteredDentists.length > 0 ? (
               filteredDentists.map((dentist) => (
-                <DentistCard
-                  key={dentist.id}
-                  dentist={dentist}
-                  isAdmin={user?.role == Role_type.ADMIN}
-                  user={user}
-                />
+                <DentistCard key={dentist.id} dentist={dentist} />
               ))
             ) : (
               <p className="w-full pr-10 text-end">No dentists found.</p>

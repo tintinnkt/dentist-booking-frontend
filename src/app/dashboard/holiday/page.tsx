@@ -16,7 +16,7 @@ import {
 import { BackendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
-import { OffHour } from "@/types/api/OffHour";
+import { OffHour, OffHourCreateProps } from "@/types/api/OffHour";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { set } from "date-fns";
@@ -24,6 +24,7 @@ import { Clock10Icon, LoaderIcon, Trash2, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function Page() {
   const { user } = useUser();
@@ -87,7 +88,9 @@ export default function Page() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (newOffHour: Omit<OffHour, "_id" | "createdAt">) => {
+    mutationFn: async (
+      newOffHour: Omit<OffHourCreateProps, "_id" | "createdAt">,
+    ) => {
       if (!session?.user.token) throw new Error("Authentication required");
       const response = await axios.post(BackendRoutes.OFF_HOURS, newOffHour, {
         headers: { Authorization: `Bearer ${session.user.token}` },
@@ -219,6 +222,10 @@ export default function Page() {
       seconds: 0,
       milliseconds: 0,
     });
+    if (!user) {
+      toast.error("Login First");
+      return;
+    }
 
     createMutation.mutate({
       owner: user._id,
@@ -270,10 +277,12 @@ export default function Page() {
           </div>
         </div>
 
-        <CustomButton
-          useFor="add-off-hours"
-          onClick={() => setShowModal(true)}
-        />
+        {user && (
+          <CustomButton
+            useFor="add-off-hours"
+            onClick={() => setShowModal(true)}
+          />
+        )}
       </div>
 
       {/* Error display */}

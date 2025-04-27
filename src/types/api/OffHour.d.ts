@@ -9,3 +9,6 @@ export interface OffHour {
   isForAllDentist: boolean;
   createdAt: string;
 }
+export interface OffHourCreateProps extends OffHour {
+  owner: string;
+}
