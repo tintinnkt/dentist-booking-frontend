@@ -17,6 +17,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
 import {
+  CalendarX2Icon,
   CheckIcon,
   Loader2Icon,
   MessageCircleIcon,
@@ -213,12 +214,6 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
     },
   });
 
-  // Function to check if a slot is disabled (now uses pre-calculated data)
-  const isSlotDisabled = (time: string): boolean => {
-    if (!appDate) return true;
-    return !availableTimeSlots[time];
-  };
-
   // Create a visual indicator for available slots
   const getAvailableSlotsCount = (): number => {
     if (!appDate) return 0;
@@ -410,62 +405,14 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
                             timeSlots.map((time) => {
                               const isAvailable = availableTimeSlots[time];
 
-                              // Determine why a slot is unavailable
-                              let unavailableReason = "";
-                              if (!isAvailable && appDate) {
-                                const dateStr = format(appDate, "yyyy-MM-dd");
-                                const dateTimeStr = `${dateStr}T${time}`;
-
-                                const isOffHour = filteredOffhours.some(
-                                  (offhour) => {
-                                    const startTime = new Date(
-                                      offhour.startDate,
-                                    );
-                                    const endTime = new Date(offhour.endDate);
-                                    const slotTime = new Date(dateTimeStr);
-                                    return (
-                                      slotTime >= startTime &&
-                                      slotTime <= endTime
-                                    );
-                                  },
-                                );
-
-                                const isBooked = dentist.bookings?.some(
-                                  (booking) => {
-                                    if (booking.status === "cancel")
-                                      return false;
-                                    const bookingDate = new Date(
-                                      booking.apptDateAndTime,
-                                    );
-                                    const bookingTime = format(
-                                      bookingDate,
-                                      "HH:mm",
-                                    );
-                                    const bookingDateStr = format(
-                                      bookingDate,
-                                      "yyyy-MM-dd",
-                                    );
-                                    return (
-                                      bookingTime === time &&
-                                      bookingDateStr === dateStr
-                                    );
-                                  },
-                                );
-
-                                if (isOffHour)
-                                  unavailableReason = " (Off Hours)";
-                                else if (isBooked)
-                                  unavailableReason = " (Booked)";
-                              }
-
                               return (
                                 <SelectItem
                                   key={time}
                                   value={time}
                                   disabled={!isAvailable}
                                 >
+                                  {!isAvailable ? <CalendarX2Icon /> : null}
                                   {time}
-                                  {!isAvailable ? " (Unavailable)" : null}
                                 </SelectItem>
                               );
                             })
