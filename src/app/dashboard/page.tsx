@@ -1,5 +1,6 @@
 "use client";
 
+import { Input } from "@/components/ui/Input";
 import { BackendRoutes, FrontendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { useUser } from "@/hooks/useUser";
@@ -72,11 +73,11 @@ export default function ScheduleManagement() {
 
       <div className="py-3 text-sm font-bold">Select Date</div>
       <div className="flex gap-x-3">
-        <input
+        <Input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="w-fit rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
       </div>
 

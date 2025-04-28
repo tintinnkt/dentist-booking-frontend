@@ -14,10 +14,6 @@ const managementRoutes: Array<{ name: string; route: FrontendRoutes }> = [
     route: FrontendRoutes.DASHBOARD,
   },
   {
-    name: "Comments",
-    route: FrontendRoutes.COMMENT,
-  },
-  {
     name: "Holidays",
     route: FrontendRoutes.HOLIDAY,
   },

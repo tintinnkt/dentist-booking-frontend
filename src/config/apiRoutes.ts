@@ -43,7 +43,6 @@ export enum FrontendRootRoutes {
 export enum FrontendRoutes {
   DASHBOARD = FrontendRootRoutes.DASHBOARD,
   ADMIN = `${FrontendRoutes.DASHBOARD}/admin`,
-  COMMENT = `${FrontendRootRoutes.DASHBOARD}/comment`,
   USER = `${FrontendRootRoutes.DASHBOARD}/users`,
   HOLIDAY = `${FrontendRootRoutes.DASHBOARD}/holiday`,
   DENTIST = `${FrontendRootRoutes.DASHBOARD}/dentist`,
