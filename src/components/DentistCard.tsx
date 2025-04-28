@@ -9,16 +9,22 @@ import { BackendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { expertiseOptions, timeSlots } from "@/constant/expertise";
 import { useBooking } from "@/hooks/useBooking";
-import { useComments } from "@/hooks/useComments"; // Import our new hook
-import { useOffHours } from "@/hooks/useOffHours"; // Me too
+import { useComments } from "@/hooks/useComments";
+import { useOffHours } from "@/hooks/useOffHours";
 import { useUser } from "@/hooks/useUser";
 import { DentistProps, DentistResponse } from "@/types/api/Dentist";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { format } from "date-fns";
-import { Check, MessageCircleIcon, Trash2Icon, UserIcon } from "lucide-react";
+import {
+  CheckIcon,
+  Loader2Icon,
+  MessageCircleIcon,
+  Trash2Icon,
+  UserIcon,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { twJoin } from "tailwind-merge";
 import { ButtonConfigKeys, CustomButton } from "./CustomButton";
@@ -74,6 +80,10 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
   const [appTime, setAppTime] = useState<string>("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<
+    Record<string, boolean>
+  >({});
+  const [availabilityCalculating, setAvailabilityCalculating] = useState(false);
 
   const [formData, setFormData] = useState<Partial<DentistProps>>({
     yearsOfExperience: dentist.yearsOfExperience,
@@ -97,10 +107,67 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
     handleDeleteComment,
   } = useComments(dentist._id);
 
-  const { filteredOffhours } = useOffHours(appDate, dentist.user._id);
+  const { filteredOffhours, isLoadingOffHours } = useOffHours(
+    appDate,
+    dentist.user._id,
+  );
 
   // Booking mutation
   const { bookAppointment, isCreating } = useBooking();
+
+  // Pre-calculate available time slots whenever the date changes
+  useEffect(() => {
+    if (!appDate) {
+      setAvailableTimeSlots({});
+      return;
+    }
+
+    // Set loading state
+    setAvailabilityCalculating(true);
+
+    // Calculate availability for all time slots
+    const dateStr = format(appDate, "yyyy-MM-dd");
+    const slotsAvailability: Record<string, boolean> = {};
+
+    // Small delay to ensure the offhours data is loaded
+    const timer = setTimeout(() => {
+      timeSlots.forEach((time) => {
+        const dateTimeStr = `${dateStr}T${time}`;
+
+        // Check if in off hours
+        const isOffHour = filteredOffhours.some((offhour) => {
+          const startTime = new Date(offhour.startDate);
+          const endTime = new Date(offhour.endDate);
+          const slotTime = new Date(dateTimeStr);
+          return slotTime >= startTime && slotTime <= endTime;
+        });
+
+        // Check if already booked
+        const isBooked = dentist.bookings?.some((booking) => {
+          if (booking.status === "cancel") return false;
+
+          const bookingDate = new Date(booking.apptDateAndTime);
+          const bookingTime = format(bookingDate, "HH:mm");
+          const bookingDateStr = format(bookingDate, "yyyy-MM-dd");
+
+          return bookingTime === time && bookingDateStr === dateStr;
+        });
+
+        slotsAvailability[time] = !(isOffHour || isBooked);
+      });
+
+      setAvailableTimeSlots(slotsAvailability);
+
+      // If current selected time is now unavailable, reset it
+      if (appTime && !slotsAvailability[appTime]) {
+        setAppTime("");
+      }
+
+      setAvailabilityCalculating(false);
+    }, 300); // Small delay to avoid excessive re-renders
+
+    return () => clearTimeout(timer);
+  }, [appDate, filteredOffhours, dentist.bookings, appTime]);
 
   // Update dentist mutation
   const updateDentist = useMutation({
@@ -146,34 +213,16 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
     },
   });
 
+  // Function to check if a slot is disabled (now uses pre-calculated data)
   const isSlotDisabled = (time: string): boolean => {
     if (!appDate) return true;
+    return !availableTimeSlots[time];
+  };
 
-    // Format the date and time for comparison
-    const dateStr = format(appDate, "yyyy-MM-dd");
-    const dateTimeStr = `${dateStr}T${time}`;
-
-    // Check if the time slot falls within any off hours
-    const isOffHour = filteredOffhours.some((offhour) => {
-      const startTime = new Date(offhour.startDate);
-      const endTime = new Date(offhour.endDate);
-      const slotTime = new Date(dateTimeStr);
-
-      return slotTime >= startTime && slotTime <= endTime;
-    });
-
-    // Check if the time slot already has a booking
-    const isBooked = dentist.bookings?.some((booking) => {
-      if (booking.status === "cancel") return false;
-
-      const bookingDate = new Date(booking.apptDateAndTime);
-      const bookingTime = format(bookingDate, "HH:mm");
-      const bookingDateStr = format(bookingDate, "yyyy-MM-dd");
-
-      return bookingTime === time && bookingDateStr === dateStr;
-    });
-
-    return isOffHour || isBooked;
+  // Create a visual indicator for available slots
+  const getAvailableSlotsCount = (): number => {
+    if (!appDate) return 0;
+    return Object.values(availableTimeSlots).filter(Boolean).length;
   };
 
   // Handle input changes during editing
@@ -308,30 +357,119 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
                   <Calendar
                     mode="single"
                     selected={appDate}
-                    onSelect={setAppDate}
+                    onSelect={(date) => {
+                      setAppDate(date);
+                      setAppTime(""); // Reset time selection when date changes
+                    }}
                     disabled={(date) => date < new Date()}
                     className="rounded-md border"
                   />
 
                   {appDate && (
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium">
-                        Time for {format(appDate, "EEEE, MMMM do")}
-                      </h4>
-                      <Select value={appTime} onValueChange={setAppTime}>
-                        <SelectTrigger>
+                      <div className="flex flex-col items-start">
+                        <h4 className="text-sm font-medium">
+                          Time for {format(appDate, "EEEE, MMMM do")}
+                        </h4>
+                        {availabilityCalculating || isLoadingOffHours ? (
+                          <div className="flex items-center space-x-2">
+                            <Loader2Icon className="h-4 w-4 animate-spin" />
+                            <span className="text-xs">
+                              Checking availability...
+                            </span>
+                          </div>
+                        ) : (
+                          <Badge
+                            variant={
+                              getAvailableSlotsCount() > 0
+                                ? "outline"
+                                : "secondary"
+                            }
+                          >
+                            {getAvailableSlotsCount()} available slots
+                          </Badge>
+                        )}
+                      </div>
+
+                      <Select
+                        value={appTime}
+                        onValueChange={setAppTime}
+                        disabled={availabilityCalculating || isLoadingOffHours}
+                      >
+                        <SelectTrigger disabled={getAvailableSlotsCount() <= 0}>
                           <SelectValue placeholder="Select time" />
                         </SelectTrigger>
                         <SelectContent>
-                          {timeSlots.map((time) => (
-                            <SelectItem
-                              key={time}
-                              value={time}
-                              disabled={isSlotDisabled(time)}
-                            >
-                              {time}
-                            </SelectItem>
-                          ))}
+                          {getAvailableSlotsCount() === 0 &&
+                          !availabilityCalculating &&
+                          !isLoadingOffHours ? (
+                            <div className="text-muted-foreground p-2 text-center text-sm">
+                              No available time slots for this date
+                            </div>
+                          ) : (
+                            timeSlots.map((time) => {
+                              const isAvailable = availableTimeSlots[time];
+
+                              // Determine why a slot is unavailable
+                              let unavailableReason = "";
+                              if (!isAvailable && appDate) {
+                                const dateStr = format(appDate, "yyyy-MM-dd");
+                                const dateTimeStr = `${dateStr}T${time}`;
+
+                                const isOffHour = filteredOffhours.some(
+                                  (offhour) => {
+                                    const startTime = new Date(
+                                      offhour.startDate,
+                                    );
+                                    const endTime = new Date(offhour.endDate);
+                                    const slotTime = new Date(dateTimeStr);
+                                    return (
+                                      slotTime >= startTime &&
+                                      slotTime <= endTime
+                                    );
+                                  },
+                                );
+
+                                const isBooked = dentist.bookings?.some(
+                                  (booking) => {
+                                    if (booking.status === "cancel")
+                                      return false;
+                                    const bookingDate = new Date(
+                                      booking.apptDateAndTime,
+                                    );
+                                    const bookingTime = format(
+                                      bookingDate,
+                                      "HH:mm",
+                                    );
+                                    const bookingDateStr = format(
+                                      bookingDate,
+                                      "yyyy-MM-dd",
+                                    );
+                                    return (
+                                      bookingTime === time &&
+                                      bookingDateStr === dateStr
+                                    );
+                                  },
+                                );
+
+                                if (isOffHour)
+                                  unavailableReason = " (Off Hours)";
+                                else if (isBooked)
+                                  unavailableReason = " (Booked)";
+                              }
+
+                              return (
+                                <SelectItem
+                                  key={time}
+                                  value={time}
+                                  disabled={!isAvailable}
+                                >
+                                  {time}
+                                  {!isAvailable ? " (Unavailable)" : null}
+                                </SelectItem>
+                              );
+                            })
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -356,7 +494,13 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
                           toast.error("Please select a date and time");
                         }
                       }}
-                      disabled={!appDate || !appTime || isCreating}
+                      disabled={
+                        !appDate ||
+                        !appTime ||
+                        isCreating ||
+                        availabilityCalculating ||
+                        isLoadingOffHours
+                      }
                       className="w-full"
                       isLoading={isCreating}
                     >
@@ -419,7 +563,7 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
                           value={expertise}
                           onSelect={() => toggleExpertise(expertise)}
                         >
-                          <Check
+                          <CheckIcon
                             className={`mr-2 h-4 w-4 ${
                               selectedExpertise.includes(expertise)
                                 ? "opacity-100"
