@@ -9,13 +9,13 @@ import { BackendRoutes } from "@/config/apiRoutes";
 import { Role_type } from "@/config/role";
 import { expertiseOptions } from "@/constant/expertise";
 import { useUser } from "@/hooks/useUser";
-import { DentistProps } from "@/types/api/Dentist";
+import { DentistResponse } from "@/types/api/Dentist";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { LoaderIcon, XCircleIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-const fetchDentists = async (): Promise<Array<DentistProps>> => {
+const fetchDentists = async (): Promise<Array<DentistResponse>> => {
   const response = await axios.get(BackendRoutes.DENTIST);
   if (Array.isArray(response.data.data)) {
     return response.data.data;
@@ -33,9 +33,9 @@ const Page = () => {
     queryFn: fetchDentists,
   });
 
-  const [filteredDentists, setFilteredDentists] = useState<Array<DentistProps>>(
-    [],
-  );
+  const [filteredDentists, setFilteredDentists] = useState<
+    Array<DentistResponse>
+  >([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { user } = useUser();
 
