@@ -10,5 +10,5 @@ export interface Booking {
   apptDateAndTime: string;
   user: BookingUserProps;
   dentist: DentistProps;
-  status: string;
+  status: "Booked" | "cancel";
 }

@@ -1,3 +1,4 @@
+import { Booking } from "./Booking";
 import { UserProps } from "./UserProps";
 
 export interface DentistProps {
@@ -6,4 +7,13 @@ export interface DentistProps {
   yearsOfExperience: number;
   areaOfExpertise: Array<string>;
   id: string;
+}
+
+export interface DentistResponse extends DentistProps {
+  bookings: Array<DentistBookingProps>;
+}
+
+interface DentistBookingProps extends Booking {
+  user: string;
+  _id: string;
 }

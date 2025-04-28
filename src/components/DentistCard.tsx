@@ -12,10 +12,10 @@ import { useBooking } from "@/hooks/useBooking";
 import { useComments } from "@/hooks/useComments"; // Import our new hook
 import { useOffHours } from "@/hooks/useOffHours"; // Me too
 import { useUser } from "@/hooks/useUser";
-import { DentistProps } from "@/types/api/Dentist";
+import { DentistProps, DentistResponse } from "@/types/api/Dentist";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-import { format, isWithinInterval } from "date-fns";
+import { format } from "date-fns";
 import { Check, MessageCircleIcon, Trash2Icon, UserIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -62,7 +62,7 @@ import {
 import { Separator } from "./ui/Separator";
 
 interface DentistCardProps {
-  dentist: DentistProps;
+  dentist: DentistResponse;
   onAction?: () => void;
   isLoaded?: boolean;
   actionButtonUseFor?: ButtonConfigKeys;
@@ -146,25 +146,34 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
     },
   });
 
-  const isSlotDisabled = (time: string) => {
-    if (!filteredOffhours.length) return false;
-  
-    const [hours, minutes] = time.split(":").map(Number);
-    const selectedDateTime = new Date(appDate!);
-    selectedDateTime.setHours(hours, minutes, 0, 0);
-  
-    const minustHour = (date: Date, hours: number) => {
-      const newDate = new Date(date);
-      newDate.setHours(newDate.getHours() - hours);
-      return newDate;
-    };
-  
-    return filteredOffhours.some((offhour) => {
-      const start = minustHour(new Date(offhour.startDate), 7);
-      const end = minustHour(new Date(offhour.endDate), 7);
-  
-      return isWithinInterval(selectedDateTime, { start, end });
+  const isSlotDisabled = (time: string): boolean => {
+    if (!appDate) return true;
+
+    // Format the date and time for comparison
+    const dateStr = format(appDate, "yyyy-MM-dd");
+    const dateTimeStr = `${dateStr}T${time}`;
+
+    // Check if the time slot falls within any off hours
+    const isOffHour = filteredOffhours.some((offhour) => {
+      const startTime = new Date(offhour.startDate);
+      const endTime = new Date(offhour.endDate);
+      const slotTime = new Date(dateTimeStr);
+
+      return slotTime >= startTime && slotTime <= endTime;
     });
+
+    // Check if the time slot already has a booking
+    const isBooked = dentist.bookings?.some((booking) => {
+      if (booking.status === "cancel") return false;
+
+      const bookingDate = new Date(booking.apptDateAndTime);
+      const bookingTime = format(bookingDate, "HH:mm");
+      const bookingDateStr = format(bookingDate, "yyyy-MM-dd");
+
+      return bookingTime === time && bookingDateStr === dateStr;
+    });
+
+    return isOffHour || isBooked;
   };
 
   // Handle input changes during editing
@@ -304,32 +313,29 @@ const DentistCard = ({ dentist }: DentistCardProps) => {
                     className="rounded-md border"
                   />
 
-                {appDate && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium">
-                      Time for {format(appDate, "EEEE, MMMM do")}
-                    </h4>
-                    <Select value={appTime} onValueChange={setAppTime}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select time" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {timeSlots.map((time) => (
-                          <SelectItem 
-                            key={time}
-                            value={time}
-                            disabled={isSlotDisabled(time)}
-                          > 
-                            {time}
-                          </SelectItem>
-                        ))}
-                        <SelectItem key={"test"} value="test" disabled={true}>
-                          Items That is disabled
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                  {appDate && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">
+                        Time for {format(appDate, "EEEE, MMMM do")}
+                      </h4>
+                      <Select value={appTime} onValueChange={setAppTime}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeSlots.map((time) => (
+                            <SelectItem
+                              key={time}
+                              value={time}
+                              disabled={isSlotDisabled(time)}
+                            >
+                              {time}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <div className="pt-2">
                     <CustomButton

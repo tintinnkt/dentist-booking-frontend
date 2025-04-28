@@ -1,6 +1,6 @@
 import { BackendRoutes } from "@/config/apiRoutes";
 import { OffHour } from "@/types/api/OffHour";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { isSameDay, parseISO } from "date-fns";
 import { useSession } from "next-auth/react";
@@ -11,8 +11,11 @@ interface OffHoursResponse {
   data: Array<OffHour>;
 }
 
-export function useOffHours(appDate: Date | null | undefined, dentistId: string) {
-  const [filteredOffhours, setFilteredOffhours] = useState<OffHour[]>([]);
+export function useOffHours(
+  appDate: Date | null | undefined,
+  dentistId: string,
+) {
+  const [filteredOffhours, setFilteredOffhours] = useState<Array<OffHour>>([]);
   const { data: session } = useSession();
   const token = session?.user?.token;
 
@@ -32,7 +35,7 @@ export function useOffHours(appDate: Date | null | undefined, dentistId: string)
   };
 
   // Fetch offHours query
-  const { 
+  const {
     data: offHoursData,
     isLoading: isLoadingOffHours,
     isError: isErrorOffHours,
@@ -45,7 +48,7 @@ export function useOffHours(appDate: Date | null | undefined, dentistId: string)
   });
 
   useEffect(() => {
-    if (isErrorOffHours && offHoursError  instanceof Error) {
+    if (isErrorOffHours && offHoursError instanceof Error) {
       console.error("useQuery error:", offHoursError.message);
       toast.error(offHoursError.message || "Failed to fetch offhours!");
     }
@@ -57,9 +60,8 @@ export function useOffHours(appDate: Date | null | undefined, dentistId: string)
     const allOffhours = offHoursData.data;
 
     const dentistOffhours = allOffhours.filter(
-      (offhour) => 
-        offhour.owner._id === dentistId ||
-        offhour.isForAllDentist === true
+      (offhour) =>
+        offhour.owner._id === dentistId || offhour.isForAllDentist === true,
     );
 
     const matchedOffhours = dentistOffhours.filter((offhour: OffHour) => {
